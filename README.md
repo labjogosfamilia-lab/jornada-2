@@ -26,17 +26,31 @@ Quando a janela preta do servidor abrir, ela exibirá seus IPs de conexão, por 
 
 ---
 
-## 🕹️ Controles
+## 🕹️ Controles da Jornada
 
 | Ação | Teclado & Mouse | Celular / Touch |
 | :--- | :--- | :--- |
 | **Mover o Campeão** | `W, A, S, D` ou `Setas` | Teclas / Arrastar |
-| **Mirar** | Mover o cursor do Mouse | Direção do movimento |
-| **Atacar / Disparo Astral** | `Botão Esquerdo do Mouse` | Botão ⚔️ |
+| **Mirar & Atacar** | `Mouse` + `Clique Esquerdo` | Direção + Botão ⚔️ |
 | **Esquiva Rápida (Dash)** | `Barra de Espaço` ou `Shift` | Botão 💨 |
+| **💬 Falar com NPC / Abrir Loja** | `E` (próximo ao NPC na Cidade) | Botão no balão |
+| **🧪 Poção de Vida (+50 HP)** | Tecla `1` | Toque no slot 🧪 |
+| **⚡ Poção de Vigor / Fúria** | Tecla `2` | Toque no slot ⚡ |
+| **💥 Pisão Sísmico (Super Poder)** | Tecla `R` | Toque no slot 💥 |
+| **🏹 Raio Astral (Super Poder)** | Tecla `F` | Toque no slot 🏹 |
 | **Conversar no Chat** | Pressionar `Enter` | Campo de texto inferior |
 
 ---
+
+## 🏰 A Cidade & As Lojas da Jornada
+
+- **Zona Segura:** No centro do mapa fica a **Cidade dos Guardiões**. Dentro dela, ninguém pode sofrer dano ou atacar, e a fonte central regenera sua vida automaticamente!
+- **NPCs e Mercadores:**
+  - 🔨 **Brok, o Ferreiro:** Vende espadas e armas (Lâmina Rúnica, Lâmina de Fogo e Cajado Arcano com disparo triplo).
+  - 🧪 **Sylva, a Alquimista:** Vende Poções de Vida e Poções de Vigor/Velocidade.
+  - 🧙‍♂️ **Mago Elidor:** Ensina os Super Poderes: **Pisão Sísmico [R]** e o **Raio Astral Cósmico [F]**.
+- **Ouro da Jornada (🪙):** Ganhe moedas abrindo os baús de ouro espalhados pelo mapa e derrotando bots e outros combatentes!
+
 
 ## 🤖 Sistema de Bots Inteligentes
 
