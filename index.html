@@ -24,6 +24,28 @@
         </div>
 
         <div class="form-group">
+          <label>Classe do Personagem</label>
+          <div class="class-picker" id="class-picker">
+            <div class="class-card selected" data-class="warrior">
+              <span class="class-icon">🗡️</span>
+              <span class="class-name">Guerreiro</span>
+            </div>
+            <div class="class-card" data-class="mage">
+              <span class="class-icon">🧙‍♂️</span>
+              <span class="class-name">Mago</span>
+            </div>
+            <div class="class-card" data-class="ranger">
+              <span class="class-icon">🏹</span>
+              <span class="class-name">Arqueiro</span>
+            </div>
+            <div class="class-card" data-class="shadow">
+              <span class="class-icon">🥷</span>
+              <span class="class-name">Assassino</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
           <label>Cor do Campeão</label>
           <div class="color-options" id="color-picker">
             <div class="color-btn selected" data-color="#00e5ff" style="background: #00e5ff;"></div>
@@ -41,7 +63,7 @@
           <small style="color: #70a1ff; font-size: 11px; display: block; margin-top: 4px;">Deixe vazio ou padrão para jogar no servidor local / bots.</small>
         </div>
 
-        <button id="btn-start" class="btn-play">ENTRAR NA BATALHA</button>
+        <button id="btn-start" class="btn-play">ENTRAR NA JORNADA</button>
 
         <div class="server-info-badge">
           <span id="server-status-dot">🟡 Conectando...</span>
@@ -64,6 +86,24 @@
         <span>🪙</span>
         <span id="gold-val">50</span>
         <span style="font-size: 11px; color: #8899aa;">Ouro</span>
+      </div>
+
+      <!-- Barra de Vida do Colosso / Chefe do Mundo -->
+      <div id="boss-hud-bar" style="display: none;">
+        <div class="boss-hud-label">
+          <span id="boss-name">👑 Colosso Titânico Ancestral</span>
+          <span id="boss-hp-val">450 / 450</span>
+        </div>
+        <div class="boss-bar-bg">
+          <div id="boss-hp-fill" class="boss-bar-fill"></div>
+        </div>
+      </div>
+
+      <!-- Rastreador de Missões da Jornada -->
+      <div id="quest-tracker">
+        <div class="quest-title">📜 Missão da Jornada</div>
+        <div id="quest-desc">⚔️ Caçar 2 Inimigos (0/2)</div>
+        <div class="quest-reward">Recompensa: 🪙 150 Ouro</div>
       </div>
 
       <!-- Banner de Zona Segura (Cidade) -->
