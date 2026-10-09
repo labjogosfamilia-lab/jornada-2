@@ -178,6 +178,21 @@ class SoundFX {
     osc.stop(this.ctx.currentTime + 0.8);
   }
 
+  playNatureCyclone() {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(360, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.45);
+    gain.gain.setValueAtTime(0.28, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.45);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.45);
+  }
+
   playRespawn() {
     if (!this.ctx) return;
     const osc = this.ctx.createOscillator();
@@ -262,101 +277,187 @@ const CHARACTER_CLASSES = {
   }
 };
 
-// 8 CIDADES LENDÁRIAS (MAPA GIGANTE 8000x8000)
-const CITIES = [
-  { id: 'city_capital', name: 'Cidade Real da Capital', x: 4000, y: 4000, radius: 420, theme: 'royal' },
-  { id: 'city_forest', name: 'Vila dos Bosques Sagrados', x: 1800, y: 1800, radius: 280, theme: 'forest' },
-  { id: 'city_lake', name: 'Vila do Lago Glacial', x: 6200, y: 1800, radius: 280, theme: 'lake' },
-  { id: 'city_oasis', name: 'Vila do Oásis das Areias', x: 1800, y: 6200, radius: 280, theme: 'desert' },
-  { id: 'city_forge', name: 'Cidadela da Forja Vulcânica', x: 6200, y: 6200, radius: 280, theme: 'forge' },
-  { id: 'city_port', name: 'Porto Real dos Navegadores', x: 4000, y: 1200, radius: 280, theme: 'port' },
-  { id: 'city_astral', name: 'Santuário Astral do Cosmos', x: 6800, y: 4000, radius: 280, theme: 'astral' },
-  { id: 'city_hunter', name: 'Aldeia dos Caçadores Selvagens', x: 1200, y: 4000, radius: 280, theme: 'hunter' }
+// =============================================================
+// A GRANDE FLORESTA DOS CAMPEÕES (8 SANTUÁRIOS SAGRADOS)
+// =============================================================
+const FOREST_SANCTUARIES = [
+  // 1. Árvore-Mãe Sagrada (Centro do Mundo)
+  { id: 'sanc_mother_tree', name: '🌳 Árvore-Mãe Ancestral', x: 4000, y: 4000, radius: 420, theme: 'ancient_tree' },
+  // 2. Bosque Sagrado dos Druidas (Noroeste)
+  { id: 'sanc_druids', name: '🌿 Bosque dos Druidas Silvestres', x: 1800, y: 1800, radius: 300, theme: 'druid_grove' },
+  // 3. Lago Esmeralda dos Salgueiros (Nordeste)
+  { id: 'sanc_lake', name: '💧 Lago Esmeralda dos Salgueiros', x: 6200, y: 1800, radius: 300, theme: 'emerald_lake' },
+  // 4. Clareira dos Cogumelos Luminosos (Sudoeste)
+  { id: 'sanc_mushrooms', name: '🍄 Clareira dos Cogumelos Luminosos', x: 1800, y: 6200, radius: 300, theme: 'mushrooms' },
+  // 5. Refúgio dos Forjadores da Madeira (Sudeste)
+  { id: 'sanc_forgers', name: '🪵 Refúgio dos Forjadores da Madeira', x: 6200, y: 6200, radius: 300, theme: 'wood_forge' },
+  // 6. Mirante dos Ventos das Copas (Norte)
+  { id: 'sanc_winds', name: '🌾 Mirante dos Ventos das Copas', x: 4000, y: 1200, radius: 300, theme: 'treetop_winds' },
+  // 7. Bosque Encantado dos Cristais (Leste)
+  { id: 'sanc_fae', name: '🌸 Bosque Encantado dos Cristais', x: 6800, y: 4000, radius: 300, theme: 'fae_crystals' },
+  // 8. Aldeia dos Guardiões da Mata (Oeste)
+  { id: 'sanc_hunters', name: '🏹 Aldeia dos Guardiões da Mata', x: 1200, y: 4000, radius: 300, theme: 'hunters_camp' }
 ];
 
-// Prédios nas 8 Cidades
-const BUILDINGS = [
-  // Capital
-  { id: 'b_castle', name: 'Castelo Real', x: 4000, y: 3820, w: 170, h: 100, roofColor: '#2f3542', wallColor: '#747d8c', type: 'castle' },
-  { id: 'b_blacksmith', name: 'Ferraria de Brok', x: 3850, y: 3980, w: 95, h: 80, roofColor: '#e74c3c', wallColor: '#795548', type: 'shop' },
-  { id: 'b_alchemy', name: 'Alquimia da Sylva', x: 4150, y: 3980, w: 95, h: 80, roofColor: '#27ae60', wallColor: '#5d4037', type: 'shop' },
-  { id: 'b_mage', name: 'Torre Arcana Real', x: 4000, y: 4190, w: 90, h: 90, roofColor: '#8e44ad', wallColor: '#34495e', type: 'tower' },
-  { id: 'b_tavern', name: 'Taverna Real', x: 3840, y: 3820, w: 85, h: 70, roofColor: '#d35400', wallColor: '#6d4c41', type: 'house' },
-  { id: 'b_house1', name: 'Quartel dos Guardas', x: 4160, y: 3820, w: 85, h: 70, roofColor: '#c0392b', wallColor: '#6d4c41', type: 'house' },
+const CITIES = FOREST_SANCTUARIES;
 
-  // Bosques
-  { id: 'b_for_1', name: 'Cabana do Druida', x: 1800, y: 1700, w: 90, h: 75, roofColor: '#27ae60', wallColor: '#4e342e', type: 'house' },
-  { id: 'b_for_2', name: 'Ferraria Élfica', x: 1700, y: 1840, w: 80, h: 70, roofColor: '#e67e22', wallColor: '#5d4037', type: 'shop' },
-  { id: 'b_for_3', name: 'Herbário Místico', x: 1900, y: 1840, w: 80, h: 70, roofColor: '#16a085', wallColor: '#3e2723', type: 'shop' },
+// Cabanas de Madeira, Tendas e Altares da Floresta
+const FOREST_STRUCTURES = [
+  // 1. Árvore-Mãe Central
+  { id: 'b_mother_tree', name: 'Árvore-Mãe Sagrada', x: 4000, y: 3820, w: 180, h: 110, roofColor: '#1b4332', wallColor: '#3e2723', type: 'ancient_tree' },
+  { id: 'b_wood_smithy', name: 'Armaria da Árvore', x: 3850, y: 3980, w: 90, h: 75, roofColor: '#2d6a4f', wallColor: '#4e342e', type: 'shop' },
+  { id: 'b_herbal_hut', name: 'Cabana das Ervas Místicas', x: 4150, y: 3980, w: 90, h: 75, roofColor: '#40916c', wallColor: '#4e342e', type: 'shop' },
+  { id: 'b_elder_lodge', name: 'Tenda dos Anciãos', x: 4000, y: 4180, w: 95, h: 80, roofColor: '#52b788', wallColor: '#3e2723', type: 'house' },
 
-  // Lago Glacial
-  { id: 'b_lake_1', name: 'Templo de Niflheim', x: 6200, y: 1700, w: 95, h: 80, roofColor: '#3498db', wallColor: '#57606f', type: 'tower' },
-  { id: 'b_lake_2', name: 'Refúgio dos Pescadores', x: 6100, y: 1840, w: 80, h: 70, roofColor: '#2980b9', wallColor: '#4b6584', type: 'house' },
-  { id: 'b_lake_3', name: 'Mercado de Gelo', x: 6300, y: 1840, w: 80, h: 70, roofColor: '#00d2d3', wallColor: '#4b6584', type: 'shop' },
+  // 2. Bosque dos Druidas
+  { id: 'b_druid_hut', name: 'Cabana do Grande Druida', x: 1800, y: 1700, w: 85, h: 75, roofColor: '#2d6a4f', wallColor: '#4e342e', type: 'house' },
+  { id: 'b_druid_altar', name: 'Altar de Menires', x: 1700, y: 1840, w: 80, h: 70, roofColor: '#1b4332', wallColor: '#5d4037', type: 'shop' },
+  { id: 'b_druid_herbs', name: 'Cultivo dos Bosques', x: 1900, y: 1840, w: 80, h: 70, roofColor: '#52b788', wallColor: '#3e2723', type: 'shop' },
 
-  // Oásis
-  { id: 'b_oas_1', name: 'Templo Solar', x: 1800, y: 6100, w: 95, h: 80, roofColor: '#f39c12', wallColor: '#a0522d', type: 'tower' },
-  { id: 'b_oas_2', name: 'Bazar das Especiarias', x: 1700, y: 6240, w: 80, h: 70, roofColor: '#d35400', wallColor: '#8b4513', type: 'shop' },
-  { id: 'b_oas_3', name: 'Tenda dos Nômades', x: 1900, y: 6240, w: 80, h: 70, roofColor: '#e67e22', wallColor: '#8b4513', type: 'house' },
+  // 3. Lago Esmeralda
+  { id: 'b_lake_shrine', name: 'Santuário da Água', x: 6200, y: 1700, w: 90, h: 80, roofColor: '#1b4332', wallColor: '#4e342e', type: 'house' },
+  { id: 'b_lake_pier', name: 'Cabana dos Pescadores', x: 6100, y: 1840, w: 80, h: 70, roofColor: '#2d6a4f', wallColor: '#5d4037', type: 'house' },
 
-  // Forja Vulcânica
-  { id: 'b_forg_1', name: 'Grande Forja Vulcânica', x: 6200, y: 6100, w: 100, h: 85, roofColor: '#c0392b', wallColor: '#2c3e50', type: 'castle' },
-  { id: 'b_forg_2', name: 'Armaria do Aço Negro', x: 6100, y: 6240, w: 80, h: 70, roofColor: '#d63031', wallColor: '#34495e', type: 'shop' },
+  // 4. Clareira dos Cogumelos
+  { id: 'b_shroom_hut', name: 'Tenda do Xamã', x: 1800, y: 6100, w: 90, h: 80, roofColor: '#8e44ad', wallColor: '#4e342e', type: 'house' },
+  { id: 'b_shroom_bazaar', name: 'Bazar dos Fungos', x: 1700, y: 6240, w: 80, h: 70, roofColor: '#9b59b6', wallColor: '#3e2723', type: 'shop' },
 
-  // Porto Real
-  { id: 'b_port_1', name: 'Farol das Marés', x: 4000, y: 1100, w: 85, h: 85, roofColor: '#0984e3', wallColor: '#dfe6e9', type: 'tower' },
-  { id: 'b_port_2', name: 'Taverna do Marinheiro', x: 4100, y: 1240, w: 80, h: 70, roofColor: '#00cec9', wallColor: '#2d3436', type: 'house' },
+  // 5. Forjadores da Madeira
+  { id: 'b_forg_hut', name: 'Forja da Madeira e Pedra', x: 6200, y: 6100, w: 95, h: 80, roofColor: '#c0392b', wallColor: '#4e342e', type: 'shop' },
 
-  // Santuário Astral
-  { id: 'b_ast_1', name: 'Torre dos Arcontes', x: 6800, y: 3900, w: 90, h: 90, roofColor: '#6c5ce7', wallColor: '#2d3436', type: 'tower' },
-  { id: 'b_ast_2', name: 'Empório Astral', x: 6700, y: 4040, w: 80, h: 70, roofColor: '#a29bfe', wallColor: '#34495e', type: 'shop' },
+  // 6. Mirante dos Ventos
+  { id: 'b_wind_lodge', name: 'Torre de Vigia de Madeira', x: 4000, y: 1100, w: 85, h: 85, roofColor: '#2d6a4f', wallColor: '#3e2723', type: 'house' },
 
-  // Aldeia dos Caçadores
-  { id: 'b_hunt_1', name: 'Chalé do Mestre Caçador', x: 1200, y: 3900, w: 90, h: 75, roofColor: '#d35400', wallColor: '#4e342e', type: 'house' },
-  { id: 'b_hunt_2', name: 'Armaria Selvagem', x: 1100, y: 4040, w: 80, h: 70, roofColor: '#b71540', wallColor: '#5d4037', type: 'shop' }
+  // 7. Bosque dos Cristais
+  { id: 'b_crystal_shrine', name: 'Santuário do Oráculo', x: 6800, y: 3900, w: 90, h: 85, roofColor: '#6c5ce7', wallColor: '#3e2723', type: 'house' },
+
+  // 8. Aldeia dos Guardiões
+  { id: 'b_hunter_cabin', name: 'Cabana dos Caçadores', x: 1200, y: 3900, w: 90, h: 75, roofColor: '#d35400', wallColor: '#4e342e', type: 'house' }
 ];
 
-// NPCs nas 8 Cidades
+const BUILDINGS = FOREST_STRUCTURES;
+
+// NPCs da Floresta
 const NPCS = [
-  { id: 'npc_blacksmith', name: 'Brok, o Ferreiro', icon: '🔨', x: 3920, y: 3980, radius: 28, type: 'weapons' },
-  { id: 'npc_alchemist', name: 'Sylva, a Alquimista', icon: '🧪', x: 4080, y: 3980, radius: 28, type: 'potions' },
-  { id: 'npc_mage', name: 'Mago Elidor', icon: '🧙‍♂️', x: 4000, y: 4110, radius: 28, type: 'powers' },
-  { id: 'npc_king', name: 'Mestre das Missões', icon: '📜', x: 4000, y: 3900, radius: 28, type: 'quests' },
+  { id: 'npc_blacksmith', name: 'Brok, o Forjador da Floresta', icon: '🔨', x: 3920, y: 3980, radius: 28, type: 'weapons' },
+  { id: 'npc_alchemist', name: 'Sylva, a Herbalista', icon: '🧪', x: 4080, y: 3980, radius: 28, type: 'potions' },
+  { id: 'npc_elder', name: 'Ancião da Floresta', icon: '📜', x: 4000, y: 3900, radius: 28, type: 'quests' },
   { id: 'npc_druid', name: 'Druida Rowan', icon: '🌿', x: 1800, y: 1800, radius: 26, type: 'potions' },
-  { id: 'npc_frost', name: 'Ferreiro Glacial', icon: '❄️', x: 6200, y: 1800, radius: 26, type: 'weapons' },
-  { id: 'npc_sun', name: 'Mago do Sol', icon: '☀️', x: 1800, y: 6200, radius: 26, type: 'powers' },
-  { id: 'npc_forge', name: 'Mestre da Forja', icon: '🌋', x: 6200, y: 6200, radius: 26, type: 'weapons' },
-  { id: 'npc_port', name: 'Capitão dos Mares', icon: '⚓', x: 4000, y: 1200, radius: 26, type: 'potions' },
-  { id: 'npc_astral', name: 'Arquimago do Cosmos', icon: '🌌', x: 6800, y: 4000, radius: 26, type: 'powers' },
+  { id: 'npc_frost_druid', name: 'Pescador do Lago', icon: '🎣', x: 6200, y: 1800, radius: 26, type: 'weapons' },
+  { id: 'npc_xama', name: 'Xamã dos Cogumelos', icon: '🍄', x: 1800, y: 6200, radius: 26, type: 'potions' },
+  { id: 'npc_wood_smith', name: 'Ferreiro dos Troncos', icon: '🪵', x: 6200, y: 6200, radius: 26, type: 'weapons' },
   { id: 'npc_hunter', name: 'Lorde dos Caçadores', icon: '🏹', x: 1200, y: 4000, radius: 26, type: 'weapons' }
 ];
 
-// Missões para Ganhar Poderes
+// Missões da Floresta para Ganhar Poderes (ÚNICO JEITO DE GANHAR PODER!)
 const POWER_QUESTS = [
-  { id: 'q_slam', name: '⚡ Provação do Trovão', desc: 'Derrote 2 Inimigos no mapa', target: 2, type: 'kill', rewardPower: 'power_slam', powerName: 'Pisão Sísmico [R]' },
+  { id: 'q_slam', name: '⚡ Provação do Trovão', desc: 'Derrote 2 Inimigos na Floresta', target: 2, type: 'kill', rewardPower: 'power_slam', powerName: 'Pisão Sísmico [R]' },
   { id: 'q_beam', name: '🏹 Harmonia Astral', desc: 'Minere 2 Cristais de Gemas', target: 2, type: 'mine', rewardPower: 'power_beam', powerName: 'Raio Astral [F]' },
-  { id: 'q_fire', name: '🔥 Fogo Ancestral', desc: 'Derrote 3 Inimigos no mapa', target: 3, type: 'kill', rewardPower: 'power_fire', powerName: 'Meteoro Flamejante [C]' },
-  { id: 'q_shield', name: '🛡️ Relíquia Sagrada', desc: 'Abra 3 Baús de Tesouro', target: 3, type: 'chest', rewardPower: 'power_shield', powerName: 'Escudo Divino [V]' }
+  { id: 'q_fire', name: '🔥 Fogo Ancestral', desc: 'Derrote 3 Inimigos na Floresta', target: 3, type: 'kill', rewardPower: 'power_fire', powerName: 'Meteoro Flamejante [C]' },
+  { id: 'q_shield', name: '🛡️ Relíquia Sagrada', desc: 'Abra 3 Baús de Tesouro', target: 3, type: 'chest', rewardPower: 'power_shield', powerName: 'Escudo Divino [V]' },
+  { id: 'q_nature', name: '🌪️ Fúria da Floresta', desc: 'Derrote 1 Chefe Ancião da Mata', target: 1, type: 'boss', rewardPower: 'power_nature', powerName: 'Ciclone de Folhas [T]' }
 ];
 
+// Catálogo das Lojas (PODERES NÃO PODEM SER COMPRADOS! APENAS ARMAS E POÇÕES)
 const SHOP_CATALOG = {
   weapons: [
-    { id: 'sword_starter', name: 'Lâmina do Noviço', cost: 0, damage: 22, color: '#00e5ff', desc: 'Espada inicial balanceada' },
-    { id: 'sword_rune', name: 'Espada de Prata Rúnica', cost: 120, damage: 34, color: '#a29bfe', desc: '+50% Dano & disparo veloz' },
-    { id: 'sword_fire', name: 'Lâmina do Fogo Estelar', cost: 280, damage: 52, color: '#ff4757', desc: 'Lança chamas ardentes de alto impacto' },
-    { id: 'staff_astral', name: 'Cajado Arcano dos Arcontes', cost: 450, damage: 32, triple: true, color: '#ffd32a', desc: 'Disparo Triplo em leque!' }
+    { id: 'sword_starter', name: 'Lâmina dos Bosques', cost: 0, damage: 22, color: '#00e5ff', desc: 'Espada de carvalho balanceada' },
+    { id: 'sword_rune', name: 'Lâmina Rúnica da Floresta', cost: 120, damage: 34, color: '#2ed573', desc: '+50% Dano & corte veloz' },
+    { id: 'sword_fire', name: 'Lâmina do Fogo da Mata', cost: 280, damage: 52, color: '#ff4757', desc: 'Lança brasas incandescentes' },
+    { id: 'staff_astral', name: 'Cajado Ancião dos Druidas', cost: 450, damage: 32, triple: true, color: '#ffd32a', desc: 'Disparo Triplo em leque!' }
   ],
   potions: [
-    { id: 'potion_heal', name: 'Poção de Vida Maior', cost: 40, heal: 50, icon: '🧪', desc: 'Recupera +50 de HP imediatamente' },
-    { id: 'potion_speed', name: 'Poção de Vigor & Fúria', cost: 55, speedBoost: 1.5, icon: '⚡', desc: 'Vigor máximo e corrida acelerada por 10s' }
-  ],
-  powers: [
-    { id: 'power_slam', name: '⚡ Pisão Sísmico [R]', cost: 150, cooldown: 5, icon: '⚡', desc: 'Explosão sísmica 360° que repele e fere inimigos' },
-    { id: 'power_beam', name: '🏹 Raio Astral Cósmico [F]', cost: 300, cooldown: 8, icon: '🏹', desc: 'Feixe concentrado perfurante de longo alcance' },
-    { id: 'power_fire', name: '🔥 Meteoro Flamejante [C]', cost: 350, cooldown: 7, icon: '🔥', desc: 'Chuva de meteoros incandescentes em área' },
-    { id: 'power_shield', name: '🛡️ Escudo Divino [V]', cost: 250, cooldown: 12, icon: '🛡️', desc: 'Barreira protetora que bloqueia dano por 6s' }
+    { id: 'potion_heal', name: 'Néctar Curativo da Floresta', cost: 40, heal: 50, icon: '🧪', desc: 'Recupera +50 de HP imediatamente' },
+    { id: 'potion_speed', name: 'Extrato de Fúria do Vento', cost: 55, speedBoost: 1.5, icon: '⚡', desc: 'Vigor máximo e corrida acelerada por 10s' }
   ]
 };
+
+// -------------------------------------------------------------
+// Árvores Procedurais da Floresta (450 Árvores no Mundo 8000x8000)
+// -------------------------------------------------------------
+const FOREST_TREES = [];
+(function generateForestTrees() {
+  let seed = 98765;
+  function rnd() {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  }
+  for (let i = 0; i < 450; i++) {
+    const x = 150 + rnd() * 7700;
+    const y = 150 + rnd() * 7700;
+    let insideSanc = false;
+    for (const s of FOREST_SANCTUARIES) {
+      if (Math.hypot(x - s.x, y - s.y) < s.radius + 70) {
+        insideSanc = true;
+        break;
+      }
+    }
+    if (!insideSanc) {
+      const size = 34 + rnd() * 30;
+      const shade = rnd();
+      const foliageColor = shade > 0.6 ? '#1b4332' : (shade > 0.3 ? '#2d6a4f' : '#40916c');
+      const hasFruit = rnd() > 0.65;
+      FOREST_TREES.push({ x, y, size, foliageColor, hasFruit });
+    }
+  }
+})();
+
+// -------------------------------------------------------------
+// Efeito de Folhas Flutuantes Levadas pelo Vento
+// -------------------------------------------------------------
+const WIND_LEAVES = [];
+for (let i = 0; i < 40; i++) {
+  WIND_LEAVES.push({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    vx: 1.4 + Math.random() * 2.0,
+    vy: 0.7 + Math.random() * 1.4,
+    rot: Math.random() * Math.PI * 2,
+    vRot: (Math.random() - 0.5) * 0.05,
+    size: 4 + Math.random() * 5,
+    color: ['#52b788', '#2d6a4f', '#74c69d', '#e67e22', '#d4a373'][Math.floor(Math.random() * 5)]
+  });
+}
+
+// -------------------------------------------------------------
+// Sistema de Números Flutuantes de Dano e Recompensas
+// -------------------------------------------------------------
+const floatingTexts = [];
+function addFloatingText(x, y, text, color = '#ffd32a', size = 16, isCrit = false) {
+  floatingTexts.push({
+    x,
+    y,
+    text: isCrit ? '🔥 ' + text + '!' : text,
+    color,
+    size: isCrit ? size * 1.3 : size,
+    alpha: 1,
+    vy: -1.8,
+    lifetime: 45
+  });
+}
+
+function addPlayerXp(amount) {
+  if (!localPlayer) return;
+  localPlayer.xp = (localPlayer.xp || 0) + amount;
+  if (!localPlayer.level) localPlayer.level = 1;
+  if (!localPlayer.maxXp) localPlayer.maxXp = 100;
+
+  addFloatingText(localPlayer.x, localPlayer.y - 25, '+' + amount + ' XP', '#2ed573', 14);
+
+  while (localPlayer.xp >= localPlayer.maxXp) {
+    localPlayer.xp -= localPlayer.maxXp;
+    localPlayer.level++;
+    localPlayer.maxXp = Math.round(localPlayer.maxXp * 1.5);
+    localPlayer.hp = localPlayer.maxHp;
+    localPlayer.stamina = localPlayer.maxStamina;
+
+    sfx.playRespawn();
+    addFloatingText(localPlayer.x, localPlayer.y - 50, '⭐ SUBIU PARA O NÍVEL ' + localPlayer.level + '! ⭐', '#ffd32a', 22, true);
+    addParticle(localPlayer.x, localPlayer.y, '#ffd32a', 30, 8);
+    updateKillfeed([{ text: '👑 ' + localPlayer.name + ' alcançou o NÍVEL ' + localPlayer.level + ' da Floresta!' }]);
+  }
+  updateHUD(localPlayer);
+}
 
 // Dados de Rede e Mundo
 let socket = null;
@@ -390,7 +491,7 @@ const keys = {
   w: false, a: false, s: false, d: false,
   ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false,
   Space: false, Shift: false,
-  r: false, f: false, c: false, v: false, e: false, '1': false, '2': false
+  r: false, f: false, c: false, v: false, t: false, e: false, '1': false, '2': false
 };
 const mouse = { x: screenWidth / 2, y: screenHeight / 2, down: false };
 let nearbyNpc = null;
@@ -533,8 +634,11 @@ function startOfflineSimulation() {
     minedCount: 0,
     weapon: 'sword_starter',
     potions: { heal: 2, speed: 1 },
-    powers: { slam: false, beam: false, fire: false, shield: false },
-    powerCooldowns: { slam: 0, beam: 0, fire: 0, shield: 0 },
+    powers: { slam: false, beam: false, fire: false, shield: false, nature: false },
+    powerCooldowns: { slam: 0, beam: 0, fire: 0, shield: 0, nature: 0 },
+    level: 1,
+    xp: 0,
+    maxXp: 100,
     dashCooldown: 0,
     attackCooldown: 0,
     speedBoostTimer: 0,
@@ -696,6 +800,7 @@ function startOfflineSimulation() {
     if (localPlayer.powerCooldowns.beam > 0) localPlayer.powerCooldowns.beam -= 1 / 30;
     if (localPlayer.powerCooldowns.fire > 0) localPlayer.powerCooldowns.fire -= 1 / 30;
     if (localPlayer.powerCooldowns.shield > 0) localPlayer.powerCooldowns.shield -= 1 / 30;
+    if (localPlayer.powerCooldowns.nature > 0) localPlayer.powerCooldowns.nature -= 1 / 30;
 
     // Movimentação só se não estiver morto
     if (!localPlayer.isDead) {
@@ -751,6 +856,8 @@ function startOfflineSimulation() {
               localPlayer.gold += cr.gold;
               localPlayer.score += 40;
               localPlayer.minedCount++;
+              addPlayerXp(15);
+              addFloatingText(cr.x, cr.y - 15, '+70 🪙', '#ffd32a');
               sfx.playCoin();
               addParticle(cr.x, cr.y, '#ffd32a', 20, 7);
               updateKillfeed([{ text: `💎 ${localPlayer.name} minerou uma Gema (+${cr.gold} 🪙)!` }]);
@@ -767,6 +874,8 @@ function startOfflineSimulation() {
         const br = serverBreakables[i];
         if (Math.hypot(localPlayer.x - br.x, localPlayer.y - br.y) < localPlayer.radius + br.radius) {
           localPlayer.gold += br.gold;
+          addPlayerXp(8);
+          addFloatingText(br.x, br.y - 15, '+25 🪙', '#ffd32a');
           sfx.playCoin();
           addParticle(br.x, br.y, '#e67e22', 12, 5);
           serverBreakables.splice(i, 1);
@@ -780,6 +889,8 @@ function startOfflineSimulation() {
         if (Math.hypot(localPlayer.x - ch.x, localPlayer.y - ch.y) < localPlayer.radius + ch.radius) {
           localPlayer.gold += ch.gold;
           localPlayer.score += 25;
+          addPlayerXp(25);
+          addFloatingText(ch.x, ch.y - 15, '+50 🪙', '#ffd32a');
           sfx.playCoin();
           addParticle(ch.x, ch.y, '#ffd32a', 15, 6);
           updateKillfeed([{ text: `🪙 ${localPlayer.name} abriu um baú (+${ch.gold} Ouro)!` }]);
@@ -793,8 +904,14 @@ function startOfflineSimulation() {
       for (let i = serverOrbs.length - 1; i >= 0; i--) {
         const o = serverOrbs[i];
         if (Math.hypot(localPlayer.x - o.x, localPlayer.y - o.y) < localPlayer.radius + o.radius) {
-          if (o.type === 'heal') localPlayer.hp = Math.min(localPlayer.maxHp, localPlayer.hp + 30);
-          else localPlayer.stamina = Math.min(100, localPlayer.stamina + 30);
+          if (o.type === 'heal') {
+            localPlayer.hp = Math.min(localPlayer.maxHp, localPlayer.hp + 30);
+            addFloatingText(localPlayer.x, localPlayer.y - 15, '+30 HP', '#2ed573');
+          } else {
+            localPlayer.stamina = Math.min(100, localPlayer.stamina + 30);
+            addFloatingText(localPlayer.x, localPlayer.y - 15, '+30 Vigor', '#00e5ff');
+          }
+          addPlayerXp(10);
           sfx.playPotion();
           serverOrbs.splice(i, 1);
           break;
@@ -923,8 +1040,9 @@ function startOfflineSimulation() {
             if (boss.hp <= 0) {
               localPlayer.gold += 300;
               localPlayer.score += 600;
-              localPlayer.powers.slam = true;
-              localPlayer.powers.beam = true;
+              addPlayerXp(250);
+              checkOfflineQuestProgress('boss');
+              addFloatingText(boss.x, boss.y - 45, '+300 🪙', '#ffd32a', 20, true);
               sfx.playCoin();
               updateKillfeed([{ text: `👑 ${localPlayer.name} derrotou o ${boss.name.toUpperCase()} (+300 🪙)!` }]);
               boss.hp = 0;
@@ -950,6 +1068,7 @@ function startOfflineSimulation() {
           if (pr.ownerId !== b.id && b.hp > 0 && !b.isDead && !b.inSafeZone && Math.hypot(pr.x - b.x, pr.y - b.y) < b.radius + 6) {
             hit = true;
             b.hp -= pr.damage;
+            addFloatingText(b.x, b.y - 20, '-' + pr.damage, pr.color || '#ff4757');
             sfx.playHit();
             addParticle(pr.x, pr.y, pr.color, 8, 5);
             if (b.hp <= 0) {
@@ -957,6 +1076,8 @@ function startOfflineSimulation() {
               b.isDead = true;
               localPlayer.score += 100;
               localPlayer.gold += 70;
+              addPlayerXp(40);
+              addFloatingText(b.x, b.y - 35, '+70 🪙', '#ffd32a');
               sfx.playCoin();
               updateKillfeed([{ text: `⚡ ${localPlayer.name} derrotou ${b.name} (+70 🪙)!` }]);
               checkOfflineQuestProgress('kill');
@@ -1198,6 +1319,7 @@ function sendInput() {
   if (keys.f) keys.f = false;
   if (keys.c) keys.c = false;
   if (keys.v) keys.v = false;
+  if (keys.t) keys.t = false;
   if (keys['1']) keys['1'] = false;
   if (keys['2']) keys['2'] = false;
 }
@@ -1245,11 +1367,25 @@ function updateHUD(player) {
   document.getElementById('count-heal-pot').innerText = player.potions?.heal || 0;
   document.getElementById('count-speed-pot').innerText = player.potions?.speed || 0;
 
+  // Nível Elite e Barra de XP
+  const lvlEl = document.getElementById('level-num');
+  if (lvlEl) lvlEl.innerText = player.level || 1;
+  const xpFill = document.getElementById('xp-bar-fill');
+  if (xpFill) {
+    const curXp = player.xp || 0;
+    const maxXp = player.maxXp || 100;
+    const xpPercent = Math.min(100, Math.max(0, (curXp / maxXp) * 100));
+    xpFill.style.width = `${xpPercent}%`;
+  }
+  const xpValEl = document.getElementById('xp-val');
+  if (xpValEl) xpValEl.innerText = `${player.xp || 0} / ${player.maxXp || 100}`;
+
   // Slots de Poderes
   updatePowerSlot('slot-power-slam', 'cd-slam', player.powers?.slam, player.powerCooldowns?.slam);
   updatePowerSlot('slot-power-beam', 'cd-beam', player.powers?.beam, player.powerCooldowns?.beam);
   updatePowerSlot('slot-power-fire', 'cd-fire', player.powers?.fire, player.powerCooldowns?.fire);
   updatePowerSlot('slot-power-shield', 'cd-shield', player.powers?.shield, player.powerCooldowns?.shield);
+  updatePowerSlot('slot-power-nature', 'cd-nature', player.powers?.nature, player.powerCooldowns?.nature);
 
   checkNpcProximity(player);
 }
@@ -1395,6 +1531,10 @@ function renderShopItems() {
 }
 
 function buyItem(category, itemId) {
+  if (category === 'powers') {
+    alert('Super Poderes NÃO podem ser comprados com ouro! A única maneira de desbloquear novos poderes é completando as Missões Sagradas da Floresta!');
+    return;
+  }
   const item = shopCatalog[category]?.find(it => it.id === itemId);
   if (!item || !localPlayer) return;
 
@@ -1439,10 +1579,13 @@ function render() {
   ctx.save();
   ctx.translate(screenWidth / 2 - camera.x, screenHeight / 2 - camera.y);
 
-  // 1. Cenário de Grama Verde & Estradas
+  // 1. Cenário da Floresta Viva
   drawWorldBackground();
 
-  // 2. As 8 Cidades e seus Prédios
+  // 1.5. Árvores Procedurais da Floresta
+  drawTrees();
+
+  // 2. Os 8 Santuários da Floresta com Fogueiras
   drawCitiesAndBuildings();
 
   // 3. Orbes Sagrados
@@ -1519,7 +1662,13 @@ function render() {
   for (const bot of serverBots.values()) drawCharacter(bot);
   for (const player of serverPlayers.values()) drawCharacter(player);
 
+  // 14. Textos Flutuantes de Dano e Recompensas
+  drawFloatingTexts();
+
   ctx.restore();
+
+  // 15. Efeito de Folhas ao Vento na Tela
+  drawWindLeaves();
 
   drawMinimap();
 }
@@ -1621,7 +1770,100 @@ function drawWorldBackground() {
 }
 
 // -------------------------------------------------------------
-// Desenho das 8 Cidades e seus Edifícios
+// Desenho das Árvores Procedurais da Floresta
+// -------------------------------------------------------------
+function drawTrees() {
+  const margin = 120;
+  const left = camera.x - screenWidth / 2 - margin;
+  const right = camera.x + screenWidth / 2 + margin;
+  const top = camera.y - screenHeight / 2 - margin;
+  const bottom = camera.y + screenHeight / 2 + margin;
+
+  for (const t of FOREST_TREES) {
+    if (t.x < left || t.x > right || t.y < top || t.y > bottom) continue;
+    ctx.save();
+    // Sombra projetada
+    ctx.beginPath();
+    ctx.ellipse(t.x + t.size * 0.25, t.y + t.size * 0.35, t.size * 0.85, t.size * 0.45, -0.2, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+    ctx.fill();
+
+    // Tronco de madeira de carvalho
+    ctx.fillStyle = '#3e2723';
+    ctx.fillRect(t.x - t.size * 0.18, t.y - t.size * 0.2, t.size * 0.36, t.size * 0.5);
+
+    // Copa da Árvore (folhagem densa multicamadas)
+    ctx.fillStyle = t.foliageColor;
+    ctx.beginPath();
+    ctx.arc(t.x, t.y - t.size * 0.45, t.size * 0.68, 0, Math.PI * 2);
+    ctx.arc(t.x - t.size * 0.35, t.y - t.size * 0.18, t.size * 0.52, 0, Math.PI * 2);
+    ctx.arc(t.x + t.size * 0.35, t.y - t.size * 0.18, t.size * 0.52, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Reflexo de luz na copa
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.beginPath();
+    ctx.arc(t.x, t.y - t.size * 0.55, t.size * 0.42, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bagas e frutas silvestres
+    if (t.hasFruit) {
+      ctx.fillStyle = '#ff4757';
+      ctx.beginPath();
+      ctx.arc(t.x - t.size * 0.2, t.y - t.size * 0.32, 3, 0, Math.PI * 2);
+      ctx.arc(t.x + t.size * 0.24, t.y - t.size * 0.2, 3.5, 0, Math.PI * 2);
+      ctx.arc(t.x, t.y - t.size * 0.18, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+function drawWindLeaves() {
+  ctx.save();
+  for (const l of WIND_LEAVES) {
+    l.x += l.vx;
+    l.y += l.vy + Math.sin(Date.now() * 0.003 + l.x) * 0.6;
+    l.rot += l.vRot;
+    if (l.x > screenWidth + 20) l.x = -20;
+    if (l.y > screenHeight + 20) l.y = -20;
+
+    ctx.save();
+    ctx.translate(l.x, l.y);
+    ctx.rotate(l.rot);
+    ctx.fillStyle = l.color;
+    ctx.globalAlpha = 0.65;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, l.size, l.size * 0.45, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawFloatingTexts() {
+  for (let i = floatingTexts.length - 1; i >= 0; i--) {
+    const ft = floatingTexts[i];
+    ft.y += ft.vy;
+    ft.alpha -= 1 / ft.lifetime;
+    if (ft.alpha <= 0) {
+      floatingTexts.splice(i, 1);
+      continue;
+    }
+    ctx.save();
+    ctx.globalAlpha = ft.alpha;
+    ctx.font = `bold ${Math.round(ft.size)}px Segoe UI, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = ft.color;
+    ctx.shadowColor = '#000000';
+    ctx.shadowBlur = 6;
+    ctx.fillText(ft.text, ft.x, ft.y);
+    ctx.restore();
+  }
+}
+
+// -------------------------------------------------------------
+// Desenho dos Santuários da Floresta e Fogueiras Sagradas
 // -------------------------------------------------------------
 function drawCitiesAndBuildings() {
   for (const c of cities) {
@@ -1644,13 +1886,58 @@ function drawCitiesAndBuildings() {
     ctx.shadowBlur = 14;
     ctx.stroke();
 
+    // Círculo de Proteção do Santuário
     ctx.beginPath();
-    ctx.arc(c.x, c.y, 44, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(46, 213, 115, 0.3)';
+    ctx.arc(c.x, c.y, 50, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(46, 213, 115, 0.25)';
     ctx.fill();
     ctx.strokeStyle = '#2ed573';
     ctx.lineWidth = 2;
     ctx.stroke();
+
+    // Fogueira Sagrada Animada da Floresta
+    // 1. Círculo de Pedras
+    for (let k = 0; k < 8; k++) {
+      const a = (k / 8) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.arc(c.x + Math.cos(a) * 22, c.y + Math.sin(a) * 22, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#636e72';
+      ctx.fill();
+    }
+    // 2. Troncos Cruzados
+    ctx.strokeStyle = '#3e2723';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(c.x - 14, c.y - 12);
+    ctx.lineTo(c.x + 14, c.y + 12);
+    ctx.moveTo(c.x - 14, c.y + 12);
+    ctx.lineTo(c.x + 14, c.y - 12);
+    ctx.stroke();
+
+    // 3. Chamas Oscilantes e Brilho Quente
+    const flameTime = Date.now() * 0.015;
+    const f1 = Math.sin(flameTime) * 3;
+    const f2 = Math.cos(flameTime * 1.3) * 4;
+
+    ctx.beginPath();
+    ctx.arc(c.x, c.y - 4, 18, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 165, 2, 0.35)';
+    ctx.fill();
+
+    ctx.fillStyle = '#ff4757';
+    ctx.beginPath();
+    ctx.ellipse(c.x + f1 * 0.5, c.y - 8, 9, 14 + f2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffa502';
+    ctx.beginPath();
+    ctx.ellipse(c.x - f1 * 0.5, c.y - 6, 6, 11 + f1, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffd32a';
+    ctx.beginPath();
+    ctx.ellipse(c.x, c.y - 4, 4, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.font = 'bold 13px Segoe UI, sans-serif';
     ctx.fillStyle = '#2ed573';
@@ -1989,6 +2276,28 @@ function drawSpecialEffects() {
       ctx.lineWidth = 6;
       ctx.stroke();
       ctx.restore();
+    } else if (fx.type === 'nature_cyclone') {
+      fx.radius += 8;
+      fx.rot = (fx.rot || 0) + 0.22;
+      fx.alpha -= 0.035;
+      if (fx.alpha <= 0) { activeSpecialEffects.splice(i, 1); continue; }
+      ctx.save();
+      ctx.translate(fx.x, fx.y);
+      ctx.rotate(fx.rot);
+      ctx.globalAlpha = fx.alpha;
+      ctx.strokeStyle = '#2ed573';
+      ctx.lineWidth = 4;
+      ctx.shadowColor = '#2ed573';
+      ctx.shadowBlur = 16;
+      for (let k = 0; k < 6; k++) {
+        const a = (k / 6) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.arc(Math.cos(a) * fx.radius * 0.65, Math.sin(a) * fx.radius * 0.65, 12, 0, Math.PI * 2);
+        ctx.fillStyle = '#40916c';
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.restore();
     } else if (fx.type === 'laser_beam') {
       fx.alpha -= 0.08;
       if (fx.alpha <= 0) { activeSpecialEffects.splice(i, 1); continue; }
@@ -2166,6 +2475,7 @@ window.addEventListener('keydown', (e) => {
     if (e.key === 'f' || e.key === 'F') { keys.f = true; castPowerBeam(); }
     if (e.key === 'c' || e.key === 'C') { keys.c = true; castPowerFire(); }
     if (e.key === 'v' || e.key === 'V') { keys.v = true; castPowerShield(); }
+    if (e.key === 't' || e.key === 'T') { keys.t = true; castPowerNature(); }
   }
 
   if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
@@ -2181,6 +2491,7 @@ window.addEventListener('keyup', (e) => {
   if (e.key === 'f' || e.key === 'F') keys.f = false;
   if (e.key === 'c' || e.key === 'C') keys.c = false;
   if (e.key === 'v' || e.key === 'V') keys.v = false;
+  if (e.key === 't' || e.key === 'T') keys.t = false;
   if (e.key === '1') keys['1'] = false;
   if (e.key === '2') keys['2'] = false;
 });
@@ -2353,6 +2664,74 @@ function castPowerShield() {
   }
 }
 
+function castPowerNature() {
+  if (!localPlayer || localPlayer.isDead || !localPlayer.powers?.nature || localPlayer.inSafeZone) return;
+  if (localPlayer.powerCooldowns?.nature > 0) return;
+
+  if (isOfflineMode) {
+    localPlayer.powerCooldowns.nature = 10;
+    sfx.playNatureCyclone();
+    activeSpecialEffects.push({
+      type: 'nature_cyclone',
+      x: localPlayer.x,
+      y: localPlayer.y,
+      radius: 10,
+      color: '#2ed573',
+      alpha: 1
+    });
+
+    // Causa dano em área de 260px a bots e chefes
+    for (const b of serverBots.values()) {
+      if (b.hp > 0 && !b.isDead && !b.inSafeZone && Math.hypot(b.x - localPlayer.x, b.y - localPlayer.y) < 260) {
+        b.hp -= 50;
+        addFloatingText(b.x, b.y - 25, '-50', '#2ed573');
+        addParticle(b.x, b.y, '#2ed573', 12, 6);
+        const pa = Math.atan2(b.y - localPlayer.y, b.x - localPlayer.x);
+        b.x += Math.cos(pa) * 80;
+        b.y += Math.sin(pa) * 80;
+        if (b.hp <= 0) {
+          b.hp = 0;
+          b.isDead = true;
+          localPlayer.score += 100;
+          localPlayer.gold += 70;
+          addPlayerXp(40);
+          sfx.playCoin();
+          updateKillfeed([{ text: `🌪️ ${localPlayer.name} varreu ${b.name} com o Ciclone (+70 🪙)!` }]);
+          checkOfflineQuestProgress('kill');
+          setTimeout(() => {
+            const sp = getOfflineSpawnPoint();
+            b.hp = b.maxHp;
+            b.isDead = false;
+            b.x = sp.x;
+            b.y = sp.y;
+          }, 3000);
+        }
+      }
+    }
+
+    const bosses = [serverWorldBoss, serverSecondBoss];
+    for (const boss of bosses) {
+      if (boss && boss.hp > 0 && Math.hypot(boss.x - localPlayer.x, boss.y - localPlayer.y) < 280) {
+        boss.hp -= 50;
+        addFloatingText(boss.x, boss.y - 35, '-50', '#2ed573', 18);
+        addParticle(boss.x, boss.y, '#2ed573', 15, 6);
+        if (boss.hp <= 0) {
+          localPlayer.gold += 300;
+          localPlayer.score += 600;
+          addPlayerXp(250);
+          checkOfflineQuestProgress('boss');
+          addFloatingText(boss.x, boss.y - 50, '+300 🪙', '#ffd32a', 22, true);
+          sfx.playCoin();
+          updateKillfeed([{ text: `👑 ${localPlayer.name} aniquilou ${boss.name.toUpperCase()} (+300 🪙)!` }]);
+          boss.hp = 0;
+        }
+      }
+    }
+
+    updateHUD(localPlayer);
+  }
+}
+
 function distanceToSegment(px, py, x1, y1, x2, y2) {
   const dx = x2 - x1; const dy = y2 - y1;
   const l2 = dx * dx + dy * dy;
@@ -2377,6 +2756,31 @@ document.getElementById('slot-power-slam').addEventListener('click', castPowerSl
 document.getElementById('slot-power-beam').addEventListener('click', castPowerBeam);
 document.getElementById('slot-power-fire').addEventListener('click', castPowerFire);
 document.getElementById('slot-power-shield').addEventListener('click', castPowerShield);
+const slotNature = document.getElementById('slot-power-nature');
+if (slotNature) slotNature.addEventListener('click', castPowerNature);
+
+// Botão de Tela Cheia
+const btnFullscreen = document.getElementById('btn-fullscreen');
+if (btnFullscreen) {
+  btnFullscreen.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      btnFullscreen.innerText = '⛶ Sair Tela Cheia';
+    } else {
+      document.exitFullscreen().catch(() => {});
+      btnFullscreen.innerText = '⛶ Tela Cheia';
+    }
+  });
+}
+
+// Botão para abrir Missões a partir da Loja
+const btnGotoQuests = document.getElementById('btn-goto-quests-from-shop');
+if (btnGotoQuests) {
+  btnGotoQuests.addEventListener('click', () => {
+    closeShop();
+    openQuestsModal();
+  });
+}
 
 document.getElementById('btn-open-quests').addEventListener('click', openQuestsModal);
 document.getElementById('btn-close-quests').addEventListener('click', closeQuestsModal);
