@@ -394,14 +394,21 @@ canvas#minimapCanvas {
 }
 
 /* -----------------------------------------------------------
-   ELEMENTOS DE RPG (OURO, CIDADE, LOJA E PODERES)
+   ELEMENTOS DA FLORESTA (OURO, NÍVEL, SANTUÁRIO E PODERES)
    ----------------------------------------------------------- */
-/* Badge de Ouro no Topo */
-#gold-badge {
+/* Barra Superior no Topo */
+#top-bar-hud {
   position: absolute;
-  top: 20px;
+  top: 18px;
   left: 260px;
-  background: rgba(12, 17, 28, 0.85);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 50;
+}
+
+#gold-badge {
+  background: rgba(12, 17, 28, 0.88);
   border: 1px solid rgba(255, 211, 42, 0.4);
   padding: 8px 16px;
   border-radius: 20px;
@@ -414,7 +421,56 @@ canvas#minimapCanvas {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
-/* Banner de Zona Segura (Cidade) */
+#level-badge {
+  background: rgba(12, 17, 28, 0.88);
+  border: 1px solid rgba(46, 213, 115, 0.4);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #2ed573;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.xp-bar-bg {
+  width: 70px;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+#xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2ed573, #00e5ff);
+  transition: width 0.3s;
+}
+
+.btn-fullscreen {
+  background: rgba(12, 17, 28, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.btn-fullscreen:hover {
+  transform: scale(1.1);
+  border-color: #00e5ff;
+}
+
+/* Banner de Santuário Seguro da Floresta */
 #safe-zone-banner {
   position: absolute;
   top: 70px;
@@ -609,6 +665,37 @@ canvas#minimapCanvas {
   color: #00e5ff;
   background: rgba(0, 229, 255, 0.1);
   border-bottom: 2px solid #00e5ff;
+}
+
+.shop-power-notice {
+  background: rgba(243, 156, 18, 0.12);
+  border: 1px solid rgba(243, 156, 18, 0.35);
+  margin: 12px 24px 0 24px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #f1c40f;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-shop-quests {
+  align-self: flex-start;
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  border: 1px solid #f1c40f;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.btn-shop-quests:hover {
+  transform: translateY(-1px);
 }
 
 .shop-items-list {
