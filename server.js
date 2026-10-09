@@ -527,7 +527,7 @@ function getSpreadSpawn(allowSanctuary = false) {
     }
     if (!collides) return { x, y };
   }
-  return { x: 4000 + (Math.random() - 0.5) * 600, y: 4000 + (Math.random() - 0.5) * 600 };
+  return { x: 12000 + (Math.random() - 0.5) * 400, y: 12000 + (Math.random() - 0.5) * 400 };
 }
 
 function isInsideAnySanctuary(x, y) {
@@ -553,8 +553,8 @@ function onPlayerJoin(client) {
     color: defClass.color,
     hairColor: defClass.hairColor,
     skinColor: defClass.skinColor,
-    x: 4000,
-    y: 4000,
+    x: 12000 + (Math.random() - 0.5) * 200,
+    y: 12000 + (Math.random() - 0.5) * 200,
     vx: 0,
     vy: 0,
     walkStep: 0,
@@ -1637,9 +1637,9 @@ function checkEntityDeath(victim, killer) {
     }
 
     setTimeout(() => {
-      // Renasce no Santuário Central da Árvore-Mãe (4000, 4000)
-      victim.x = 4000 + (Math.random() - 0.5) * 80;
-      victim.y = 4000 + (Math.random() - 0.5) * 80;
+      // Renasce no Santuário Central da Árvore-Mãe (12000, 12000)
+      victim.x = 12000 + (Math.random() - 0.5) * 120;
+      victim.y = 12000 + (Math.random() - 0.5) * 120;
       victim.hp = victim.maxHp;
       victim.stamina = victim.maxStamina;
       victim.isDead = false;
