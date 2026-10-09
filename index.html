@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Jornada II: Arena dos Campeões (Multiplayer Online)</title>
+  <title>Jornada II: A Grande Floresta dos Campeões</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,8 +15,8 @@
     <!-- Tela Inicial de Entrada / Lobby -->
     <div id="lobby-screen">
       <div class="lobby-card">
-        <h1 class="lobby-title">⚔️ JORNADA II</h1>
-        <p class="lobby-subtitle">Arena Multiplayer em Tempo Real com Bots Inteligentes</p>
+        <h1 class="lobby-title">🌲 JORNADA II</h1>
+        <p class="lobby-subtitle">A Grande Floresta Ancestral • Apenas Missões dão Poderes!</p>
 
         <div class="form-group">
           <label for="player-name">Seu Nome / Apelido</label>
@@ -63,7 +63,7 @@
           <small style="color: #70a1ff; font-size: 11px; display: block; margin-top: 4px;">Deixe vazio ou padrão para jogar no servidor local / bots.</small>
         </div>
 
-        <button id="btn-start" class="btn-play">ENTRAR NA JORNADA</button>
+        <button id="btn-start" class="btn-play">ENTRAR NA FLORESTA</button>
 
         <div class="server-info-badge">
           <span id="server-status-dot">🟡 Conectando...</span>
@@ -81,11 +81,19 @@
         <div id="lb-entries"></div>
       </div>
 
-      <!-- Contador de Ouro da Jornada -->
-      <div id="gold-badge">
-        <span>🪙</span>
-        <span id="gold-val">50</span>
-        <span style="font-size: 11px; color: #8899aa;">Ouro</span>
+      <!-- Barra Superior: Ouro, Nível de Elite e Tela Cheia -->
+      <div id="top-bar-hud">
+        <div id="gold-badge">
+          <span>🪙</span>
+          <span id="gold-val">50</span>
+          <span style="font-size: 11px; color: #8899aa;">Ouro</span>
+        </div>
+        <div id="level-badge">
+          <span>⭐</span>
+          <span id="level-val">Nv. 1</span>
+          <div class="xp-bar-bg"><div id="xp-bar-fill" style="width: 0%;"></div></div>
+        </div>
+        <button id="btn-fullscreen" class="btn-fullscreen" title="Tela Cheia">⛶</button>
       </div>
 
       <!-- Barra de Vida do Colosso / Chefe do Mundo -->
@@ -99,17 +107,17 @@
         </div>
       </div>
 
-      <!-- Rastreador de Missões da Jornada -->
+      <!-- Rastreador de Missões da Floresta -->
       <div id="quest-tracker">
-        <div class="quest-title">📜 Missão da Jornada</div>
+        <div class="quest-title">📜 Missão Sagrada da Floresta</div>
         <div id="quest-desc">⚔️ Caçar 2 Inimigos (0/2)</div>
-        <div class="quest-reward">Recompensa: 🪙 150 Ouro</div>
+        <div class="quest-reward">Recompensa: ✨ Super Poder</div>
         <button id="btn-open-quests" class="btn-quest-open">⚡ Ver Missões de Poderes</button>
       </div>
 
-      <!-- Banner de Zona Segura (Cidade) -->
+      <!-- Banner de Zona Segura (Floresta) -->
       <div id="safe-zone-banner">
-        🛡️ CIDADE DOS GUARDIÕES (ZONA SEGURA)
+        🌿 SANTUÁRIO DA FLORESTA (ZONA SEGURA)
       </div>
 
       <!-- Tela de Morte / Renascimento -->
@@ -188,14 +196,20 @@
           <span class="slot-icon">🛡️</span>
           <div class="slot-cooldown-overlay" id="cd-shield" style="display: none;"></div>
         </div>
+        <!-- Fúria da Floresta -->
+        <div class="quick-slot locked" id="slot-power-nature" title="Fúria da Floresta [T]">
+          <span class="slot-key">T</span>
+          <span class="slot-icon">🌪️</span>
+          <div class="slot-cooldown-overlay" id="cd-nature" style="display: none;"></div>
+        </div>
       </div>
 
       <!-- Prompt de Interação com NPC -->
       <div id="npc-interact-prompt">
-        💬 Pressione [E] ou Clique para Abrir a Loja
+        💬 Pressione [E] ou Clique para Falar
       </div>
 
-      <!-- Minimapa Tático da Arena -->
+      <!-- Minimapa Tático da Floresta -->
       <div id="minimap-container">
         <canvas id="minimapCanvas" width="160" height="160"></canvas>
       </div>
@@ -213,17 +227,20 @@
       </div>
     </div>
 
-    <!-- Janela Modal da Loja da Cidade -->
+    <!-- Janela Modal do Bazar da Floresta -->
     <div id="shop-modal">
       <div class="shop-window">
         <div class="shop-header">
-          <h2 id="shop-npc-title">🏛️ Mercado da Cidade</h2>
+          <h2 id="shop-npc-title">🌿 Bazar dos Guardiões da Floresta</h2>
           <button class="shop-close-btn" id="btn-close-shop">×</button>
         </div>
         <div class="shop-tabs">
-          <button class="shop-tab-btn active" data-tab="weapons">⚔️ Espadas & Armas</button>
-          <button class="shop-tab-btn" data-tab="potions">🧪 Poções de Alquimia</button>
-          <button class="shop-tab-btn" data-tab="powers">✨ Super Poderes</button>
+          <button class="shop-tab-btn active" data-tab="weapons">⚔️ Armas & Cajados</button>
+          <button class="shop-tab-btn" data-tab="potions">🧪 Alquimia da Floresta</button>
+        </div>
+        <div class="shop-power-notice">
+          ✨ <b>Poderes Sagrados:</b> Super Poderes NÃO podem ser comprados com ouro! O único jeito de dominar um poder é completando as <b>Missões da Floresta</b>.
+          <button id="btn-goto-quests-from-shop" class="btn-shop-quests">📜 Abrir Missões de Poderes</button>
         </div>
         <div class="shop-items-list" id="shop-items-container">
           <!-- Itens injetados via JS -->
@@ -231,14 +248,14 @@
       </div>
     </div>
 
-    <!-- Janela Modal das Missões de Super Poderes -->
+    <!-- Janela Modal das Missões Sagradas da Floresta -->
     <div id="quests-modal">
       <div class="quests-window">
         <div class="quests-header">
-          <h2>📜 Missões para Desbloquear Super Poderes</h2>
+          <h2>📜 Missões Sagradas da Floresta (Único Jeito de Ganhar Poder!)</h2>
           <button class="quests-close-btn" id="btn-close-quests">×</button>
         </div>
-        <p class="quests-intro">Complete os desafios pelo grande mundo de grama para dominar poderes lendários!</p>
+        <p class="quests-intro">🌿 Super Poderes não podem ser comprados! Complete as provações sagradas para despertar cada poder em seu campeão:</p>
         <div class="quests-list" id="quests-list-container">
           <!-- Cards de Missões gerados via JS -->
         </div>
