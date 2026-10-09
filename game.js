@@ -850,6 +850,76 @@ function executeOfflineAttack(attacker, isPlayer) {
         lifetime: 65
       });
     });
+
+    if (isPlayer) {
+      // Também permite minerar cristais de diamante que estiverem na frente imediata do cajado
+      for (let i = serverMineCrystals.length - 1; i >= 0; i--) {
+        const cr = serverMineCrystals[i];
+        const dist = Math.hypot(cr.x - attacker.x, cr.y - attacker.y);
+        if (dist <= 95 + cr.radius) {
+          const dir = Math.atan2(cr.y - attacker.y, cr.x - attacker.x);
+          if (calcAngleDiff(dir, attacker.angle) < 1.35) {
+            cr.hp--;
+            localPlayer.gold += 20;
+            sfx.playHit();
+            addParticle(cr.x, cr.y, cr.color, 10, 5);
+            addFloatingText(cr.x, cr.y - 20, '-1', cr.color, 15);
+            if (cr.hp <= 0) {
+              localPlayer.gold += cr.gold;
+              localPlayer.score += 40;
+              localPlayer.minedCount++;
+              addPlayerXp(15);
+              addFloatingText(cr.x, cr.y - 15, `+${cr.gold} 🪙`, '#ffd32a');
+              sfx.playCoin();
+              addParticle(cr.x, cr.y, '#ffd32a', 20, 7);
+              updateKillfeed([{ text: `💎 ${localPlayer.name} minerou um Diamante (+${cr.gold} 🪙)!` }]);
+              checkOfflineQuestProgress('mine');
+              serverMineCrystals.splice(i, 1);
+              setTimeout(() => {
+                const sp = getOfflineSpawnPoint();
+                serverMineCrystals.push({
+                  id: 'cry_' + Date.now() + Math.random(),
+                  x: sp.x,
+                  y: sp.y,
+                  hp: 3,
+                  maxHp: 3,
+                  radius: 20,
+                  name: 'Diamante Sagrado',
+                  color: ['#00e5ff', '#ff4757', '#a29bfe', '#2ed573'][Math.floor(Math.random() * 4)],
+                  gold: 70
+                });
+              }, 12000);
+            }
+          }
+        }
+      }
+      // Também quebra barris na frente imediata do cajado
+      for (let i = serverBreakables.length - 1; i >= 0; i--) {
+        const br = serverBreakables[i];
+        const dist = Math.hypot(br.x - attacker.x, br.y - attacker.y);
+        if (dist <= 95 + br.radius) {
+          const dir = Math.atan2(br.y - attacker.y, br.x - attacker.x);
+          if (calcAngleDiff(dir, attacker.angle) < 1.35) {
+            localPlayer.gold += br.gold;
+            addPlayerXp(8);
+            addFloatingText(br.x, br.y - 15, `+${br.gold} 🪙`, '#ffd32a');
+            sfx.playCoin();
+            addParticle(br.x, br.y, '#e67e22', 12, 5);
+            serverBreakables.splice(i, 1);
+            setTimeout(() => {
+              const sp = getOfflineSpawnPoint();
+              serverBreakables.push({
+                id: 'brk_' + Date.now() + Math.random(),
+                x: sp.x,
+                y: sp.y,
+                radius: 16,
+                gold: 25
+              });
+            }, 10000);
+          }
+        }
+      }
+    }
     return;
   }
 
@@ -977,6 +1047,20 @@ function executeOfflineAttack(attacker, isPlayer) {
             updateKillfeed([{ text: `💎 ${localPlayer.name} quebrou uma Gema (+${cr.gold} 🪙)!` }]);
             checkOfflineQuestProgress('mine');
             serverMineCrystals.splice(i, 1);
+            setTimeout(() => {
+              const sp = getOfflineSpawnPoint();
+              serverMineCrystals.push({
+                id: 'cry_' + Date.now() + Math.random(),
+                x: sp.x,
+                y: sp.y,
+                hp: 3,
+                maxHp: 3,
+                radius: 20,
+                name: 'Diamante Sagrado',
+                color: ['#00e5ff', '#ff4757', '#a29bfe', '#2ed573'][Math.floor(Math.random() * 4)],
+                gold: 70
+              });
+            }, 12000);
           }
         }
       }
@@ -995,6 +1079,16 @@ function executeOfflineAttack(attacker, isPlayer) {
           sfx.playCoin();
           addParticle(br.x, br.y, '#e67e22', 12, 5);
           serverBreakables.splice(i, 1);
+          setTimeout(() => {
+            const sp = getOfflineSpawnPoint();
+            serverBreakables.push({
+              id: 'brk_' + Date.now() + Math.random(),
+              x: sp.x,
+              y: sp.y,
+              radius: 16,
+              gold: 25
+            });
+          }, 10000);
         }
       }
     }
@@ -1556,6 +1650,81 @@ function startOfflineSimulation() {
 
       let hit = false;
       if (pr.x < 0 || pr.x > arena.width || pr.y < 0 || pr.y > arena.height || pr.lifetime <= 0) hit = true;
+
+      // Colisão de Projéteis com Cristais de Diamante e Gemas Sagradas
+      if (!hit) {
+        for (let cIdx = serverMineCrystals.length - 1; cIdx >= 0; cIdx--) {
+          const cr = serverMineCrystals[cIdx];
+          if (Math.hypot(pr.x - cr.x, pr.y - cr.y) < cr.radius + 14) {
+            hit = true;
+            cr.hp--;
+            sfx.playHit();
+            addParticle(cr.x, cr.y, cr.color || '#00e5ff', 12, 5);
+            addFloatingText(cr.x, cr.y - 20, '-1', cr.color || '#00e5ff', 15);
+            if (pr.ownerId === localPlayer.id) {
+              localPlayer.gold += 20;
+            }
+            if (cr.hp <= 0) {
+              if (pr.ownerId === localPlayer.id) {
+                localPlayer.gold += cr.gold;
+                localPlayer.score += 40;
+                localPlayer.minedCount = (localPlayer.minedCount || 0) + 1;
+                addPlayerXp(15);
+                addFloatingText(cr.x, cr.y - 15, `+${cr.gold} 🪙 Diamante Minerado!`, '#ffd32a', 16, true);
+                sfx.playCoin();
+                addParticle(cr.x, cr.y, '#ffd32a', 20, 7);
+                updateKillfeed([{ text: `💎 ${localPlayer.name} minerou um Diamante Sagrado (+${cr.gold} 🪙)!` }]);
+                checkOfflineQuestProgress('mine');
+              }
+              serverMineCrystals.splice(cIdx, 1);
+              setTimeout(() => {
+                const sp = getOfflineSpawnPoint();
+                serverMineCrystals.push({
+                  id: 'cry_' + Date.now() + Math.random(),
+                  x: sp.x,
+                  y: sp.y,
+                  hp: 3,
+                  maxHp: 3,
+                  radius: 20,
+                  name: 'Diamante Sagrado',
+                  color: ['#00e5ff', '#ff4757', '#a29bfe', '#2ed573'][Math.floor(Math.random() * 4)],
+                  gold: 70
+                });
+              }, 12000);
+            }
+            break;
+          }
+        }
+      }
+
+      // Colisão de Projéteis com Barris Destrutíveis
+      if (!hit) {
+        for (let bIdx = serverBreakables.length - 1; bIdx >= 0; bIdx--) {
+          const br = serverBreakables[bIdx];
+          if (Math.hypot(pr.x - br.x, pr.y - br.y) < br.radius + 12) {
+            hit = true;
+            if (pr.ownerId === localPlayer.id) {
+              localPlayer.gold += br.gold;
+              addPlayerXp(8);
+              addFloatingText(br.x, br.y - 15, `+${br.gold} 🪙`, '#ffd32a');
+              sfx.playCoin();
+            }
+            addParticle(br.x, br.y, '#e67e22', 12, 5);
+            serverBreakables.splice(bIdx, 1);
+            setTimeout(() => {
+              const sp = getOfflineSpawnPoint();
+              serverBreakables.push({
+                id: 'brk_' + Date.now() + Math.random(),
+                x: sp.x,
+                y: sp.y,
+                radius: 16,
+                gold: 25
+              });
+            }, 10000);
+            break;
+          }
+        }
+      }
 
       if (!hit) {
         for (const boss of bosses) {
