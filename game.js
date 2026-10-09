@@ -281,22 +281,22 @@ const CHARACTER_CLASSES = {
 // A GRANDE FLORESTA DOS CAMPEÕES (8 SANTUÁRIOS SAGRADOS)
 // =============================================================
 const FOREST_SANCTUARIES = [
-  // 1. Árvore-Mãe Sagrada (Centro do Mundo)
-  { id: 'sanc_mother_tree', name: '🌳 Árvore-Mãe Ancestral', x: 4000, y: 4000, radius: 420, theme: 'ancient_tree' },
+  // 1. Grande Árvore-Mãe Ancestral (Centro 16000x16000)
+  { id: 'sanc_mother_tree', name: '🌳 Grande Árvore-Mãe Ancestral', x: 8000, y: 8000, radius: 550, theme: 'ancient_tree' },
   // 2. Bosque Sagrado dos Druidas (Noroeste)
-  { id: 'sanc_druids', name: '🌿 Bosque dos Druidas Silvestres', x: 1800, y: 1800, radius: 300, theme: 'druid_grove' },
+  { id: 'sanc_druids', name: '🌿 Bosque Sagrado dos Druidas', x: 3200, y: 3200, radius: 400, theme: 'druid_grove' },
   // 3. Lago Esmeralda dos Salgueiros (Nordeste)
-  { id: 'sanc_lake', name: '💧 Lago Esmeralda dos Salgueiros', x: 6200, y: 1800, radius: 300, theme: 'emerald_lake' },
+  { id: 'sanc_lake', name: '💧 Lago Esmeralda dos Salgueiros', x: 12800, y: 3200, radius: 420, theme: 'emerald_lake' },
   // 4. Clareira dos Cogumelos Luminosos (Sudoeste)
-  { id: 'sanc_mushrooms', name: '🍄 Clareira dos Cogumelos Luminosos', x: 1800, y: 6200, radius: 300, theme: 'mushrooms' },
+  { id: 'sanc_mushrooms', name: '🍄 Clareira dos Cogumelos Luminosos', x: 3200, y: 12800, radius: 400, theme: 'mushrooms' },
   // 5. Refúgio dos Forjadores da Madeira (Sudeste)
-  { id: 'sanc_forgers', name: '🪵 Refúgio dos Forjadores da Madeira', x: 6200, y: 6200, radius: 300, theme: 'wood_forge' },
+  { id: 'sanc_forgers', name: '🪵 Refúgio dos Forjadores da Madeira', x: 12800, y: 12800, radius: 400, theme: 'wood_forge' },
   // 6. Mirante dos Ventos das Copas (Norte)
-  { id: 'sanc_winds', name: '🌾 Mirante dos Ventos das Copas', x: 4000, y: 1200, radius: 300, theme: 'treetop_winds' },
+  { id: 'sanc_winds', name: '🌾 Mirante dos Ventos das Copas', x: 8000, y: 2200, radius: 400, theme: 'treetop_winds' },
   // 7. Bosque Encantado dos Cristais (Leste)
-  { id: 'sanc_fae', name: '🌸 Bosque Encantado dos Cristais', x: 6800, y: 4000, radius: 300, theme: 'fae_crystals' },
+  { id: 'sanc_fae', name: '🌸 Bosque Encantado dos Cristais', x: 13800, y: 8000, radius: 400, theme: 'fae_crystals' },
   // 8. Aldeia dos Guardiões da Mata (Oeste)
-  { id: 'sanc_hunters', name: '🏹 Aldeia dos Guardiões da Mata', x: 1200, y: 4000, radius: 300, theme: 'hunters_camp' }
+  { id: 'sanc_hunters', name: '🏹 Aldeia dos Guardiões da Mata', x: 2200, y: 8000, radius: 400, theme: 'hunters_camp' }
 ];
 
 const CITIES = FOREST_SANCTUARIES;
@@ -304,49 +304,49 @@ const CITIES = FOREST_SANCTUARIES;
 // Cabanas de Madeira, Tendas e Altares da Floresta
 const FOREST_STRUCTURES = [
   // 1. Árvore-Mãe Central
-  { id: 'b_mother_tree', name: 'Árvore-Mãe Sagrada', x: 4000, y: 3820, w: 180, h: 110, roofColor: '#1b4332', wallColor: '#3e2723', type: 'ancient_tree' },
-  { id: 'b_wood_smithy', name: 'Armaria da Árvore', x: 3850, y: 3980, w: 90, h: 75, roofColor: '#2d6a4f', wallColor: '#4e342e', type: 'shop' },
-  { id: 'b_herbal_hut', name: 'Cabana das Ervas Místicas', x: 4150, y: 3980, w: 90, h: 75, roofColor: '#40916c', wallColor: '#4e342e', type: 'shop' },
-  { id: 'b_elder_lodge', name: 'Tenda dos Anciãos', x: 4000, y: 4180, w: 95, h: 80, roofColor: '#52b788', wallColor: '#3e2723', type: 'house' },
+  { id: 'b_mother_tree', name: 'Grande Árvore-Mãe', x: 8000, y: 7820, w: 220, h: 140, roofColor: '#1b4332', wallColor: '#3e2723', type: 'ancient_tree' },
+  { id: 'b_wood_smithy', name: 'Armaria da Árvore', x: 7850, y: 7980, w: 95, h: 80, roofColor: '#2d6a4f', wallColor: '#4e342e', type: 'shop' },
+  { id: 'b_herbal_hut', name: 'Cabana das Ervas Místicas', x: 8150, y: 7980, w: 95, h: 80, roofColor: '#40916c', wallColor: '#4e342e', type: 'shop' },
+  { id: 'b_elder_lodge', name: 'Tenda dos Anciãos', x: 8000, y: 8190, w: 105, h: 85, roofColor: '#52b788', wallColor: '#3e2723', type: 'house' },
 
   // 2. Bosque dos Druidas
-  { id: 'b_druid_hut', name: 'Cabana do Grande Druida', x: 1800, y: 1700, w: 85, h: 75, roofColor: '#2d6a4f', wallColor: '#4e342e', type: 'house' },
-  { id: 'b_druid_altar', name: 'Altar de Menires', x: 1700, y: 1840, w: 80, h: 70, roofColor: '#1b4332', wallColor: '#5d4037', type: 'shop' },
-  { id: 'b_druid_herbs', name: 'Cultivo dos Bosques', x: 1900, y: 1840, w: 80, h: 70, roofColor: '#52b788', wallColor: '#3e2723', type: 'shop' },
+  { id: 'b_druid_hut', name: 'Cabana do Grande Druida', x: 3200, y: 3100, w: 90, h: 80, roofColor: '#2d6a4f', wallColor: '#4e342e', type: 'house' },
+  { id: 'b_druid_altar', name: 'Altar de Menires', x: 3100, y: 3240, w: 85, h: 75, roofColor: '#1b4332', wallColor: '#5d4037', type: 'shop' },
+  { id: 'b_druid_herbs', name: 'Cultivo dos Bosques', x: 3300, y: 3240, w: 85, h: 75, roofColor: '#52b788', wallColor: '#3e2723', type: 'shop' },
 
   // 3. Lago Esmeralda
-  { id: 'b_lake_shrine', name: 'Santuário da Água', x: 6200, y: 1700, w: 90, h: 80, roofColor: '#1b4332', wallColor: '#4e342e', type: 'house' },
-  { id: 'b_lake_pier', name: 'Cabana dos Pescadores', x: 6100, y: 1840, w: 80, h: 70, roofColor: '#2d6a4f', wallColor: '#5d4037', type: 'house' },
+  { id: 'b_lake_shrine', name: 'Santuário da Água', x: 12800, y: 3100, w: 95, h: 85, roofColor: '#1b4332', wallColor: '#4e342e', type: 'house' },
+  { id: 'b_lake_pier', name: 'Cabana dos Pescadores', x: 12700, y: 3240, w: 85, h: 75, roofColor: '#2d6a4f', wallColor: '#5d4037', type: 'house' },
 
   // 4. Clareira dos Cogumelos
-  { id: 'b_shroom_hut', name: 'Tenda do Xamã', x: 1800, y: 6100, w: 90, h: 80, roofColor: '#8e44ad', wallColor: '#4e342e', type: 'house' },
-  { id: 'b_shroom_bazaar', name: 'Bazar dos Fungos', x: 1700, y: 6240, w: 80, h: 70, roofColor: '#9b59b6', wallColor: '#3e2723', type: 'shop' },
+  { id: 'b_shroom_hut', name: 'Tenda do Xamã', x: 3200, y: 12700, w: 95, h: 85, roofColor: '#8e44ad', wallColor: '#4e342e', type: 'house' },
+  { id: 'b_shroom_bazaar', name: 'Bazar dos Fungos', x: 3100, y: 12840, w: 85, h: 75, roofColor: '#9b59b6', wallColor: '#3e2723', type: 'shop' },
 
   // 5. Forjadores da Madeira
-  { id: 'b_forg_hut', name: 'Forja da Madeira e Pedra', x: 6200, y: 6100, w: 95, h: 80, roofColor: '#c0392b', wallColor: '#4e342e', type: 'shop' },
+  { id: 'b_forg_hut', name: 'Forja da Madeira e Pedra', x: 12800, y: 12700, w: 100, h: 85, roofColor: '#c0392b', wallColor: '#4e342e', type: 'shop' },
 
   // 6. Mirante dos Ventos
-  { id: 'b_wind_lodge', name: 'Torre de Vigia de Madeira', x: 4000, y: 1100, w: 85, h: 85, roofColor: '#2d6a4f', wallColor: '#3e2723', type: 'house' },
+  { id: 'b_wind_lodge', name: 'Torre de Vigia de Madeira', x: 8000, y: 2100, w: 90, h: 90, roofColor: '#2d6a4f', wallColor: '#3e2723', type: 'house' },
 
   // 7. Bosque dos Cristais
-  { id: 'b_crystal_shrine', name: 'Santuário do Oráculo', x: 6800, y: 3900, w: 90, h: 85, roofColor: '#6c5ce7', wallColor: '#3e2723', type: 'house' },
+  { id: 'b_crystal_shrine', name: 'Santuário do Oráculo', x: 13800, y: 7900, w: 95, h: 90, roofColor: '#6c5ce7', wallColor: '#3e2723', type: 'house' },
 
   // 8. Aldeia dos Guardiões
-  { id: 'b_hunter_cabin', name: 'Cabana dos Caçadores', x: 1200, y: 3900, w: 90, h: 75, roofColor: '#d35400', wallColor: '#4e342e', type: 'house' }
+  { id: 'b_hunter_cabin', name: 'Cabana dos Caçadores', x: 2200, y: 7900, w: 95, h: 80, roofColor: '#d35400', wallColor: '#4e342e', type: 'house' }
 ];
 
 const BUILDINGS = FOREST_STRUCTURES;
 
 // NPCs da Floresta
 const NPCS = [
-  { id: 'npc_blacksmith', name: 'Brok, o Forjador da Floresta', icon: '🔨', x: 3920, y: 3980, radius: 28, type: 'weapons' },
-  { id: 'npc_alchemist', name: 'Sylva, a Herbalista', icon: '🧪', x: 4080, y: 3980, radius: 28, type: 'potions' },
-  { id: 'npc_elder', name: 'Ancião da Floresta', icon: '📜', x: 4000, y: 3900, radius: 28, type: 'quests' },
-  { id: 'npc_druid', name: 'Druida Rowan', icon: '🌿', x: 1800, y: 1800, radius: 26, type: 'potions' },
-  { id: 'npc_frost_druid', name: 'Pescador do Lago', icon: '🎣', x: 6200, y: 1800, radius: 26, type: 'weapons' },
-  { id: 'npc_xama', name: 'Xamã dos Cogumelos', icon: '🍄', x: 1800, y: 6200, radius: 26, type: 'potions' },
-  { id: 'npc_wood_smith', name: 'Ferreiro dos Troncos', icon: '🪵', x: 6200, y: 6200, radius: 26, type: 'weapons' },
-  { id: 'npc_hunter', name: 'Lorde dos Caçadores', icon: '🏹', x: 1200, y: 4000, radius: 26, type: 'weapons' }
+  { id: 'npc_blacksmith', name: 'Brok, o Forjador da Floresta', icon: '🔨', x: 7920, y: 7980, radius: 28, type: 'weapons' },
+  { id: 'npc_alchemist', name: 'Sylva, a Herbalista', icon: '🧪', x: 8080, y: 7980, radius: 28, type: 'potions' },
+  { id: 'npc_elder', name: 'Ancião da Floresta', icon: '📜', x: 8000, y: 7900, radius: 28, type: 'quests' },
+  { id: 'npc_druid', name: 'Druida Rowan', icon: '🌿', x: 3200, y: 3200, radius: 26, type: 'potions' },
+  { id: 'npc_frost_druid', name: 'Pescador do Lago', icon: '🎣', x: 12800, y: 3200, radius: 26, type: 'weapons' },
+  { id: 'npc_xama', name: 'Xamã dos Cogumelos', icon: '🍄', x: 3200, y: 12800, radius: 26, type: 'potions' },
+  { id: 'npc_wood_smith', name: 'Ferreiro dos Troncos', icon: '🪵', x: 12800, y: 12800, radius: 26, type: 'weapons' },
+  { id: 'npc_hunter', name: 'Lorde dos Caçadores', icon: '🏹', x: 2200, y: 8000, radius: 26, type: 'weapons' }
 ];
 
 // Missões da Floresta para Ganhar Poderes (ÚNICO JEITO DE GANHAR PODER!)
@@ -355,7 +355,7 @@ const POWER_QUESTS = [
   { id: 'q_beam', name: '🏹 Harmonia Astral', desc: 'Minere 2 Cristais de Gemas', target: 2, type: 'mine', rewardPower: 'power_beam', powerName: 'Raio Astral [F]' },
   { id: 'q_fire', name: '🔥 Fogo Ancestral', desc: 'Derrote 3 Inimigos na Floresta', target: 3, type: 'kill', rewardPower: 'power_fire', powerName: 'Meteoro Flamejante [C]' },
   { id: 'q_shield', name: '🛡️ Relíquia Sagrada', desc: 'Abra 3 Baús de Tesouro', target: 3, type: 'chest', rewardPower: 'power_shield', powerName: 'Escudo Divino [V]' },
-  { id: 'q_nature', name: '🌪️ Fúria da Floresta', desc: 'Derrote 1 Chefe Ancião da Mata', target: 1, type: 'boss', rewardPower: 'power_nature', powerName: 'Ciclone de Folhas [T]' }
+  { id: 'q_nature', name: '🌪️ Fúria da Floresta', desc: 'Derrote 1 Titã Guardião da Floresta', target: 1, type: 'boss', rewardPower: 'power_nature', powerName: 'Ciclone de Folhas [T]' }
 ];
 
 // Catálogo das Lojas (PODERES NÃO PODEM SER COMPRADOS! APENAS ARMAS E POÇÕES)
@@ -373,30 +373,30 @@ const SHOP_CATALOG = {
 };
 
 // -------------------------------------------------------------
-// Árvores Procedurais da Floresta (450 Árvores no Mundo 8000x8000)
+// Árvores Procedurais da Floresta (1250 Árvores no Mundo 16000x16000)
 // -------------------------------------------------------------
 const FOREST_TREES = [];
 (function generateForestTrees() {
-  let seed = 98765;
+  let seed = 43210;
   function rnd() {
     seed = (seed * 9301 + 49297) % 233280;
     return seed / 233280;
   }
-  for (let i = 0; i < 450; i++) {
-    const x = 150 + rnd() * 7700;
-    const y = 150 + rnd() * 7700;
+  for (let i = 0; i < 1250; i++) {
+    const x = 200 + rnd() * 15600;
+    const y = 200 + rnd() * 15600;
     let insideSanc = false;
     for (const s of FOREST_SANCTUARIES) {
-      if (Math.hypot(x - s.x, y - s.y) < s.radius + 70) {
+      if (Math.hypot(x - s.x, y - s.y) < s.radius + 80) {
         insideSanc = true;
         break;
       }
     }
     if (!insideSanc) {
-      const size = 34 + rnd() * 30;
+      const size = 36 + rnd() * 32;
       const shade = rnd();
       const foliageColor = shade > 0.6 ? '#1b4332' : (shade > 0.3 ? '#2d6a4f' : '#40916c');
-      const hasFruit = rnd() > 0.65;
+      const hasFruit = rnd() > 0.6;
       FOREST_TREES.push({ x, y, size, foliageColor, hasFruit });
     }
   }
@@ -406,12 +406,12 @@ const FOREST_TREES = [];
 // Efeito de Folhas Flutuantes Levadas pelo Vento
 // -------------------------------------------------------------
 const WIND_LEAVES = [];
-for (let i = 0; i < 40; i++) {
+for (let i = 0; i < 50; i++) {
   WIND_LEAVES.push({
     x: Math.random() * window.innerWidth,
     y: Math.random() * window.innerHeight,
-    vx: 1.4 + Math.random() * 2.0,
-    vy: 0.7 + Math.random() * 1.4,
+    vx: 1.4 + Math.random() * 2.2,
+    vy: 0.7 + Math.random() * 1.5,
     rot: Math.random() * Math.PI * 2,
     vRot: (Math.random() - 0.5) * 0.05,
     size: 4 + Math.random() * 5,
@@ -419,9 +419,6 @@ for (let i = 0; i < 40; i++) {
   });
 }
 
-// -------------------------------------------------------------
-// Sistema de Números Flutuantes de Dano e Recompensas
-// -------------------------------------------------------------
 const floatingTexts = [];
 function addFloatingText(x, y, text, color = '#ffd32a', size = 16, isCrit = false) {
   floatingTexts.push({
@@ -462,7 +459,7 @@ function addPlayerXp(amount) {
 // Dados de Rede e Mundo
 let socket = null;
 let myId = null;
-let arena = { width: 8000, height: 8000 };
+let arena = { width: 16000, height: 16000 };
 let cities = CITIES;
 let buildings = BUILDINGS;
 let npcs = NPCS;
@@ -482,10 +479,11 @@ let serverChests = [];
 let serverOrbs = [];
 let serverWorldBoss = null;
 let serverSecondBoss = null;
+let serverThirdBoss = null;
 let particles = [];
 let activeSpecialEffects = [];
 
-const camera = { x: 4000, y: 4000 };
+const camera = { x: 8000, y: 8000 };
 
 const keys = {
   w: false, a: false, s: false, d: false,
@@ -590,19 +588,19 @@ function startOfflineSimulation() {
 
   const dot = document.getElementById('server-status-dot');
   const pingInd = document.getElementById('ping-indicator');
-  if (dot) dot.innerText = '🌿 8 Cidades (Offline)';
+  if (dot) dot.innerText = '🌿 Floresta Gigante (Offline)';
   if (pingInd) pingInd.innerText = '60 FPS (Local)';
 
-  arena = { width: 8000, height: 8000 };
-  cities = CITIES;
-  buildings = BUILDINGS;
+  arena = { width: 16000, height: 16000 };
+  cities = FOREST_SANCTUARIES;
+  buildings = FOREST_STRUCTURES;
   npcs = NPCS;
 
   obstacles = [
-    { x: 3000, y: 3000, radius: 95, type: 'rock', label: 'Pedra Ancestral' },
-    { x: 5000, y: 5000, radius: 105, type: 'pillar', label: 'Ruínas Antigas' },
-    { x: 3000, y: 5000, radius: 95, type: 'rock', label: 'Pico Escarpado' },
-    { x: 5000, y: 3000, radius: 95, type: 'pillar', label: 'Obelisco Cósmico' }
+    { x: 5000, y: 5000, radius: 110, type: 'rock', label: 'Pedra de Musgo Ancestral' },
+    { x: 11000, y: 11000, radius: 120, type: 'pillar', label: 'Menir dos Druidas' },
+    { x: 5000, y: 11000, radius: 110, type: 'rock', label: 'Pico das Corujas' },
+    { x: 11000, y: 5000, radius: 110, type: 'pillar', label: 'Monólito Cósmico' }
   ];
 
   myId = 'local_hero';
@@ -615,8 +613,8 @@ function startOfflineSimulation() {
     color: cData.color,
     hairColor: cData.hairColor,
     skinColor: cData.skinColor,
-    x: 4000,
-    y: 4000,
+    x: 8000,
+    y: 8000,
     vx: 0,
     vy: 0,
     walkStep: 0,
@@ -648,10 +646,10 @@ function startOfflineSimulation() {
   };
   serverPlayers.set(myId, localPlayer);
 
-  // Spawna 45 Cristais
+  // Spawna 110 Cristais de Gemas
   serverMineCrystals = [];
   const cryColors = ['#00e5ff', '#ff4757', '#a29bfe', '#2ed573'];
-  for (let i = 0; i < 45; i++) {
+  for (let i = 0; i < 110; i++) {
     const sp = getOfflineSpawnPoint();
     serverMineCrystals.push({
       id: 'cry_' + i,
@@ -666,9 +664,9 @@ function startOfflineSimulation() {
     });
   }
 
-  // Spawna 50 Barris
+  // Spawna 120 Barris Destrutíveis
   serverBreakables = [];
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 120; i++) {
     const sp = getOfflineSpawnPoint();
     serverBreakables.push({
       id: 'brk_' + i,
@@ -679,9 +677,9 @@ function startOfflineSimulation() {
     });
   }
 
-  // Spawna 40 Baús
+  // Spawna 100 Baús de Tesouro
   serverChests = [];
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 100; i++) {
     const sp = getOfflineSpawnPoint();
     serverChests.push({
       id: 'ch_' + i,
@@ -692,9 +690,9 @@ function startOfflineSimulation() {
     });
   }
 
-  // Spawna 65 Orbes
+  // Spawna 130 Orbes de Vida e Energia
   serverOrbs = [];
-  for (let i = 0; i < 65; i++) {
+  for (let i = 0; i < 130; i++) {
     const sp = getOfflineSpawnPoint();
     serverOrbs.push({
       id: 'orb_' + i,
@@ -706,40 +704,58 @@ function startOfflineSimulation() {
     });
   }
 
-  // 2 Chefes do Mundo
+  // 3 CHEFES TITÂNICOS HUMANOS (PESSOAS TITÃS GIGANTES!)
   serverWorldBoss = {
     id: 'world_colossus',
-    name: '👑 Colosso Titânico Ancestral',
-    x: 5800,
-    y: 4000,
+    name: '👑 Rei Titã da Floresta Ancestral',
+    x: 11000,
+    y: 8000,
     radius: 65,
-    hp: 500,
-    maxHp: 500,
-    color: '#e67e22',
+    hp: 800,
+    maxHp: 800,
+    color: '#ffd32a',
     speed: 3.2,
-    angle: 0
+    angle: 0,
+    walkStep: 0
   };
 
   serverSecondBoss = {
-    id: 'world_dragon',
-    name: '🐉 Dragão dos Vulcões Antigos',
-    x: 6200,
-    y: 5200,
-    radius: 70,
-    hp: 600,
-    maxHp: 600,
-    color: '#d63031',
+    id: 'world_ignis',
+    name: '🔥 Lorde Ignis, O Cavaleiro do Fogo',
+    x: 8000,
+    y: 12000,
+    radius: 65,
+    hp: 750,
+    maxHp: 750,
+    color: '#ff4757',
     speed: 3.5,
-    angle: 0
+    angle: 0,
+    walkStep: 0
   };
 
-  // 20 Bots Humanoides Espalhados pelo Mundo
+  serverThirdBoss = {
+    id: 'world_druid',
+    name: '⚡ Arquidruida das Tempestades',
+    x: 5000,
+    y: 5000,
+    radius: 60,
+    hp: 700,
+    maxHp: 700,
+    color: '#00e5ff',
+    speed: 3.4,
+    angle: 0,
+    walkStep: 0
+  };
+
+  // 35 BOTS HUMANOS DE ELITE ESPALHADOS PELA FLORESTA
   const BOT_NAMES = [
-    'Arconte Sylas', 'Valquíria Kira', 'Titã Gorok', 'Sombra Vane',
-    'Sentinela Kael', 'Caçador Rex', 'Guardião Thorne', 'Oráculo Zeph',
-    'Lorde Malakor', 'Druida Rowan', 'Lâmina Lyra', 'Paladino Uther',
-    'Cavaleiro Galahad', 'Arqueira Diana', 'Mestre Roland', 'Cavaleiro Kaelen',
-    'Feiticeira Morgana', 'Lorde Alistair', 'Ranger Varis', 'Guarda Gareth'
+    'Sir Galahad', 'Mestre Eldon', 'Valquíria Freya', 'Lorde Alistair', 'Ranger Sylas',
+    'Assassino Kael', 'Arconte Zephyr', 'Guardião Thorne', 'Druida Rowan', 'Feiticeira Morgana',
+    'Paladino Uther', 'Caçador Rex', 'Lorde Malakor', 'Cavaleiro Kaelen', 'Arqueira Diana',
+    'Mestre Roland', 'Sentinela Orin', 'Valquíria Kira', 'Titã Gorok', 'Sombra Vane',
+    'Guerreiro Ragnar', 'Maga Lunafreya', 'Ranger Varis', 'Lâmina Lyra', 'Druida Tarsus',
+    'Xamã Volkan', 'Bárbaro Conan', 'Caçadora Astrid', 'Lorde Fenris', 'Cavaleiro Arthur',
+    'Feiticeiro Morpheus', 'Arqueiro Robin', 'Guardiã Elanor', 'Assassina Viper', 'Arquimago Merlin'
   ];
   const clList = ['warrior', 'mage', 'ranger', 'shadow'];
   serverBots.clear();
@@ -764,10 +780,10 @@ function startOfflineSimulation() {
       walkStep: 0,
       speed: 5.5,
       angle: Math.random() * Math.PI * 2,
-      hp: 110,
-      maxHp: 110,
+      hp: 120,
+      maxHp: 120,
       gold: 50,
-      score: 0,
+      score: 100 + Math.floor(Math.random() * 250),
       shieldTimer: 0,
       weapon: idx % 2 === 0 ? 'sword_rune' : 'sword_starter',
       radius: 24,
@@ -776,7 +792,7 @@ function startOfflineSimulation() {
     });
   });
 
-  // Loop de Simulação Offline (30 FPS)
+// Loop de Simulação Offline (30 FPS)
   offlineSimulationInterval = setInterval(() => {
     if (!isOfflineMode || !localPlayer) return;
 
@@ -955,7 +971,7 @@ function startOfflineSimulation() {
     }
 
     // Chefes do Mundo
-    const bosses = [serverWorldBoss, serverSecondBoss];
+    const bosses = [serverWorldBoss, serverSecondBoss, serverThirdBoss];
     for (const boss of bosses) {
       if (boss && boss.hp > 0) {
         const dToBoss = Math.hypot(localPlayer.x - boss.x, localPlayer.y - boss.y);
@@ -1135,8 +1151,8 @@ function respawnOfflinePlayer() {
   if (overlay) overlay.style.display = 'none';
 
   // Renasce na Capital Central (4000, 4000)
-  localPlayer.x = 4000 + (Math.random() - 0.5) * 80;
-  localPlayer.y = 4000 + (Math.random() - 0.5) * 80;
+  localPlayer.x = 8000 + (Math.random() - 0.5) * 100;
+  localPlayer.y = 8000 + (Math.random() - 0.5) * 100;
   localPlayer.hp = localPlayer.maxHp;
   localPlayer.stamina = localPlayer.maxStamina;
   localPlayer.isDead = false;
@@ -1157,7 +1173,7 @@ function getOfflineSpawnPoint() {
     }
     if (!inCity) return { x, y };
   }
-  return { x: 4000 + (Math.random() - 0.5) * 1000, y: 4000 + (Math.random() - 0.5) * 1000 };
+  return { x: 8000 + (Math.random() - 0.5) * 2000, y: 8000 + (Math.random() - 0.5) * 2000 };
 }
 
 function checkOfflineQuestProgress(actionType) {
@@ -1208,6 +1224,7 @@ function handleServerMessage(msg) {
     serverOrbs = msg.orbs || [];
     serverWorldBoss = msg.worldBoss || null;
     serverSecondBoss = msg.secondBoss || null;
+    serverThirdBoss = msg.thirdBoss || null;
 
     updateLeaderboard();
   } else if (msg.type === 'you_died') {
@@ -1346,7 +1363,12 @@ function updateHUD(player) {
   const bossBar = document.getElementById('boss-hud-bar');
   const bossFill = document.getElementById('boss-hp-fill');
   const bossVal = document.getElementById('boss-hp-val');
-  const activeBoss = (serverWorldBoss && serverWorldBoss.hp > 0) ? serverWorldBoss : ((serverSecondBoss && serverSecondBoss.hp > 0) ? serverSecondBoss : null);
+  const activeBosses = [serverWorldBoss, serverSecondBoss, serverThirdBoss].filter(b => b && b.hp > 0);
+  let activeBoss = null;
+  if (activeBosses.length > 0) {
+    activeBosses.sort((a, b) => Math.hypot(player.x - a.x, player.y - a.y) - Math.hypot(player.x - b.x, player.y - b.y));
+    activeBoss = activeBosses[0];
+  }
   if (activeBoss) {
     bossBar.style.display = 'block';
     const bRatio = Math.max(0, (activeBoss.hp / activeBoss.maxHp) * 100);
@@ -1620,9 +1642,10 @@ function render() {
     drawObstacle(obs);
   }
 
-  // 8. Chefes Titânicos
-  if (serverWorldBoss && serverWorldBoss.hp > 0) drawBoss(serverWorldBoss);
-  if (serverSecondBoss && serverSecondBoss.hp > 0) drawBoss(serverSecondBoss);
+  // 8. Chefes Titânicos (Pessoas Titãs Humanoides Gigantes)
+  if (serverWorldBoss) drawBoss(serverWorldBoss);
+  if (serverSecondBoss) drawBoss(serverSecondBoss);
+  if (serverThirdBoss) drawBoss(serverThirdBoss);
 
   // 9. NPCs das 8 Cidades
   for (const npc of npcs) {
@@ -1717,29 +1740,30 @@ function drawWorldBackground() {
     }
   }
 
-  // Rede de Rodovias / Caminhos de Terra Conectando as 8 Cidades
+  // Rede de Trilhas Ancestrais Conectando os 8 Santuários na Floresta Gigante
   ctx.save();
-  ctx.strokeStyle = '#8d6e63';
-  ctx.lineWidth = 44;
+  ctx.strokeStyle = '#5d4037';
+  ctx.lineWidth = 48;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.beginPath();
-  // Da Capital (4000, 4000) para cada uma das outras 7 cidades
+  // Da Árvore-Mãe (8000, 8000) para cada um dos outros 7 santuários
   const roads = [
-    [4000, 4000, 1800, 1800], // Para Bosques
-    [4000, 4000, 6200, 1800], // Para Lago
-    [4000, 4000, 1800, 6200], // Para Oásis
-    [4000, 4000, 6200, 6200], // Para Forja
-    [4000, 4000, 4000, 1200], // Para Porto
-    [4000, 4000, 6800, 4000], // Para Santuário
-    [4000, 4000, 1200, 4000], // Para Caçadores
-    // Rodovia Perimetral entre as vilas
-    [1800, 1800, 4000, 1200],
-    [4000, 1200, 6200, 1800],
-    [6200, 1800, 6800, 4000],
-    [6800, 4000, 6200, 6200],
-    [1800, 1800, 1200, 4000],
-    [1200, 4000, 1800, 6200]
+    [8000, 8000, 3200, 3200],   // Para Bosque dos Druidas
+    [8000, 8000, 12800, 3200],  // Para Lago Esmeralda
+    [8000, 8000, 3200, 12800],  // Para Clareira dos Cogumelos
+    [8000, 8000, 12800, 12800], // Para Forjadores da Madeira
+    [8000, 8000, 8000, 2200],   // Para Mirante dos Ventos
+    [8000, 8000, 13800, 8000],  // Para Bosque dos Cristais
+    [8000, 8000, 2200, 8000],   // Para Guardiões da Mata
+    // Circuito Perimetral entre os bosques
+    [3200, 3200, 8000, 2200],
+    [8000, 2200, 12800, 3200],
+    [12800, 3200, 13800, 8000],
+    [13800, 8000, 12800, 12800],
+    [12800, 12800, 8000, 14000],
+    [3200, 3200, 2200, 8000],
+    [2200, 8000, 3200, 12800]
   ];
   roads.forEach(r => {
     ctx.moveTo(r[0], r[1]);
@@ -1747,15 +1771,24 @@ function drawWorldBackground() {
   });
   ctx.stroke();
 
-  ctx.strokeStyle = '#a1887f';
-  ctx.lineWidth = 26;
+  ctx.strokeStyle = '#8d6e63';
+  ctx.lineWidth = 28;
   ctx.stroke();
   ctx.restore();
 
-  // Grande Lago Glacial perto da Vila do Lago (6200, 2200)
+  // Grandioso Lago Esmeralda dos Salgueiros (12800, 4200)
   ctx.save();
   ctx.beginPath();
-  ctx.ellipse(6200, 2200, 320, 220, 0, 0, Math.PI * 2);
+  ctx.ellipse(12800, 4200, 700, 450, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#16a085';
+  ctx.fill();
+  ctx.strokeStyle = '#2ecc71';
+  ctx.lineWidth = 14;
+  ctx.stroke();
+
+  // Lago Místico das Brumas (4500, 11500)
+  ctx.beginPath();
+  ctx.ellipse(4500, 11500, 500, 320, 0, 0, Math.PI * 2);
   ctx.fillStyle = '#2980b9';
   ctx.fill();
   ctx.strokeStyle = '#3498db';
@@ -2058,7 +2091,21 @@ function drawCharacter(ent) {
   ctx.save();
   ctx.rotate(ent.angle);
 
-  // Perna Esquerda e Bota
+  // --- CAPA DE ELITE DO HERÓI (BILLOWING HERO CAPE) ---
+  const capeWave = Math.sin(walkStep * 1.5) * 5;
+  ctx.fillStyle = ent.isBot ? '#b71540' : '#4834d4';
+  ctx.beginPath();
+  ctx.moveTo(-10, -7);
+  ctx.lineTo(-24 - Math.abs(legCycle) * 0.4, -12 + capeWave);
+  ctx.lineTo(-22 - Math.abs(legCycle) * 0.4, 12 - capeWave);
+  ctx.lineTo(-10, 7);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#ffd32a';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // Perna Esquerda e Bota com Greva de Elite
   ctx.fillStyle = '#2c3e50';
   ctx.fillRect(-10, -12 + legCycle, 6, 12);
   ctx.fillStyle = '#4a3728';
@@ -2070,7 +2117,7 @@ function drawCharacter(ent) {
   ctx.fillStyle = '#4a3728';
   ctx.fillRect(-11, 10 - legCycle, 8, 5);
 
-  // 3. Tronco e Túnica
+  // 3. Tronco e Peitoral Armadurado de Elite
   ctx.fillStyle = ent.color || '#ff4757';
   ctx.beginPath();
   ctx.roundRect(-12, -10, 18, 20, 4);
@@ -2079,13 +2126,39 @@ function drawCharacter(ent) {
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Cinto
-  ctx.fillStyle = '#3e2723';
-  ctx.fillRect(-6, -10, 4, 20);
-  ctx.fillStyle = '#f1c40f';
-  ctx.fillRect(-6, -3, 4, 6);
+  // Brasão Dourado no Peito
+  ctx.fillStyle = '#ffd32a';
+  ctx.beginPath();
+  ctx.moveTo(-6, -5);
+  ctx.lineTo(2, 0);
+  ctx.lineTo(-6, 5);
+  ctx.closePath();
+  ctx.fill();
 
-  // 4. Braços e Mãos
+  // Cinto de Aço com Fivela Dourada
+  ctx.fillStyle = '#2d3436';
+  ctx.fillRect(-6, -10, 4, 20);
+  ctx.fillStyle = '#ffd32a';
+  ctx.fillRect(-7, -3, 6, 6);
+
+  // --- OMBREIRAS DE ELITE DOURADAS (PAULDRONS) ---
+  ctx.fillStyle = '#ffd32a';
+  ctx.beginPath();
+  ctx.arc(-2, -13, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#e67e22';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = '#ffd32a';
+  ctx.beginPath();
+  ctx.arc(-2, 13, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#e67e22';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // 4. Braços e Manoplas
   const skin = ent.skinColor || '#ffdcb4';
   ctx.fillStyle = ent.color || '#ff4757';
   ctx.fillRect(0, -14, 8, 6);
@@ -2097,10 +2170,10 @@ function drawCharacter(ent) {
   ctx.fillStyle = skin;
   ctx.fillRect(10, 8, 5, 5);
 
-  // 5. Arma Equipada
+  // 5. Arma Equipada com Brilho Encantado
   drawWeaponSprite(ent.weapon || 'sword_starter', ent.charClass);
 
-  // 6. Cabeça e Rosto
+  // 6. Cabeça, Elmo/Tiara e Olhos Vivos
   ctx.beginPath();
   ctx.arc(-2, 0, 11, 0, Math.PI * 2);
   ctx.fillStyle = skin;
@@ -2111,7 +2184,11 @@ function drawCharacter(ent) {
   ctx.fillStyle = ent.hairColor || '#2c3e50';
   ctx.fill();
 
-  // Olhos Olhando na Direção do Alvo
+  // Tiara de Guerreiro de Elite
+  ctx.fillStyle = '#ffd32a';
+  ctx.fillRect(0, -11, 3, 22);
+
+  // Olhos Vivos
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(3, -5, 4, 3);
   ctx.fillRect(3, 2, 4, 3);
@@ -2120,6 +2197,18 @@ function drawCharacter(ent) {
   ctx.fillRect(5, 3, 2, 2);
 
   ctx.restore();
+
+  // Aura Mística para Campeões de Alto Nível ou Pontuação Alta
+  if ((ent.level && ent.level >= 2) || (ent.score && ent.score >= 200)) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(0, 0, 26, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255, 211, 42, 0.45)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.restore();
+  }
 
   // 7. Barra de Vida e Nome
   const barWidth = 46;
@@ -2218,27 +2307,233 @@ function drawChest(ch) {
 function drawBoss(boss) {
   ctx.save();
   ctx.translate(boss.x, boss.y);
+
+  const bStep = boss.walkStep || (Date.now() * 0.005);
+  const legCycle = Math.sin(bStep) * 14;
+
+  // 1. Sombra Titânica no Chão
   ctx.beginPath();
-  ctx.arc(0, 8, boss.radius, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.ellipse(0, 22, boss.radius * 0.9, boss.radius * 0.42, 0, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
   ctx.fill();
+
+  // Anel Rúnico de Poder Sob os Pés do Titã
+  ctx.save();
   ctx.beginPath();
-  ctx.arc(0, 0, boss.radius, 0, Math.PI * 2);
-  ctx.fillStyle = '#3e2723';
-  ctx.strokeStyle = boss.color || '#e67e22';
-  ctx.lineWidth = 5;
-  ctx.shadowColor = boss.color || '#e67e22';
+  ctx.arc(0, 0, boss.radius + 14, 0, Math.PI * 2);
+  ctx.strokeStyle = boss.color || '#ffd32a';
+  ctx.lineWidth = 3.5;
+  ctx.shadowColor = boss.color || '#ffd32a';
   ctx.shadowBlur = 18;
+  ctx.setLineDash([10, 8]);
   ctx.stroke();
-  ctx.fill();
-  ctx.fillStyle = '#ffd32a';
-  ctx.fillRect(-16, -12, 10, 8);
-  ctx.fillRect(6, -12, 10, 8);
-  ctx.font = 'bold 14px Segoe UI, sans-serif';
-  ctx.fillStyle = boss.color || '#e67e22';
-  ctx.textAlign = 'center';
-  ctx.fillText(boss.name, 0, -70);
   ctx.restore();
+
+  // Se o Boss foi derrotado: repousa no chão com Grande Lápide Ancestral
+  if (boss.hp <= 0) {
+    ctx.save();
+    ctx.rotate(Math.PI * 0.45);
+    ctx.globalAlpha = 0.75;
+    ctx.fillStyle = '#3e2723';
+    ctx.roundRect(-35, -22, 70, 44, 8);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.font = '46px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🪦', 0, -10);
+
+    ctx.font = 'bold 15px Segoe UI, sans-serif';
+    ctx.fillStyle = '#ffd32a';
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 6;
+    ctx.fillText('👑 TITÃ DA FLORESTA DERROTADO', 0, -60);
+    ctx.fillText(boss.name, 0, -80);
+    ctx.restore();
+    return;
+  }
+
+  // --- O CHEFE É UMA PESSOA TITÃ HUMANOIDE GIGANTE ---
+  ctx.save();
+  ctx.rotate(boss.angle || 0);
+
+  // 2. Capa Colossal do Titã Billowing (Ondulando com os passos)
+  const capeWave = Math.sin(bStep * 1.3) * 12;
+  ctx.fillStyle = boss.id === 'world_ignis' ? '#b71540' : (boss.id === 'world_druid' ? '#1b4332' : '#2c3e50');
+  ctx.beginPath();
+  ctx.moveTo(-28, -20);
+  ctx.lineTo(-65 - Math.abs(legCycle) * 0.5, -34 + capeWave);
+  ctx.lineTo(-60 - Math.abs(legCycle) * 0.5, 34 - capeWave);
+  ctx.lineTo(-28, 20);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#ffd32a';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // 3. Pernas e Grevas Titânicas com Espigões
+  ctx.fillStyle = '#2d3436';
+  // Perna Esquerda
+  ctx.fillRect(-22, -26 + legCycle, 16, 26);
+  ctx.fillStyle = boss.color || '#ffd32a';
+  ctx.fillRect(-24, -4 + legCycle, 20, 10);
+  // Perna Direita
+  ctx.fillStyle = '#2d3436';
+  ctx.fillRect(-22, 6 - legCycle, 16, 26);
+  ctx.fillStyle = boss.color || '#ffd32a';
+  ctx.fillRect(-24, 20 - legCycle, 20, 10);
+
+  // 4. Tronco Colossal / Armadura de Placas de Titã
+  ctx.fillStyle = '#1e272e';
+  ctx.beginPath();
+  ctx.roundRect(-28, -24, 44, 48, 8);
+  ctx.fill();
+  ctx.strokeStyle = '#ffd32a';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Peitoral Dourado / Emblema Titânico
+  ctx.fillStyle = boss.color || '#ffd32a';
+  ctx.beginPath();
+  ctx.moveTo(-16, -16);
+  ctx.lineTo(12, 0);
+  ctx.lineTo(-16, 16);
+  ctx.closePath();
+  ctx.fill();
+
+  // Cinto de Ouro com Gema Rúnica
+  ctx.fillStyle = '#d35400';
+  ctx.fillRect(-12, -22, 8, 44);
+  ctx.fillStyle = '#ffd32a';
+  ctx.fillRect(-14, -8, 12, 16);
+  ctx.fillStyle = '#00e5ff';
+  ctx.beginPath();
+  ctx.arc(-8, 0, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 5. Ombreiras Titânicas Gigantes com Espinhos (Pauldrons)
+  ctx.fillStyle = boss.color || '#ffd32a';
+  ctx.beginPath();
+  ctx.arc(-8, -32, 16, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#e67e22';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  ctx.fillStyle = boss.color || '#ffd32a';
+  ctx.beginPath();
+  ctx.arc(-8, 32, 16, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#e67e22';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // 6. Braços e Manoplas
+  ctx.fillStyle = '#2d3436';
+  ctx.fillRect(4, -30, 24, 12);
+  ctx.fillRect(4, 18, 24, 12);
+  ctx.fillStyle = '#f39c12';
+  ctx.fillRect(20, -32, 14, 16);
+  ctx.fillRect(20, 16, 14, 16);
+
+  // 7. ARMA GIGANTE LENDÁRIA DO TITÃ
+  drawBossWeapon(boss);
+
+  // 8. Cabeça com Elmo de Guerra e Coroa Titânica
+  ctx.beginPath();
+  ctx.arc(0, 0, 18, 0, Math.PI * 2);
+  ctx.fillStyle = '#f5cd79';
+  ctx.fill();
+
+  // Elmo de Aço Escuro
+  ctx.beginPath();
+  ctx.arc(-2, 0, 19, Math.PI * 0.4, Math.PI * 1.6);
+  ctx.fillStyle = '#2d3436';
+  ctx.fill();
+
+  // Coroa Titânica com Joias
+  ctx.fillStyle = '#ffd32a';
+  ctx.beginPath();
+  ctx.moveTo(8, -16);
+  ctx.lineTo(16, -10);
+  ctx.lineTo(24, -14);
+  ctx.lineTo(20, 0);
+  ctx.lineTo(24, 14);
+  ctx.lineTo(16, 10);
+  ctx.lineTo(8, 16);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#e67e22';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Olhos Flamejantes do Titã
+  ctx.fillStyle = '#ffd32a';
+  ctx.shadowColor = '#ffd32a';
+  ctx.shadowBlur = 10;
+  ctx.fillRect(10, -7, 6, 4);
+  ctx.fillRect(10, 3, 6, 4);
+  ctx.fillStyle = '#ff4757';
+  ctx.fillRect(13, -6, 3, 2);
+  ctx.fillRect(13, 4, 3, 2);
+
+  ctx.restore();
+
+  // 9. Barra de Vida Gigante sobre a Cabeça do Titã
+  const bBarW = 100;
+  const bBarH = 9;
+  const bRatio = Math.max(0, boss.hp / boss.maxHp);
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+  ctx.fillRect(-bBarW / 2, -70, bBarW, bBarH);
+  ctx.fillStyle = '#ff4757';
+  ctx.fillRect(-bBarW / 2, -70, bBarW * bRatio, bBarH);
+  ctx.strokeStyle = '#ffd32a';
+  ctx.lineWidth = 1.8;
+  ctx.strokeRect(-bBarW / 2, -70, bBarW, bBarH);
+
+  ctx.font = 'bold 13px Segoe UI, sans-serif';
+  ctx.fillStyle = '#ffd32a';
+  ctx.shadowColor = '#000000';
+  ctx.shadowBlur = 6;
+  ctx.textAlign = 'center';
+  ctx.fillText(boss.name, 0, -82);
+  ctx.font = 'bold 10px Segoe UI, sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(Math.round(boss.hp) + ' / ' + boss.maxHp + ' HP', 0, -56);
+
+  ctx.restore();
+}
+
+function drawBossWeapon(boss) {
+  if (boss.id === 'world_ignis') {
+    // Montante Colossal do Fogo
+    ctx.fillStyle = '#ff4757';
+    ctx.fillRect(26, 12, 60, 10);
+    ctx.fillStyle = '#ffd32a';
+    ctx.fillRect(24, 10, 12, 14);
+    ctx.fillStyle = '#d63031';
+    ctx.fillRect(80, 10, 10, 14);
+  } else if (boss.id === 'world_druid') {
+    // Cajado Tempestuoso do Druida
+    ctx.fillStyle = '#5d4037';
+    ctx.fillRect(20, 14, 65, 8);
+    ctx.beginPath();
+    ctx.arc(88, 18, 14, 0, Math.PI * 2);
+    ctx.fillStyle = '#00e5ff';
+    ctx.shadowColor = '#00e5ff';
+    ctx.shadowBlur = 15;
+    ctx.fill();
+  } else {
+    // Martelo Titânico da Terra e Ouro
+    ctx.fillStyle = '#636e72';
+    ctx.fillRect(24, 14, 50, 7);
+    ctx.fillStyle = '#ffd32a';
+    ctx.fillRect(66, 0, 24, 34);
+    ctx.strokeStyle = '#e67e22';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(66, 0, 24, 34);
+  }
 }
 
 function drawNpc(npc) {
@@ -2361,18 +2656,28 @@ function drawMinimap() {
   mCtx.fillStyle = '#ffd32a';
   for (const ch of serverChests) mCtx.fillRect(ch.x * sx - 1, ch.y * sy - 1, 2.5, 2.5);
 
-  // Chefes Titânicos
-  if (serverWorldBoss && serverWorldBoss.hp > 0) {
-    mCtx.fillStyle = '#e67e22';
-    mCtx.beginPath();
-    mCtx.arc(serverWorldBoss.x * sx, serverWorldBoss.y * sy, 4, 0, Math.PI * 2);
-    mCtx.fill();
-  }
-  if (serverSecondBoss && serverSecondBoss.hp > 0) {
-    mCtx.fillStyle = '#d63031';
-    mCtx.beginPath();
-    mCtx.arc(serverSecondBoss.x * sx, serverSecondBoss.y * sy, 4, 0, Math.PI * 2);
-    mCtx.fill();
+  // Lago Místico no Minimapa
+  mCtx.fillStyle = '#16a085';
+  mCtx.beginPath();
+  mCtx.arc(12800 * sx, 4200 * sy, 8, 0, Math.PI * 2);
+  mCtx.fill();
+  mCtx.fillStyle = '#2980b9';
+  mCtx.beginPath();
+  mCtx.arc(4500 * sx, 11500 * sy, 6, 0, Math.PI * 2);
+  mCtx.fill();
+
+  // 3 Chefes Titânicos no Minimapa
+  const mapBosses = [serverWorldBoss, serverSecondBoss, serverThirdBoss];
+  for (const mb of mapBosses) {
+    if (mb && mb.hp > 0) {
+      mCtx.fillStyle = mb.color || '#ffd32a';
+      mCtx.beginPath();
+      mCtx.arc(mb.x * sx, mb.y * sy, 4.5, 0, Math.PI * 2);
+      mCtx.fill();
+      mCtx.strokeStyle = '#ffffff';
+      mCtx.lineWidth = 1;
+      mCtx.stroke();
+    }
   }
 
   // Bots
