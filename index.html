@@ -168,44 +168,73 @@
 
       <!-- Barra de Ações Rápidas (Poções & Poderes) -->
       <div id="quick-slots">
-        <!-- Poção de Vida -->
-        <div class="quick-slot" id="slot-potion-heal" title="Poção de Vida [1]">
+        <!-- Dash [Q] -->
+        <div class="quick-slot skill-slot" id="slot-dash" title="Dash Veloz [Q]">
+          <span class="slot-key">Q</span>
+          <span class="slot-icon">💨</span>
+          <div class="slot-cooldown-overlay" id="cd-dash" style="display: none;"></div>
+        </div>
+        <!-- Correr [Shift] -->
+        <div class="quick-slot skill-slot" id="slot-sprint" title="Correr [Shift]">
+          <span class="slot-key">Shift</span>
+          <span class="slot-icon">🏃</span>
+        </div>
+        <!-- Poção de Vida [1] -->
+        <div class="quick-slot potion-slot" id="slot-potion-heal" title="Poção de Vida (+50 HP) [1]">
           <span class="slot-key">1</span>
           <span class="slot-icon">🧪</span>
-          <span class="slot-count" id="count-heal-pot">1</span>
+          <span class="slot-count" id="count-heal-pot">0</span>
         </div>
-        <!-- Poção de Vigor -->
-        <div class="quick-slot" id="slot-potion-speed" title="Poção de Vigor [2]">
+        <!-- Poção de Vigor [2] -->
+        <div class="quick-slot potion-slot" id="slot-potion-speed" title="Extrato do Vento (+Velocidade) [2]">
           <span class="slot-key">2</span>
           <span class="slot-icon">⚡</span>
           <span class="slot-count" id="count-speed-pot">0</span>
         </div>
+        <!-- Super Poção de Vida [3] -->
+        <div class="quick-slot potion-slot" id="slot-potion-super" title="Elixir Vital Sagrado (+120 HP) [3]">
+          <span class="slot-key">3</span>
+          <span class="slot-icon">💖</span>
+          <span class="slot-count" id="count-super-pot">0</span>
+        </div>
+        <!-- Poção de Casca de Ferro [4] -->
+        <div class="quick-slot potion-slot" id="slot-potion-shield" title="Poção de Casca de Ferro (+90 Escudo) [4]">
+          <span class="slot-key">4</span>
+          <span class="slot-icon">🛡️</span>
+          <span class="slot-count" id="count-shield-pot">0</span>
+        </div>
+        <!-- Poção de Força Dracônica [5] -->
+        <div class="quick-slot potion-slot" id="slot-potion-strength" title="Sangue de Titã (+60% Dano) [5]">
+          <span class="slot-key">5</span>
+          <span class="slot-icon">🐉</span>
+          <span class="slot-count" id="count-strength-pot">0</span>
+        </div>
         <!-- Poder Sísmico -->
-        <div class="quick-slot locked" id="slot-power-slam" title="Pisão Sísmico [R]">
+        <div class="quick-slot locked power-slot" id="slot-power-slam" title="Pisão Sísmico [R]">
           <span class="slot-key">R</span>
           <span class="slot-icon">💥</span>
           <div class="slot-cooldown-overlay" id="cd-slam" style="display: none;"></div>
         </div>
         <!-- Raio Astral -->
-        <div class="quick-slot locked" id="slot-power-beam" title="Raio Astral [F]">
+        <div class="quick-slot locked power-slot" id="slot-power-beam" title="Raio Astral [F]">
           <span class="slot-key">F</span>
           <span class="slot-icon">🏹</span>
           <div class="slot-cooldown-overlay" id="cd-beam" style="display: none;"></div>
         </div>
         <!-- Meteoro Flamejante -->
-        <div class="quick-slot locked" id="slot-power-fire" title="Meteoro Flamejante [C]">
+        <div class="quick-slot locked power-slot" id="slot-power-fire" title="Meteoro Flamejante [C]">
           <span class="slot-key">C</span>
           <span class="slot-icon">🔥</span>
           <div class="slot-cooldown-overlay" id="cd-fire" style="display: none;"></div>
         </div>
         <!-- Escudo Divino -->
-        <div class="quick-slot locked" id="slot-power-shield" title="Escudo Divino [V]">
+        <div class="quick-slot locked power-slot" id="slot-power-shield" title="Escudo Divino [V]">
           <span class="slot-key">V</span>
           <span class="slot-icon">🛡️</span>
           <div class="slot-cooldown-overlay" id="cd-shield" style="display: none;"></div>
         </div>
         <!-- Fúria da Floresta -->
-        <div class="quick-slot locked" id="slot-power-nature" title="Fúria da Floresta [T]">
+        <div class="quick-slot locked power-slot" id="slot-power-nature" title="Fúria da Floresta [T]">
           <span class="slot-key">T</span>
           <span class="slot-icon">🌪️</span>
           <div class="slot-cooldown-overlay" id="cd-nature" style="display: none;"></div>
@@ -230,6 +259,7 @@
 
       <!-- Controles Virtuais Touch (Dispositivos Móveis) -->
       <div id="mobile-controls">
+        <div class="mobile-btn" id="btn-mobile-sprint">🏃</div>
         <div class="mobile-btn" id="btn-mobile-dash">💨</div>
         <div class="mobile-btn" id="btn-mobile-attack">⚔️</div>
       </div>
