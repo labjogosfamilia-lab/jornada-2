@@ -10,13 +10,15 @@ class SoundFX {
   }
 
   init() {
-    if (!this.ctx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AudioCtx();
-    }
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
-    }
+    try {
+      if (!this.ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) this.ctx = new AudioCtx();
+      }
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
+    } catch (e) {}
   }
 
   playShoot(color = '#00e5ff') {
@@ -299,6 +301,8 @@ const FOREST_SANCTUARIES = [
   { id: 'sanc_hunters', name: '🏹 Aldeia dos Guardiões da Mata', x: 3000, y: 12000, radius: 450, theme: 'hunters_camp' }
 ];
 
+const CITIES = FOREST_SANCTUARIES;
+
 const FOREST_STRUCTURES = [
   // 1. Árvore-Mãe Central
   { id: 'b_mother_tree', name: 'Grande Árvore-Mãe Ancestral', x: 12000, y: 11800, w: 260, h: 160, roofColor: '#1b4332', wallColor: '#3e2723', type: 'ancient_tree' },
@@ -332,6 +336,8 @@ const FOREST_STRUCTURES = [
   { id: 'b_hunter_cabin', name: 'Cabana dos Caçadores', x: 3000, y: 11900, w: 100, h: 85, roofColor: '#d35400', wallColor: '#4e342e', type: 'house' }
 ];
 
+const BUILDINGS = FOREST_STRUCTURES;
+
 // NPCs da Floresta
 const NPCS = [
   { id: 'npc_blacksmith', name: 'Brok, o Forjador da Floresta', icon: '🔨', x: 11900, y: 11980, radius: 28, type: 'weapons' },
@@ -344,14 +350,22 @@ const NPCS = [
   { id: 'npc_hunter', name: 'Lorde dos Caçadores', icon: '🏹', x: 3000, y: 12000, radius: 26, type: 'weapons' }
 ];
 
+// Missões da Floresta para Ganhar Poderes (ÚNICO JEITO DE GANHAR PODER!)
+const POWER_QUESTS = [
+  { id: 'q_slam', name: '⚡ Provação do Trovão', desc: 'Derrote 2 Inimigos na Floresta', target: 2, type: 'kill', rewardPower: 'power_slam', powerName: 'Pisão Sísmico [R]' },
+  { id: 'q_beam', name: '🏹 Harmonia Astral', desc: 'Minere 2 Cristais de Gemas', target: 2, type: 'mine', rewardPower: 'power_beam', powerName: 'Raio Astral [F]' },
+  { id: 'q_fire', name: '🔥 Fogo Ancestral', desc: 'Derrote 3 Inimigos na Floresta', target: 3, type: 'kill', rewardPower: 'power_fire', powerName: 'Meteoro Flamejante [C]' },
+  { id: 'q_shield', name: '🛡️ Relíquia Sagrada', desc: 'Abra 3 Baús de Tesouro', target: 3, type: 'chest', rewardPower: 'power_shield', powerName: 'Escudo Divino [V]' },
+  { id: 'q_nature', name: '🌪️ Fúria da Floresta', desc: 'Derrote 1 Titã Guardião da Floresta', target: 1, type: 'boss', rewardPower: 'power_nature', powerName: 'Ciclone de Folhas [T]' }
+];
+
 const SHOP_CATALOG = {
   weapons: [
     { id: 'fist', name: 'Punhos do Sobrevivente', cost: 0, damage: 12, color: '#ffdcb4', desc: 'Desarmado: golpes com as próprias mãos' },
     { id: 'sword_starter', name: 'Lâmina de Carvalho Rústica', cost: 60, damage: 22, color: '#00e5ff', desc: 'Espada de madeira balanceada' },
-    { id: 'sword_starter', name: 'Lâmina dos Bosques', cost: 0, damage: 22, color: '#00e5ff', desc: 'Espada de carvalho balanceada' },
-    { id: 'sword_rune', name: 'Lâmina Rúnica da Floresta', cost: 120, damage: 34, color: '#2ed573', desc: '+50% Dano & corte veloz' },
-    { id: 'sword_fire', name: 'Lâmina do Fogo da Mata', cost: 280, damage: 52, color: '#ff4757', desc: 'Lança brasas incandescentes' },
-    { id: 'staff_astral', name: 'Cajado Ancião dos Druidas', cost: 450, damage: 32, triple: true, color: '#ffd32a', desc: 'Disparo Triplo em leque!' }
+    { id: 'sword_rune', name: 'Lâmina Rúnica da Floresta', cost: 150, damage: 34, color: '#2ed573', desc: '+50% Dano & corte veloz' },
+    { id: 'sword_fire', name: 'Lâmina do Fogo da Mata', cost: 320, damage: 52, color: '#ff4757', desc: 'Lança brasas incandescentes' },
+    { id: 'staff_astral', name: 'Cajado Ancião dos Druidas', cost: 500, damage: 34, triple: true, color: '#ffd32a', desc: 'Disparo Triplo em leque!' }
   ],
   potions: [
     { id: 'potion_heal', name: 'Néctar Curativo da Floresta', cost: 40, heal: 50, icon: '🧪', desc: 'Recupera +50 de HP imediatamente' },
@@ -419,6 +433,8 @@ for (let i = 0; i < 50; i++) {
   });
 }
 
+
+var localPlayer = null;
 
 // =============================================================
 // SISTEMA DE SALVAMENTO DE PROGRESSO (LOCALSTORAGE)
@@ -555,7 +571,7 @@ let shopCatalog = SHOP_CATALOG;
 let selectedClass = 'warrior';
 let selectedColor = '#00e5ff';
 let obstacles = [];
-let localPlayer = null;
+
 
 // Snapshots de Entidades
 let serverPlayers = new Map();
@@ -1500,8 +1516,10 @@ function updateHUD(player) {
   // Rastreador da Missão Atual
   const curQuest = (player.activeQuests || POWER_QUESTS).find(q => !q.completed) || (player.activeQuests || POWER_QUESTS)[0];
   if (curQuest) {
-    document.getElementById('quest-desc').innerText = `${curQuest.name} (${curQuest.current || 0}/${curQuest.target})`;
-    document.querySelector('.quest-reward').innerText = `Recompensa: ✨ ${curQuest.powerName || 'Super Poder'}`;
+    const qDesc = document.getElementById('quest-desc');
+    if (qDesc) qDesc.innerText = `${curQuest.name} (${curQuest.current || 0}/${curQuest.target})`;
+    const qRew = document.querySelector('.quest-reward');
+    if (qRew) qRew.innerText = `Recompensa: ✨ ${curQuest.powerName || 'Super Poder'}`;
   }
 
   document.getElementById('count-heal-pot').innerText = player.potions?.heal || 0;
