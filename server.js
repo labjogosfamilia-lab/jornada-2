@@ -316,12 +316,11 @@ const NPCS = [
 
 const SHOP_CATALOG = {
   weapons: [
-    { id: 'fist', name: 'Punhos do Sobrevivente', cost: 0, damage: 12, color: '#ffdcb4', desc: 'Desarmado: golpes com as próprias mãos' },
-    { id: 'sword_starter', name: 'Lâmina de Carvalho Rústica', cost: 60, damage: 22, color: '#00e5ff', desc: 'Espada de madeira balanceada' },
-    { id: 'sword_starter', name: 'Lâmina dos Bosques', cost: 0, damage: 22, color: '#00e5ff', desc: 'Espada de madeira de carvalho balanceada' },
-    { id: 'sword_rune', name: 'Lâmina Rúnica da Floresta', cost: 120, damage: 34, color: '#2ed573', desc: '+50% Dano & corte rápido' },
-    { id: 'sword_fire', name: 'Lâmina do Fogo da Mata', cost: 280, damage: 52, color: '#ff4757', desc: 'Lança brasas ardentes na folhagem' },
-    { id: 'staff_astral', name: 'Cajado Ancião dos Druidas', cost: 450, damage: 32, triple: true, color: '#ffd32a', desc: 'Disparo Triplo de sementes astrais!' }
+    { id: 'fist', name: 'Punhos do Sobrevivente', cost: 0, damage: 14, color: '#ffdcb4', desc: 'Desarmado: socos velozes corpo a corpo' },
+    { id: 'sword_starter', name: 'Lâmina de Carvalho Rústica', cost: 60, damage: 24, color: '#00e5ff', desc: 'Espada de madeira: corte corpo a corpo balanceado' },
+    { id: 'sword_rune', name: 'Lâmina Rúnica da Floresta', cost: 150, damage: 36, color: '#2ed573', desc: '+50% Dano & corte rúnico veloz corpo a corpo' },
+    { id: 'sword_fire', name: 'Lâmina do Fogo da Mata', cost: 320, damage: 54, color: '#ff4757', desc: 'Lâmina flamejante: corte incandescente devastador' },
+    { id: 'staff_astral', name: 'Cajado Ancião dos Druidas', cost: 500, damage: 34, triple: true, color: '#ffd32a', desc: 'Cajado druídico: disparo triplo mágico à distância' }
   ],
   potions: [
     { id: 'potion_heal', name: 'Néctar Curativo da Floresta', cost: 40, heal: 50, icon: '🧪', desc: 'Restaura +50 de HP imediatamente' },
@@ -815,6 +814,104 @@ function distanceToSegment(px, py, x1, y1, x2, y2) {
   return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
 }
 
+function executeMeleeAttack(attacker, weapon) {
+  const reach = (attacker.weapon === 'fist' ? 52 : 78) + 20;
+  const maxCone = 1.25;
+
+  broadcast({
+    type: 'effect',
+    name: 'melee_slash',
+    ownerId: attacker.id,
+    x: attacker.x,
+    y: attacker.y,
+    angle: attacker.angle,
+    radius: attacker.weapon === 'fist' ? 52 : 78,
+    color: weapon.color,
+    weaponId: attacker.weapon
+  });
+
+  const targets = [...players.values(), ...bots.values()];
+  for (const t of targets) {
+    if (t.id === attacker.id || t.hp <= 0 || t.isDead || t.shieldTimer > 0) continue;
+    const dist = Math.hypot(t.x - attacker.x, t.y - attacker.y);
+    if (dist <= reach + t.radius) {
+      const dir = Math.atan2(t.y - attacker.y, t.x - attacker.x);
+      let diff = dir - attacker.angle;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      if (Math.abs(diff) < maxCone) {
+        t.hp = Math.max(0, t.hp - weapon.damage);
+        // Knockback da lâmina
+        t.x += Math.cos(attacker.angle) * 20;
+        t.y += Math.sin(attacker.angle) * 20;
+        broadcast({ type: 'hit', x: t.x, y: t.y, color: weapon.color });
+        checkEntityDeath(t, attacker);
+      }
+    }
+  }
+
+  // Chefes Titânicos
+  const bosses = [worldBoss, secondBoss, thirdBoss, fourthBoss].filter(Boolean);
+  for (const boss of bosses) {
+    if (boss.hp <= 0) continue;
+    const dist = Math.hypot(boss.x - attacker.x, boss.y - attacker.y);
+    if (dist <= reach + boss.radius) {
+      const dir = Math.atan2(boss.y - attacker.y, boss.x - attacker.x);
+      let diff = dir - attacker.angle;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      if (Math.abs(diff) < maxCone) {
+        boss.hp = Math.max(0, boss.hp - weapon.damage);
+        broadcast({ type: 'hit', x: boss.x, y: boss.y, color: weapon.color });
+        checkBossDeath(attacker, boss);
+      }
+    }
+  }
+
+  // Cristais de Mineração
+  for (let i = mineCrystals.length - 1; i >= 0; i--) {
+    const cr = mineCrystals[i];
+    const dist = Math.hypot(cr.x - attacker.x, cr.y - attacker.y);
+    if (dist <= reach + cr.radius) {
+      const dir = Math.atan2(cr.y - attacker.y, cr.x - attacker.x);
+      let diff = dir - attacker.angle;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      if (Math.abs(diff) < maxCone) {
+        cr.hp--;
+        attacker.gold += 15;
+        broadcast({ type: 'hit', x: cr.x, y: cr.y, color: cr.color });
+        if (cr.hp <= 0) {
+          attacker.gold += cr.gold;
+          attacker.score += 40;
+          broadcast({ type: 'effect', name: 'chest_opened', x: cr.x, y: cr.y, color: '#ffd32a' });
+          mineCrystals.splice(i, 1);
+          setTimeout(() => spawnMineCrystals(1), 20000);
+        }
+      }
+    }
+  }
+
+  // Barris e Caixas Quebráveis
+  for (let i = breakables.length - 1; i >= 0; i--) {
+    const br = breakables[i];
+    const dist = Math.hypot(br.x - attacker.x, br.y - attacker.y);
+    if (dist <= reach + br.radius) {
+      const dir = Math.atan2(br.y - attacker.y, br.x - attacker.x);
+      let diff = dir - attacker.angle;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      if (Math.abs(diff) < maxCone) {
+        attacker.gold += br.gold;
+        attacker.score += 15;
+        broadcast({ type: 'effect', name: 'chest_opened', x: br.x, y: br.y, color: '#e67e22' });
+        breakables.splice(i, 1);
+        setTimeout(() => spawnBreakables(1), 22000);
+      }
+    }
+  }
+}
+
 // -------------------------------------------------------------
 // Bots Inteligentes da Floresta
 // -------------------------------------------------------------
@@ -912,15 +1009,27 @@ function updateBotAI(bot, now) {
 
   if (closestEnemy && minDist < 850) {
     bot.angle = Math.atan2(closestEnemy.y - bot.y, closestEnemy.x - bot.x);
-    if (minDist > 280) {
-      bot.input.up = true;
-      bot.input.down = false;
+    if (bot.weapon === 'staff_astral') {
+      if (minDist > 280) {
+        bot.input.up = true;
+        bot.input.down = false;
+      } else {
+        bot.angle += Math.PI / 2;
+        bot.input.up = true;
+        bot.input.down = false;
+      }
+      bot.input.attack = minDist < 650 && Math.random() < 0.6;
     } else {
-      bot.angle += Math.PI / 2;
-      bot.input.up = true;
-      bot.input.down = false;
+      // Espada ou Soco: Avança diretamente para combate corpo a corpo
+      if (minDist > 55) {
+        bot.input.up = true;
+        bot.input.down = false;
+      } else {
+        bot.input.up = false;
+        bot.input.down = false;
+      }
+      bot.input.attack = minDist <= 85;
     }
-    bot.input.attack = minDist < 650 && Math.random() < 0.6;
   } else {
     bot.input.up = true;
     bot.input.attack = false;
@@ -1073,14 +1182,14 @@ function gameTick() {
       ent.y = nextY;
     }
 
-    // Ataque
-    if (ent.input.attack && ent.attackCooldown <= 0 ) {
-      ent.attackCooldown = 0.3;
+    // Ataque / Combate Corpo a Corpo (Espada ou Soco) ou Cajado Mágico
+    if (ent.input.attack && ent.attackCooldown <= 0) {
+      ent.attackCooldown = ent.weapon === 'fist' ? 0.22 : 0.3;
       const wCatalog = SHOP_CATALOG.weapons.find(w => w.id === ent.weapon) || SHOP_CATALOG.weapons[0];
-      if (wCatalog.triple) {
+      if (wCatalog.id === 'staff_astral') {
         [-0.22, 0, 0.22].forEach(spr => createProjectile(ent, wCatalog, ent.angle + spr));
       } else {
-        createProjectile(ent, wCatalog, ent.angle);
+        executeMeleeAttack(ent, wCatalog);
       }
     }
 
