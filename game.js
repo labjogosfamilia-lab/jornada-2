@@ -1211,32 +1211,8 @@ function startOfflineSimulation() {
           localPlayer.x = nextX;
           localPlayer.y = nextY;
         }
-      }
-
-      // Mineração de Cristais de Gema Offline
-      if (mouse.down && localPlayer.attackCooldown <= 0 ) {
-        for (let i = serverMineCrystals.length - 1; i >= 0; i--) {
-          const cr = serverMineCrystals[i];
-          if (Math.hypot(localPlayer.x - cr.x, localPlayer.y - cr.y) < localPlayer.radius + cr.radius + 15) {
-            cr.hp--;
-            localPlayer.gold += 20;
-            sfx.playHit();
-            addParticle(cr.x, cr.y, cr.color, 10, 5);
-            if (cr.hp <= 0) {
-              localPlayer.gold += cr.gold;
-              localPlayer.score += 40;
-              localPlayer.minedCount++;
-              addPlayerXp(15);
-              addFloatingText(cr.x, cr.y - 15, '+70 🪙', '#ffd32a');
-              sfx.playCoin();
-              addParticle(cr.x, cr.y, '#ffd32a', 20, 7);
-              updateKillfeed([{ text: `💎 ${localPlayer.name} minerou uma Gema (+${cr.gold} 🪙)!` }]);
-              checkOfflineQuestProgress('mine');
-              serverMineCrystals.splice(i, 1);
-            }
-            break;
-          }
-        }
+      } else {
+        localPlayer.walkStep = 0; // Parado: pernas alinhadas e descansadas, sem andar eternamente!
       }
 
       // Quebra de Barris
@@ -1298,11 +1274,13 @@ function startOfflineSimulation() {
     const bosses = [serverWorldBoss, serverSecondBoss, serverThirdBoss, serverFourthBoss];
     for (const boss of bosses) {
       if (boss && boss.hp > 0) {
+        let bossMoving = false;
         const dToBoss = Math.hypot(localPlayer.x - boss.x, localPlayer.y - boss.y);
         if (dToBoss < 850 && !localPlayer.isDead) {
           boss.angle = Math.atan2(localPlayer.y - boss.y, localPlayer.x - boss.x);
           boss.x += Math.cos(boss.angle) * boss.speed;
           boss.y += Math.sin(boss.angle) * boss.speed;
+          bossMoving = true;
 
           if (dToBoss < 140 && localPlayer.shieldTimer <= 0) {
             localPlayer.hp = Math.max(0, localPlayer.hp - 35);
@@ -1312,10 +1290,14 @@ function startOfflineSimulation() {
             if (localPlayer.hp <= 0) triggerOfflineDeath();
           }
         }
+        if (bossMoving) {
+          boss.walkStep = (boss.walkStep || 0) + 0.16;
+        } else {
+          boss.walkStep = 0; // Parado: pernas alinhadas
+        }
       }
     }
 
-    
     // Dificuldade Dinâmica dos Bots baseada no Poder do Jogador!
     const pRating = getPlayerPowerRating();
     const targetBotMaxHp = Math.round(50 + pRating * 14);
@@ -1325,23 +1307,28 @@ function startOfflineSimulation() {
 
     // Bots IA Humanoides
     for (const b of serverBots.values()) {
-      if (b.hp <= 0 || b.isDead) continue;
-      b.walkStep = (b.walkStep || 0) + 0.22;
+      if (b.hp <= 0 || b.isDead) {
+        b.walkStep = 0;
+        continue;
+      }
       if (b.slashTimer > 0) b.slashTimer -= 1 / 30;
 
       b.inSafeZone = false;
 
+      let isMoving = false;
       const dToPlayer = Math.hypot(localPlayer.x - b.x, localPlayer.y - b.y);
-      if (dToPlayer < 850 && !localPlayer.isDead ) {
+      if (dToPlayer < 850 && !localPlayer.isDead) {
         b.angle = Math.atan2(localPlayer.y - b.y, localPlayer.x - b.x);
         if (b.weapon === 'staff_astral') {
           // Cajado Druídico: Mantém certa distância e atira projéteis mágicos
           if (dToPlayer > 260) {
             b.x += Math.cos(b.angle) * b.speed;
             b.y += Math.sin(b.angle) * b.speed;
+            isMoving = true;
           } else {
             b.x += Math.cos(b.angle + Math.PI / 2) * b.speed;
             b.y += Math.sin(b.angle + Math.PI / 2) * b.speed;
+            isMoving = true;
           }
 
           if (Math.random() < 0.05 && (!b.attackCooldown || b.attackCooldown <= 0)) {
@@ -1353,6 +1340,7 @@ function startOfflineSimulation() {
           if (dToPlayer > 55) {
             b.x += Math.cos(b.angle) * b.speed;
             b.y += Math.sin(b.angle) * b.speed;
+            isMoving = true;
           }
           if (dToPlayer <= 90 && (!b.attackCooldown || b.attackCooldown <= 0)) {
             b.attackCooldown = 0.45;
@@ -1360,10 +1348,30 @@ function startOfflineSimulation() {
           }
         }
       } else {
-        b.x += Math.cos(b.angle) * (b.speed * 0.4);
-        b.y += Math.sin(b.angle) * (b.speed * 0.4);
-        if (Math.random() < 0.02) b.angle += (Math.random() - 0.5) * 1.5;
+        // Patrulha natural: alterna entre andar e ficar parado descansando
+        if (b.isWandering === undefined) b.isWandering = Math.random() > 0.4;
+        if (Math.random() < 0.02) {
+          b.isWandering = !b.isWandering;
+          if (b.isWandering) b.angle += (Math.random() - 0.5) * 2;
+        }
+        if (b.isWandering) {
+          b.x += Math.cos(b.angle) * (b.speed * 0.45);
+          b.y += Math.sin(b.angle) * (b.speed * 0.45);
+          isMoving = true;
+        }
       }
+
+      // Limites da Arena (Nunca sai do mapa)
+      b.x = Math.max(80, Math.min(arena.width - 80, b.x));
+      b.y = Math.max(80, Math.min(arena.height - 80, b.y));
+
+      // Animação de caminhada somente quando está realmente andando
+      if (isMoving) {
+        b.walkStep = (b.walkStep || 0) + 0.22;
+      } else {
+        b.walkStep = 0; // Parado descansando
+      }
+
       if (b.attackCooldown > 0) b.attackCooldown -= 1 / 30;
     }
 
@@ -1455,6 +1463,8 @@ function triggerOfflineDeath() {
   if (localPlayer.isDead) return;
   localPlayer.isDead = true;
   localPlayer.hp = 0;
+  localPlayer.walkStep = 0;
+  resetAllKeys();
   sfx.playDefeat();
 
   // Exibe a tela de Morte com contagem regressiva
@@ -1480,13 +1490,15 @@ function respawnOfflinePlayer() {
   const overlay = document.getElementById('death-overlay');
   if (overlay) overlay.style.display = 'none';
 
-  // Renasce na Capital Central (4000, 4000)
+  // Renasce na Capital Central (12000, 12000)
   localPlayer.x = 12000 + (Math.random() - 0.5) * 120;
   localPlayer.y = 12000 + (Math.random() - 0.5) * 120;
   localPlayer.hp = localPlayer.maxHp;
   localPlayer.stamina = localPlayer.maxStamina;
   localPlayer.isDead = false;
   localPlayer.shieldTimer = 3; // 3 segundos de invulnerabilidade
+  localPlayer.walkStep = 0;
+  resetAllKeys();
 
   sfx.playRespawn();
   addParticle(localPlayer.x, localPlayer.y, '#ffd32a', 30, 8);
@@ -1800,11 +1812,13 @@ function checkNpcProximity(player) {
 // Modal de Missões de Poderes
 // -------------------------------------------------------------
 function openQuestsModal() {
+  resetAllKeys();
   renderQuestsList();
   document.getElementById('quests-modal').style.display = 'flex';
 }
 
 function closeQuestsModal() {
+  resetAllKeys();
   document.getElementById('quests-modal').style.display = 'none';
 }
 
@@ -1848,6 +1862,7 @@ function renderQuestsList() {
 // Loja
 // -------------------------------------------------------------
 function openShop(npc = null) {
+  resetAllKeys();
   const modal = document.getElementById('shop-modal');
   const title = document.getElementById('shop-npc-title');
   if (npc) {
@@ -1866,6 +1881,7 @@ function openShop(npc = null) {
 }
 
 function closeShop() {
+  resetAllKeys();
   document.getElementById('shop-modal').style.display = 'none';
 }
 
@@ -2718,7 +2734,7 @@ function drawBoss(boss) {
   ctx.save();
   ctx.translate(boss.x, boss.y);
 
-  const bStep = boss.walkStep || (Date.now() * 0.005);
+  const bStep = boss.walkStep || 0;
   const legCycle = Math.sin(bStep) * 14;
 
   // 1. Sombra Titânica no Chão
@@ -3221,35 +3237,70 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeShop();
     closeQuestsModal();
+    resetAllKeys();
+    return;
   }
+
+  setKey(e, true);
 
   if (localPlayer && !localPlayer.isDead) {
-    if (e.key === '1') { keys['1'] = true; useHealPotion(); }
-    if (e.key === '2') { keys['2'] = true; useSpeedPotion(); }
-    if (e.key === 'r' || e.key === 'R') { keys.r = true; castPowerSlam(); }
-    if (e.key === 'f' || e.key === 'F') { keys.f = true; castPowerBeam(); }
-    if (e.key === 'c' || e.key === 'C') { keys.c = true; castPowerFire(); }
-    if (e.key === 'v' || e.key === 'V') { keys.v = true; castPowerShield(); }
-    if (e.key === 't' || e.key === 'T') { keys.t = true; castPowerNature(); }
+    const k = (e.key || '').toLowerCase();
+    if (k === '1' || e.code === 'Digit1') { keys['1'] = true; useHealPotion(); }
+    if (k === '2' || e.code === 'Digit2') { keys['2'] = true; useSpeedPotion(); }
+    if (k === 'r' || e.code === 'KeyR') { keys.r = true; castPowerSlam(); }
+    if (k === 'f' || e.code === 'KeyF') { keys.f = true; castPowerBeam(); }
+    if (k === 'c' || e.code === 'KeyC') { keys.c = true; castPowerFire(); }
+    if (k === 'v' || e.code === 'KeyV') { keys.v = true; castPowerShield(); }
+    if (k === 't' || e.code === 'KeyT') { keys.t = true; castPowerNature(); }
+    if ((k === 'e' || e.code === 'KeyE') && nearbyNpc) openShop(nearbyNpc);
   }
-
-  if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
-  if (e.code === 'Space') keys.Space = true;
-  if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') keys.Shift = true;
 });
 
 window.addEventListener('keyup', (e) => {
-  if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
-  if (e.code === 'Space') keys.Space = false;
-  if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') keys.Shift = false;
-  if (e.key === 'r' || e.key === 'R') keys.r = false;
-  if (e.key === 'f' || e.key === 'F') keys.f = false;
-  if (e.key === 'c' || e.key === 'C') keys.c = false;
-  if (e.key === 'v' || e.key === 'V') keys.v = false;
-  if (e.key === 't' || e.key === 'T') keys.t = false;
-  if (e.key === '1') keys['1'] = false;
-  if (e.key === '2') keys['2'] = false;
+  setKey(e, false);
+  const k = (e.key || '').toLowerCase();
+  if (k === 'r' || e.code === 'KeyR') keys.r = false;
+  if (k === 'f' || e.code === 'KeyF') keys.f = false;
+  if (k === 'c' || e.code === 'KeyC') keys.c = false;
+  if (k === 'v' || e.code === 'KeyV') keys.v = false;
+  if (k === 't' || e.code === 'KeyT') keys.t = false;
+  if (k === '1' || e.code === 'Digit1') keys['1'] = false;
+  if (k === '2' || e.code === 'Digit2') keys['2'] = false;
 });
+
+function setKey(e, isPressed) {
+  const code = e.code;
+  const k = (e.key || '').toLowerCase();
+
+  // W / A / S / D e Setas Direcionais
+  if (code === 'KeyW' || k === 'w') keys.w = isPressed;
+  if (code === 'KeyS' || k === 's') keys.s = isPressed;
+  if (code === 'KeyA' || k === 'a') keys.a = isPressed;
+  if (code === 'KeyD' || k === 'd') keys.d = isPressed;
+
+  if (code === 'ArrowUp' || e.key === 'ArrowUp') keys.ArrowUp = isPressed;
+  if (code === 'ArrowDown' || e.key === 'ArrowDown') keys.ArrowDown = isPressed;
+  if (code === 'ArrowLeft' || e.key === 'ArrowLeft') keys.ArrowLeft = isPressed;
+  if (code === 'ArrowRight' || e.key === 'ArrowRight') keys.ArrowRight = isPressed;
+
+  if (code === 'Space' || e.key === ' ') keys.Space = isPressed;
+  if (code === 'ShiftLeft' || code === 'ShiftRight' || k === 'shift') keys.Shift = isPressed;
+  if (code === 'KeyE' || k === 'e') keys.e = isPressed;
+}
+
+function resetAllKeys() {
+  for (const k in keys) {
+    keys[k] = false;
+  }
+  mouse.down = false;
+  if (localPlayer) {
+    localPlayer.walkStep = 0;
+  }
+}
+
+window.addEventListener('blur', resetAllKeys);
+window.addEventListener('focus', resetAllKeys);
+window.addEventListener('contextmenu', resetAllKeys);
 
 function useHealPotion() {
   if (!localPlayer || localPlayer.isDead) return;
