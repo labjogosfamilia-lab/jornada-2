@@ -37,6 +37,49 @@ class SoundFX {
     osc.stop(this.ctx.currentTime + 0.12);
   }
 
+  playSwordSlash() {
+    if (!this.ctx) return;
+    try {
+      const bufferSize = Math.floor(this.ctx.sampleRate * 0.13);
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.sin((i / bufferSize) * Math.PI);
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1400, this.ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(280, this.ctx.currentTime + 0.13);
+      filter.Q.setValueAtTime(2.2, this.ctx.currentTime);
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.24, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.13);
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+      noise.start();
+    } catch (e) {}
+  }
+
+  playPunch() {
+    if (!this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(170, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(45, this.ctx.currentTime + 0.09);
+      gain.gain.setValueAtTime(0.26, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.09);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.09);
+    } catch (e) {}
+  }
+
   playHit() {
     if (!this.ctx) return;
     const osc = this.ctx.createOscillator();
@@ -361,11 +404,11 @@ const POWER_QUESTS = [
 
 const SHOP_CATALOG = {
   weapons: [
-    { id: 'fist', name: 'Punhos do Sobrevivente', cost: 0, damage: 12, color: '#ffdcb4', desc: 'Desarmado: golpes com as próprias mãos' },
-    { id: 'sword_starter', name: 'Lâmina de Carvalho Rústica', cost: 60, damage: 22, color: '#00e5ff', desc: 'Espada de madeira balanceada' },
-    { id: 'sword_rune', name: 'Lâmina Rúnica da Floresta', cost: 150, damage: 34, color: '#2ed573', desc: '+50% Dano & corte veloz' },
-    { id: 'sword_fire', name: 'Lâmina do Fogo da Mata', cost: 320, damage: 52, color: '#ff4757', desc: 'Lança brasas incandescentes' },
-    { id: 'staff_astral', name: 'Cajado Ancião dos Druidas', cost: 500, damage: 34, triple: true, color: '#ffd32a', desc: 'Disparo Triplo em leque!' }
+    { id: 'fist', name: 'Punhos do Sobrevivente', cost: 0, damage: 14, color: '#ffdcb4', desc: 'Desarmado: socos velozes corpo a corpo' },
+    { id: 'sword_starter', name: 'Lâmina de Carvalho Rústica', cost: 60, damage: 24, color: '#00e5ff', desc: 'Espada de madeira: corte corpo a corpo balanceado' },
+    { id: 'sword_rune', name: 'Lâmina Rúnica da Floresta', cost: 150, damage: 36, color: '#2ed573', desc: '+50% Dano & corte rúnico veloz corpo a corpo' },
+    { id: 'sword_fire', name: 'Lâmina do Fogo da Mata', cost: 320, damage: 54, color: '#ff4757', desc: 'Lâmina flamejante: corte incandescente devastador' },
+    { id: 'staff_astral', name: 'Cajado Ancião dos Druidas', cost: 500, damage: 34, triple: true, color: '#ffd32a', desc: 'Cajado druídico: disparo triplo mágico à distância' }
   ],
   potions: [
     { id: 'potion_heal', name: 'Néctar Curativo da Floresta', cost: 40, heal: 50, icon: '🧪', desc: 'Recupera +50 de HP imediatamente' },
@@ -686,7 +729,202 @@ function connectWebSocket(customHost = null) {
 }
 
 // -------------------------------------------------------------
-// Simulação Offline com Mundo Gigante (8000 x 8000)
+// Mecânicas de Combate Melee & Funções de Ataque
+// -------------------------------------------------------------
+function calcAngleDiff(a, b) {
+  let diff = a - b;
+  while (diff < -Math.PI) diff += Math.PI * 2;
+  while (diff > Math.PI) diff -= Math.PI * 2;
+  return Math.abs(diff);
+}
+
+function executeOfflineAttack(attacker, isPlayer) {
+  const wId = attacker.weapon || 'fist';
+  const weaponsList = (shopCatalog && shopCatalog.weapons) ? shopCatalog.weapons : SHOP_CATALOG.weapons;
+  const wData = weaponsList.find(w => w.id === wId) || weaponsList[0];
+  attacker.attackCooldown = wId === 'fist' ? 0.22 : 0.28;
+  attacker.slashTimer = 0.22;
+
+  // Se for o Cajado Astral (arma mágica druídica), dispara projéteis mágicos à distância
+  if (wId === 'staff_astral') {
+    sfx.playShoot(wData.color);
+    [-0.2, 0, 0.2].forEach(spr => {
+      serverProjectiles.push({
+        id: Math.random(),
+        ownerId: attacker.id,
+        color: wData.color,
+        damage: wData.damage,
+        x: attacker.x + Math.cos(attacker.angle + spr) * 30,
+        y: attacker.y + Math.sin(attacker.angle + spr) * 30,
+        vx: Math.cos(attacker.angle + spr) * 16,
+        vy: Math.sin(attacker.angle + spr) * 16,
+        lifetime: 65
+      });
+    });
+    return;
+  }
+
+  // --- COMBATE CORPO A CORPO (ESPADA OU SOCO: SEM PROJÉTEIS, 100% MELEE) ---
+  if (wId === 'fist') {
+    sfx.playPunch();
+  } else {
+    sfx.playSwordSlash();
+  }
+
+  // Animação Visual de Corte (Arco cortante de lâmina/punho na frente do personagem)
+  const slashRadius = wId === 'fist' ? 52 : 78;
+  activeSpecialEffects.push({
+    type: 'melee_slash',
+    x: attacker.x,
+    y: attacker.y,
+    angle: attacker.angle,
+    radius: slashRadius,
+    color: wData.color,
+    weaponId: wId,
+    progress: 0
+  });
+
+  const meleeReach = slashRadius + 22;
+  const maxCone = 1.25; // Leque de corte frontal (~143 graus)
+
+  if (isPlayer) {
+    // 1. Acerta Bots Inimigos
+    for (const b of serverBots.values()) {
+      if (b.hp <= 0 || b.isDead) continue;
+      const dist = Math.hypot(b.x - attacker.x, b.y - attacker.y);
+      if (dist <= meleeReach + b.radius) {
+        const dir = Math.atan2(b.y - attacker.y, b.x - attacker.x);
+        if (calcAngleDiff(dir, attacker.angle) < maxCone) {
+          b.hp -= wData.damage;
+          // Efeito de impacto e recuo físico
+          b.x += Math.cos(attacker.angle) * 22;
+          b.y += Math.sin(attacker.angle) * 22;
+          sfx.playHit();
+          triggerScreenShake(3);
+          addParticle(b.x, b.y, wData.color, 8, 4);
+          addFloatingText(b.x, b.y - 20, `-${wData.damage}`, wData.color);
+
+          if (b.hp <= 0) {
+            b.hp = 0;
+            b.isDead = true;
+            localPlayer.score += 100;
+            localPlayer.gold += 70;
+            addPlayerXp(40);
+            addFloatingText(b.x, b.y - 35, '+70 🪙', '#ffd32a');
+            sfx.playCoin();
+            updateKillfeed([{ text: `⚔️ ${localPlayer.name} derrotou ${b.name} no combate corpo a corpo (+70 🪙)!` }]);
+            checkOfflineQuestProgress('kill');
+            setTimeout(() => {
+              const sp = getOfflineSpawnPoint();
+              b.hp = b.maxHp;
+              b.isDead = false;
+              b.shieldTimer = 3;
+              b.x = sp.x;
+              b.y = sp.y;
+            }, 3000);
+          }
+        }
+      }
+    }
+
+    // 2. Acerta Chefes Titânicos
+    const bosses = [serverWorldBoss, serverSecondBoss, serverThirdBoss, serverFourthBoss];
+    for (const boss of bosses) {
+      if (boss && boss.hp > 0) {
+        const dist = Math.hypot(boss.x - attacker.x, boss.y - attacker.y);
+        if (dist <= meleeReach + boss.radius) {
+          const dir = Math.atan2(boss.y - attacker.y, boss.x - attacker.x);
+          if (calcAngleDiff(dir, attacker.angle) < maxCone) {
+            boss.hp -= wData.damage;
+            sfx.playHit();
+            triggerScreenShake(6);
+            addParticle(boss.x, boss.y, wData.color, 12, 5);
+            addFloatingText(boss.x, boss.y - 35, `-${wData.damage}`, wData.color);
+
+            if (boss.hp <= 0) {
+              localPlayer.gold += 300;
+              localPlayer.score += 600;
+              addPlayerXp(250);
+              checkOfflineQuestProgress('boss');
+              addFloatingText(boss.x, boss.y - 45, '+300 🪙', '#ffd32a', 20, true);
+              sfx.playCoin();
+              updateKillfeed([{ text: `👑 ${localPlayer.name} golpeou o ${boss.name.toUpperCase()} até a queda (+300 🪙)!` }]);
+              boss.hp = 0;
+            }
+          }
+        }
+      }
+    }
+
+    // 3. Minera Cristais de Gemas com o Golpe Melee
+    for (let i = serverMineCrystals.length - 1; i >= 0; i--) {
+      const cr = serverMineCrystals[i];
+      const dist = Math.hypot(cr.x - attacker.x, cr.y - attacker.y);
+      if (dist <= meleeReach + cr.radius) {
+        const dir = Math.atan2(cr.y - attacker.y, cr.x - attacker.x);
+        if (calcAngleDiff(dir, attacker.angle) < maxCone) {
+          cr.hp--;
+          localPlayer.gold += 20;
+          sfx.playHit();
+          addParticle(cr.x, cr.y, cr.color, 10, 5);
+          if (cr.hp <= 0) {
+            localPlayer.gold += cr.gold;
+            localPlayer.score += 40;
+            localPlayer.minedCount++;
+            addPlayerXp(15);
+            addFloatingText(cr.x, cr.y - 15, `+${cr.gold} 🪙`, '#ffd32a');
+            sfx.playCoin();
+            addParticle(cr.x, cr.y, '#ffd32a', 20, 7);
+            updateKillfeed([{ text: `💎 ${localPlayer.name} quebrou uma Gema (+${cr.gold} 🪙)!` }]);
+            checkOfflineQuestProgress('mine');
+            serverMineCrystals.splice(i, 1);
+          }
+        }
+      }
+    }
+
+    // 4. Quebra Barris e Caixas com o Golpe Melee
+    for (let i = serverBreakables.length - 1; i >= 0; i--) {
+      const br = serverBreakables[i];
+      const dist = Math.hypot(br.x - attacker.x, br.y - attacker.y);
+      if (dist <= meleeReach + br.radius) {
+        const dir = Math.atan2(br.y - attacker.y, br.x - attacker.x);
+        if (calcAngleDiff(dir, attacker.angle) < maxCone) {
+          localPlayer.gold += br.gold;
+          addPlayerXp(8);
+          addFloatingText(br.x, br.y - 15, `+${br.gold} 🪙`, '#ffd32a');
+          sfx.playCoin();
+          addParticle(br.x, br.y, '#e67e22', 12, 5);
+          serverBreakables.splice(i, 1);
+        }
+      }
+    }
+  } else {
+    // É um BOT atacando corpo a corpo
+    if (!localPlayer.isDead && localPlayer.shieldTimer <= 0) {
+      const dist = Math.hypot(localPlayer.x - attacker.x, localPlayer.y - attacker.y);
+      if (dist <= meleeReach + localPlayer.radius) {
+        const dir = Math.atan2(localPlayer.y - attacker.y, localPlayer.x - attacker.x);
+        if (calcAngleDiff(dir, attacker.angle) < maxCone) {
+          const dmg = attacker.damage || wData.damage || 15;
+          localPlayer.hp = Math.max(0, localPlayer.hp - dmg);
+          localPlayer.x += Math.cos(attacker.angle) * 18;
+          localPlayer.y += Math.sin(attacker.angle) * 18;
+          sfx.playHit();
+          triggerScreenShake(7);
+          addParticle(localPlayer.x, localPlayer.y, wData.color, 8, 5);
+          addFloatingText(localPlayer.x, localPlayer.y - 20, `-${dmg}`, '#ff4757');
+          if (localPlayer.hp <= 0) {
+            triggerOfflineDeath();
+          }
+        }
+      }
+    }
+  }
+}
+
+// -------------------------------------------------------------
+// Simulação Offline com Mundo Gigante (24000 x 24000)
 // -------------------------------------------------------------
 function startOfflineSimulation() {
   if (isOfflineMode) return;
@@ -920,20 +1158,12 @@ function startOfflineSimulation() {
   offlineSimulationInterval = setInterval(() => {
     if (!isOfflineMode || !localPlayer) return;
 
-    let inCity = false;
-    for (const c of cities) {
-      if (Math.hypot(localPlayer.x - c.x, localPlayer.y - c.y) < c.radius) {
-        inCity = true; break;
-      }
-    }
-    localPlayer.inSafeZone = false; // Não há zona safe, combate livre em toda parte!
-    if (localPlayer.inSafeZone && localPlayer.hp < localPlayer.maxHp && !localPlayer.isDead) {
-      localPlayer.hp = Math.min(localPlayer.maxHp, localPlayer.hp + 6 / 30);
-    }
+    localPlayer.inSafeZone = false; // Combate total em todo o mundo!
 
     if (localPlayer.shieldTimer > 0) localPlayer.shieldTimer -= 1 / 30;
     if (localPlayer.dashCooldown > 0) localPlayer.dashCooldown -= 1 / 30;
     if (localPlayer.attackCooldown > 0) localPlayer.attackCooldown -= 1 / 30;
+    if (localPlayer.slashTimer > 0) localPlayer.slashTimer -= 1 / 30;
     if (localPlayer.stamina < 100) localPlayer.stamina = Math.min(100, localPlayer.stamina + 20 / 30);
     if (localPlayer.speedBoostTimer > 0) localPlayer.speedBoostTimer -= 1 / 30;
     if (localPlayer.powerCooldowns.slam > 0) localPlayer.powerCooldowns.slam -= 1 / 30;
@@ -1058,39 +1288,9 @@ function startOfflineSimulation() {
         }
       }
 
-      // Ataque
-      if (mouse.down && localPlayer.attackCooldown <= 0 ) {
-        localPlayer.attackCooldown = 0.28;
-        const wData = shopCatalog.weapons.find(w => w.id === localPlayer.weapon) || shopCatalog.weapons[0];
-        sfx.playShoot(wData.color);
-
-        if (wData.triple) {
-          [-0.2, 0, 0.2].forEach(spr => {
-            serverProjectiles.push({
-              id: Math.random(),
-              ownerId: localPlayer.id,
-              color: wData.color,
-              damage: wData.damage,
-              x: localPlayer.x + Math.cos(localPlayer.angle + spr) * 30,
-              y: localPlayer.y + Math.sin(localPlayer.angle + spr) * 30,
-              vx: Math.cos(localPlayer.angle + spr) * 16,
-              vy: Math.sin(localPlayer.angle + spr) * 16,
-              lifetime: 65
-            });
-          });
-        } else {
-          serverProjectiles.push({
-            id: Math.random(),
-            ownerId: localPlayer.id,
-            color: wData.color,
-            damage: wData.damage,
-            x: localPlayer.x + Math.cos(localPlayer.angle) * 30,
-            y: localPlayer.y + Math.sin(localPlayer.angle) * 30,
-            vx: Math.cos(localPlayer.angle) * 16,
-            vy: Math.sin(localPlayer.angle) * 16,
-            lifetime: 65
-          });
-        }
+      // Ataque / Combate Corpo a Corpo (Espada ou Soco) ou Cajado Mágico
+      if (mouse.down && localPlayer.attackCooldown <= 0) {
+        executeOfflineAttack(localPlayer, true);
       }
     }
 
@@ -1127,37 +1327,37 @@ function startOfflineSimulation() {
     for (const b of serverBots.values()) {
       if (b.hp <= 0 || b.isDead) continue;
       b.walkStep = (b.walkStep || 0) + 0.22;
+      if (b.slashTimer > 0) b.slashTimer -= 1 / 30;
 
-      let bInCity = false;
-      for (const c of cities) {
-        if (Math.hypot(b.x - c.x, b.y - c.y) < c.radius) { bInCity = true; break; }
-      }
       b.inSafeZone = false;
 
       const dToPlayer = Math.hypot(localPlayer.x - b.x, localPlayer.y - b.y);
       if (dToPlayer < 850 && !localPlayer.isDead ) {
         b.angle = Math.atan2(localPlayer.y - b.y, localPlayer.x - b.x);
-        if (dToPlayer > 260) {
-          b.x += Math.cos(b.angle) * b.speed;
-          b.y += Math.sin(b.angle) * b.speed;
-        } else {
-          b.x += Math.cos(b.angle + Math.PI / 2) * b.speed;
-          b.y += Math.sin(b.angle + Math.PI / 2) * b.speed;
-        }
+        if (b.weapon === 'staff_astral') {
+          // Cajado Druídico: Mantém certa distância e atira projéteis mágicos
+          if (dToPlayer > 260) {
+            b.x += Math.cos(b.angle) * b.speed;
+            b.y += Math.sin(b.angle) * b.speed;
+          } else {
+            b.x += Math.cos(b.angle + Math.PI / 2) * b.speed;
+            b.y += Math.sin(b.angle + Math.PI / 2) * b.speed;
+          }
 
-        if (Math.random() < 0.05 && (!b.attackCooldown || b.attackCooldown <= 0)) {
-          b.attackCooldown = 0.5;
-          serverProjectiles.push({
-            id: Math.random(),
-            ownerId: b.id,
-            color: b.color,
-            damage: 22,
-            x: b.x + Math.cos(b.angle) * 30,
-            y: b.y + Math.sin(b.angle) * 30,
-            vx: Math.cos(b.angle) * 15,
-            vy: Math.sin(b.angle) * 15,
-            lifetime: 65
-          });
+          if (Math.random() < 0.05 && (!b.attackCooldown || b.attackCooldown <= 0)) {
+            b.attackCooldown = 0.5;
+            executeOfflineAttack(b, false);
+          }
+        } else {
+          // Espadas e Punhos: Avança para combate corpo a corpo direto (SEM PROJÉTEIS)!
+          if (dToPlayer > 55) {
+            b.x += Math.cos(b.angle) * b.speed;
+            b.y += Math.sin(b.angle) * b.speed;
+          }
+          if (dToPlayer <= 90 && (!b.attackCooldown || b.attackCooldown <= 0)) {
+            b.attackCooldown = 0.45;
+            executeOfflineAttack(b, false);
+          }
         }
       } else {
         b.x += Math.cos(b.angle) * (b.speed * 0.4);
@@ -1174,10 +1374,6 @@ function startOfflineSimulation() {
 
       let hit = false;
       if (pr.x < 0 || pr.x > arena.width || pr.y < 0 || pr.y > arena.height || pr.lifetime <= 0) hit = true;
-
-      for (const c of cities) {
-        if (Math.hypot(pr.x - c.x, pr.y - c.y) < c.radius) { hit = true; break; }
-      }
 
       if (!hit) {
         for (const boss of bosses) {
@@ -1425,6 +1621,21 @@ function handleServerMessage(msg) {
         color: msg.color || '#00e5ff',
         alpha: 1
       });
+    } else if (msg.name === 'melee_slash') {
+      if (msg.weaponId === 'fist') sfx.playPunch();
+      else sfx.playSwordSlash();
+      activeSpecialEffects.push({
+        type: 'melee_slash',
+        x: msg.x,
+        y: msg.y,
+        angle: msg.angle,
+        radius: msg.radius || 78,
+        color: msg.color || '#00e5ff',
+        weaponId: msg.weaponId,
+        progress: 0
+      });
+      const ent = (localPlayer && localPlayer.id === msg.ownerId) ? localPlayer : (serverPlayers.get(msg.ownerId) || serverBots.get(msg.ownerId));
+      if (ent) ent.slashTimer = 0.22;
     }
   } else if (msg.type === 'inventory_update') {
     if (localPlayer) {
@@ -2335,6 +2546,14 @@ function drawCharacter(ent) {
   ctx.fillStyle = skin;
   ctx.fillRect(6, -14, 5, 5);
 
+  // Braço Direito (Arma) com Animação Dinâmica de Corte / Golpe Melee
+  ctx.save();
+  if (ent.slashTimer > 0) {
+    const swingPhase = Math.sin((ent.slashTimer / 0.22) * Math.PI);
+    ctx.translate(6, 11);
+    ctx.rotate(swingPhase * 0.95 - 0.45);
+    ctx.translate(-6, -11);
+  }
   ctx.fillStyle = ent.color || '#ff4757';
   ctx.fillRect(0, 8, 12, 6);
   ctx.fillStyle = skin;
@@ -2342,6 +2561,7 @@ function drawCharacter(ent) {
 
   // 5. Arma Equipada com Brilho Encantado
   drawWeaponSprite(ent.weapon || 'sword_starter', ent.charClass);
+  ctx.restore();
 
   // 6. Cabeça, Elmo/Tiara e Olhos Vivos
   ctx.beginPath();
@@ -2402,30 +2622,50 @@ function drawCharacter(ent) {
 }
 
 function drawWeaponSprite(weaponId, charClass) {
-  if (weaponId === 'sword_fire') {
+  if (weaponId === 'fist') {
+    // Desarmado / Punhos: Atadura de couro e nós dos dedos fechados (sem lâmina!)
+    ctx.fillStyle = '#8b5a2b';
+    ctx.fillRect(12, 7, 7, 7);
+    ctx.fillStyle = '#f5cd79';
+    ctx.fillRect(16, 8, 4, 5);
+  } else if (weaponId === 'sword_fire') {
+    // Lâmina do Fogo da Mata: Espada incandescente com guarda dourada e lâmina flamejante
     ctx.fillStyle = '#ff4757';
-    ctx.fillRect(14, 8, 22, 5);
+    ctx.fillRect(14, 7, 26, 6);
     ctx.fillStyle = '#ffd32a';
-    ctx.fillRect(14, 7, 6, 7);
+    ctx.fillRect(14, 5, 5, 10);
+    ctx.fillStyle = '#ffa502';
+    ctx.fillRect(19, 8, 18, 4);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(23, 9, 10, 2);
   } else if (weaponId === 'staff_astral') {
+    // Cajado Druídico com Orbe Cósmico Roxo/Dourado
     ctx.fillStyle = '#8e44ad';
     ctx.fillRect(10, 8, 24, 4);
     ctx.beginPath();
     ctx.arc(36, 10, 6, 0, Math.PI * 2);
     ctx.fillStyle = '#ffd32a';
     ctx.shadowColor = '#ffd32a';
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 12;
     ctx.fill();
   } else if (weaponId === 'sword_rune') {
-    ctx.fillStyle = '#ced6e0';
-    ctx.fillRect(14, 9, 20, 4);
-    ctx.fillStyle = '#a29bfe';
-    ctx.fillRect(14, 8, 4, 6);
+    // Lâmina Rúnica da Floresta: Aço temperado esmeralda com runas azuis
+    ctx.fillStyle = '#2ed573';
+    ctx.fillRect(14, 8, 24, 5);
+    ctx.fillStyle = '#1e90ff';
+    ctx.fillRect(14, 6, 5, 9);
+    ctx.fillStyle = '#7bed9f';
+    ctx.fillRect(19, 9, 16, 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(22, 10, 8, 1);
   } else {
-    ctx.fillStyle = '#747d8c';
-    ctx.fillRect(14, 9, 18, 4);
-    ctx.fillStyle = '#2f3542';
-    ctx.fillRect(14, 8, 3, 6);
+    // Lâmina de Carvalho Rústica: Empunhadura de madeira nobre e lâmina de ferro polido
+    ctx.fillStyle = '#8b5a2b';
+    ctx.fillRect(14, 8, 22, 5);
+    ctx.fillStyle = '#e58e26';
+    ctx.fillRect(14, 6, 4, 9);
+    ctx.fillStyle = '#ced6e0';
+    ctx.fillRect(18, 9, 16, 3);
   }
 }
 
@@ -2776,6 +3016,46 @@ function drawSpecialEffects() {
       ctx.shadowColor = fx.color;
       ctx.shadowBlur = 18;
       ctx.stroke();
+      ctx.restore();
+    } else if (fx.type === 'melee_slash') {
+      fx.progress = (fx.progress || 0) + 0.16;
+      if (fx.progress >= 1) { activeSpecialEffects.splice(i, 1); continue; }
+      ctx.save();
+      ctx.translate(fx.x, fx.y);
+      ctx.rotate(fx.angle);
+
+      const alpha = Math.sin(fx.progress * Math.PI);
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha * 0.95));
+
+      const r = fx.radius || 78;
+      const arcSpread = 1.15;
+      const startArc = -arcSpread + fx.progress * 0.35;
+      const endArc = arcSpread + fx.progress * 0.35;
+
+      // Arco brilhante de corte da lâmina / golpe
+      ctx.beginPath();
+      ctx.arc(0, 0, r, startArc, endArc);
+      ctx.strokeStyle = fx.color || '#00e5ff';
+      ctx.lineWidth = fx.weaponId === 'fist' ? 5 : 8;
+      ctx.shadowColor = fx.color || '#00e5ff';
+      ctx.shadowBlur = 18;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      // Fio da lâmina reluzente (núcleo afiado branco)
+      ctx.beginPath();
+      ctx.arc(0, 0, r - 3, startArc + 0.1, endArc - 0.05);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Rastro de vento cortante
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 0.72, startArc + 0.2, endArc - 0.15);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
       ctx.restore();
     }
   }
