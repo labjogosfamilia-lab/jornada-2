@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Jornada II: Arena dos Campeões (Multiplayer Online)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div id="game-container">
+    <!-- Canvas de Renderização da Arena Principal -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Tela Inicial de Entrada / Lobby -->
+    <div id="lobby-screen">
+      <div class="lobby-card">
+        <h1 class="lobby-title">⚔️ JORNADA II</h1>
+        <p class="lobby-subtitle">Arena Multiplayer em Tempo Real com Bots Inteligentes</p>
+
+        <div class="form-group">
+          <label for="player-name">Seu Nome / Apelido</label>
+          <input type="text" id="player-name" placeholder="Ex: Guilherme" maxlength="14" value="Guilherme">
+        </div>
+
+        <div class="form-group">
+          <label>Cor do Campeão</label>
+          <div class="color-options" id="color-picker">
+            <div class="color-btn selected" data-color="#00e5ff" style="background: #00e5ff;"></div>
+            <div class="color-btn" data-color="#2ed573" style="background: #2ed573;"></div>
+            <div class="color-btn" data-color="#ffa502" style="background: #ffa502;"></div>
+            <div class="color-btn" data-color="#ff4757" style="background: #ff4757;"></div>
+            <div class="color-btn" data-color="#9b59b6" style="background: #9b59b6;"></div>
+            <div class="color-btn" data-color="#ffffff" style="background: #ffffff;"></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="server-address">Endereço do Servidor (Opcional)</label>
+          <input type="text" id="server-address" placeholder="localhost:3000 ou IP do Amigo">
+          <small style="color: #70a1ff; font-size: 11px; display: block; margin-top: 4px;">Deixe vazio ou padrão para jogar no servidor local / bots.</small>
+        </div>
+
+        <button id="btn-start" class="btn-play">ENTRAR NA BATALHA</button>
+
+        <div class="server-info-badge">
+          <span id="server-status-dot">🟡 Conectando...</span>
+          <span>•</span>
+          <span id="ping-indicator">Ping: -- ms</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interface em Jogo (HUD) -->
+    <div id="hud-overlay" style="display: none;">
+      <!-- Placar de Líderes -->
+      <div id="leaderboard">
+        <div class="lb-title">🏆 Top Combatentes</div>
+        <div id="lb-entries"></div>
+      </div>
+
+      <!-- Killfeed de Eliminações -->
+      <div id="killfeed"></div>
+
+      <!-- Status do Jogador (HP & Vigor) -->
+      <div class="player-status-card">
+        <div class="bar-container">
+          <div class="bar-label">
+            <span style="color: #ff6b81;">VIDA (HP)</span>
+            <span id="hp-val">100 / 100</span>
+          </div>
+          <div class="bar-bg">
+            <div id="hp-bar" class="bar-fill bar-hp" style="width: 100%;"></div>
+          </div>
+        </div>
+        <div class="bar-container">
+          <div class="bar-label">
+            <span style="color: #00e5ff;">VIGOR (DASH)</span>
+            <span id="stamina-val">100 / 100</span>
+          </div>
+          <div class="bar-bg">
+            <div id="stamina-bar" class="bar-fill bar-stamina" style="width: 100%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Minimapa Tático da Arena -->
+      <div id="minimap-container">
+        <canvas id="minimapCanvas" width="160" height="160"></canvas>
+      </div>
+
+      <!-- Chat Online -->
+      <div id="chat-container">
+        <div id="chat-messages"></div>
+        <input type="text" id="chat-input" placeholder="Pressione Enter para conversar..." maxlength="80">
+      </div>
+
+      <!-- Controles Virtuais Touch (Dispositivos Móveis) -->
+      <div id="mobile-controls">
+        <div class="mobile-btn" id="btn-mobile-dash">💨</div>
+        <div class="mobile-btn" id="btn-mobile-attack">⚔️</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
