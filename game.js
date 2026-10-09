@@ -1,5 +1,6 @@
 // =============================================================
-// JORNADA II: CIDADE, CASAS, CLASSES & GEMAS MÍSTICAS
+// JORNADA II: O GRANDE MUNDO VERDE & AS 4 CIDADES LENDÁRIAS
+// Multiplayer Online & Offline com Personagens Humanoides
 // =============================================================
 
 // Áudio Procedural com Web Audio API
@@ -107,7 +108,7 @@ class SoundFX {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+    osc.frequency.setValueAtTime(130, this.ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.4);
     gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
@@ -130,6 +131,36 @@ class SoundFX {
     gain.connect(this.ctx.destination);
     osc.start();
     osc.stop(this.ctx.currentTime + 0.3);
+  }
+
+  playMeteor() {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(260, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(45, this.ctx.currentTime + 0.5);
+    gain.gain.setValueAtTime(0.32, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.5);
+  }
+
+  playShield() {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(880, this.ctx.currentTime + 0.35);
+    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.35);
   }
 }
 
@@ -155,34 +186,110 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// Dados de Rede e Mundo
-let socket = null;
-let myId = null;
-let arena = { width: 3600, height: 3600 };
-let city = { x: 1800, y: 1800, radius: 350, name: 'Cidade dos Guardiões' };
-let selectedClass = 'warrior';
-let selectedColor = '#00e5ff';
+// Definições de Classes de Personagem
+const CHARACTER_CLASSES = {
+  warrior: {
+    id: 'warrior',
+    name: 'Guerreiro da Forja',
+    icon: '🗡️',
+    baseHp: 140,
+    speed: 6.3,
+    color: '#ff4757',
+    hairColor: '#e67e22',
+    skinColor: '#ffdcb4'
+  },
+  mage: {
+    id: 'mage',
+    name: 'Mago Astral',
+    icon: '🧙‍♂️',
+    baseHp: 95,
+    speed: 6.7,
+    color: '#00e5ff',
+    hairColor: '#ffffff',
+    skinColor: '#ffeaa7'
+  },
+  ranger: {
+    id: 'ranger',
+    name: 'Arqueiro dos Bosques',
+    icon: '🏹',
+    baseHp: 105,
+    speed: 7.3,
+    color: '#2ed573',
+    hairColor: '#2c3e50',
+    skinColor: '#ffdcb4'
+  },
+  shadow: {
+    id: 'shadow',
+    name: 'Assassino Noturno',
+    icon: '🥷',
+    baseHp: 100,
+    speed: 6.9,
+    color: '#a29bfe',
+    hairColor: '#1e272e',
+    skinColor: '#f5cd79'
+  }
+};
 
-// Prédios da Cidade
-let buildings = [
-  { id: 'b_castle', name: 'Castelo Real', x: 1800, y: 1610, w: 160, h: 90, roofColor: '#2f3542', wallColor: '#57606f', type: 'castle' },
-  { id: 'b_blacksmith', name: 'Ferraria de Brok', x: 1660, y: 1750, w: 90, h: 80, roofColor: '#e74c3c', wallColor: '#795548', type: 'shop' },
-  { id: 'b_alchemy', name: 'Alquimia da Sylva', x: 1940, y: 1750, w: 90, h: 80, roofColor: '#27ae60', wallColor: '#5d4037', type: 'shop' },
-  { id: 'b_mage', name: 'Torre Arcana', x: 1800, y: 1980, w: 85, h: 85, roofColor: '#8e44ad', wallColor: '#34495e', type: 'tower' },
-  { id: 'b_tavern', name: 'Taverna', x: 1650, y: 1610, w: 75, h: 65, roofColor: '#d35400', wallColor: '#6d4c41', type: 'house' },
-  { id: 'b_house1', name: 'Casa do Guarda', x: 1950, y: 1610, w: 75, h: 65, roofColor: '#c0392b', wallColor: '#6d4c41', type: 'house' },
-  { id: 'b_house2', name: 'Casa do Viajante', x: 1660, y: 1890, w: 75, h: 65, roofColor: '#e67e22', wallColor: '#6d4c41', type: 'house' },
-  { id: 'b_house3', name: 'Câmara Magos', x: 1940, y: 1890, w: 75, h: 65, roofColor: '#9b59b6', wallColor: '#4e342e', type: 'house' }
+// 4 Cidades do Grande Mundo
+const CITIES = [
+  { id: 'city_capital', name: 'Cidade Real da Capital', x: 2500, y: 2500, radius: 360, theme: 'royal' },
+  { id: 'city_forest', name: 'Vila dos Bosques', x: 1200, y: 1200, radius: 260, theme: 'forest' },
+  { id: 'city_lake', name: 'Vila do Lago Glacial', x: 3800, y: 1200, radius: 260, theme: 'lake' },
+  { id: 'city_oasis', name: 'Vila do Oásis das Rochas', x: 2500, y: 3900, radius: 260, theme: 'desert' }
 ];
 
-let npcs = [
-  { id: 'npc_blacksmith', name: 'Brok, o Ferreiro', icon: '🔨', x: 1720, y: 1760, radius: 28, type: 'weapons' },
-  { id: 'npc_alchemist', name: 'Sylva, a Alquimista', icon: '🧪', x: 1880, y: 1760, radius: 28, type: 'potions' },
-  { id: 'npc_mage', name: 'Mago Elidor', icon: '🧙‍♂️', x: 1800, y: 1910, radius: 28, type: 'powers' },
-  { id: 'npc_king', name: 'Capitão das Missões', icon: '📜', x: 1800, y: 1680, radius: 28, type: 'quests' }
+// Prédios nas 4 Cidades
+const BUILDINGS = [
+  // Capital Central
+  { id: 'b_castle', name: 'Castelo Real', x: 2500, y: 2330, w: 160, h: 95, roofColor: '#2f3542', wallColor: '#747d8c', type: 'castle' },
+  { id: 'b_blacksmith', name: 'Ferraria de Brok', x: 2360, y: 2470, w: 90, h: 80, roofColor: '#e74c3c', wallColor: '#795548', type: 'shop' },
+  { id: 'b_alchemy', name: 'Alquimia da Sylva', x: 2640, y: 2470, w: 90, h: 80, roofColor: '#27ae60', wallColor: '#5d4037', type: 'shop' },
+  { id: 'b_mage', name: 'Torre Arcana', x: 2500, y: 2680, w: 85, h: 85, roofColor: '#8e44ad', wallColor: '#34495e', type: 'tower' },
+  { id: 'b_tavern', name: 'Taverna Real', x: 2360, y: 2330, w: 80, h: 70, roofColor: '#d35400', wallColor: '#6d4c41', type: 'house' },
+  { id: 'b_house1', name: 'Guarda Imperial', x: 2640, y: 2330, w: 80, h: 70, roofColor: '#c0392b', wallColor: '#6d4c41', type: 'house' },
+
+  // Vila dos Bosques
+  { id: 'b_for_1', name: 'Cabana do Druida', x: 1200, y: 1120, w: 90, h: 75, roofColor: '#27ae60', wallColor: '#4e342e', type: 'house' },
+  { id: 'b_for_2', name: 'Ferraria da Floresta', x: 1100, y: 1240, w: 80, h: 70, roofColor: '#e67e22', wallColor: '#5d4037', type: 'shop' },
+  { id: 'b_for_3', name: 'Alquimia Herbal', x: 1300, y: 1240, w: 80, h: 70, roofColor: '#16a085', wallColor: '#3e2723', type: 'shop' },
+
+  // Vila do Lago Glacial
+  { id: 'b_lake_1', name: 'Templo de Niflheim', x: 3800, y: 1120, w: 95, h: 80, roofColor: '#3498db', wallColor: '#57606f', type: 'tower' },
+  { id: 'b_lake_2', name: 'Refúgio dos Pescadores', x: 3700, y: 1240, w: 80, h: 70, roofColor: '#2980b9', wallColor: '#4b6584', type: 'house' },
+  { id: 'b_lake_3', name: 'Mercado de Gelo', x: 3900, y: 1240, w: 80, h: 70, roofColor: '#00d2d3', wallColor: '#4b6584', type: 'shop' },
+
+  // Vila do Oásis
+  { id: 'b_oas_1', name: 'Templo Solar', x: 2500, y: 3800, w: 95, h: 80, roofColor: '#f39c12', wallColor: '#a0522d', type: 'tower' },
+  { id: 'b_oas_2', name: 'Bazar das Areias', x: 2400, y: 3940, w: 80, h: 70, roofColor: '#d35400', wallColor: '#8b4513', type: 'shop' },
+  { id: 'b_oas_3', name: 'Tenda dos Viajantes', x: 2600, y: 3940, w: 80, h: 70, roofColor: '#e67e22', wallColor: '#8b4513', type: 'house' }
 ];
 
-let shopCatalog = {
+// NPCs nas Cidades
+const NPCS = [
+  // Capital
+  { id: 'npc_blacksmith', name: 'Brok, o Ferreiro', icon: '🔨', x: 2420, y: 2470, radius: 28, type: 'weapons' },
+  { id: 'npc_alchemist', name: 'Sylva, a Alquimista', icon: '🧪', x: 2580, y: 2470, radius: 28, type: 'potions' },
+  { id: 'npc_mage', name: 'Mago Elidor', icon: '🧙‍♂️', x: 2500, y: 2600, radius: 28, type: 'powers' },
+  { id: 'npc_king', name: 'Mestre das Missões', icon: '📜', x: 2500, y: 2390, radius: 28, type: 'quests' },
+
+  // Vila dos Bosques
+  { id: 'npc_druid', name: 'Druida Rowan', icon: '🌿', x: 1200, y: 1200, radius: 26, type: 'potions' },
+  // Vila do Lago
+  { id: 'npc_frost', name: 'Ferreiro Glacial', icon: '❄️', x: 3800, y: 1200, radius: 26, type: 'weapons' },
+  // Vila do Oásis
+  { id: 'npc_sun', name: 'Mago do Sol', icon: '☀️', x: 2500, y: 3900, radius: 26, type: 'powers' }
+];
+
+// Missões para Desbloquear Super Poderes
+const POWER_QUESTS = [
+  { id: 'q_slam', name: '⚡ Provação do Trovão', desc: 'Derrote 2 Inimigos no mapa', target: 2, type: 'kill', rewardPower: 'power_slam', powerName: 'Pisão Sísmico [R]' },
+  { id: 'q_beam', name: '🏹 Harmonia Astral', desc: 'Minere 2 Cristais de Gemas', target: 2, type: 'mine', rewardPower: 'power_beam', powerName: 'Raio Astral [F]' },
+  { id: 'q_fire', name: '🔥 Fogo Ancestral', desc: 'Derrote 3 Inimigos no mapa', target: 3, type: 'kill', rewardPower: 'power_fire', powerName: 'Meteoro Flamejante [C]' },
+  { id: 'q_shield', name: '🛡️ Relíquia Sagrada', desc: 'Abra 3 Baús de Tesouro', target: 3, type: 'chest', rewardPower: 'power_shield', powerName: 'Escudo Divino [V]' }
+];
+
+// Catálogo das Lojas
+const SHOP_CATALOG = {
   weapons: [
     { id: 'sword_starter', name: 'Lâmina do Noviço', cost: 0, damage: 22, color: '#00e5ff', desc: 'Espada inicial balanceada' },
     { id: 'sword_rune', name: 'Espada de Prata Rúnica', cost: 120, damage: 34, color: '#a29bfe', desc: '+50% Dano & disparo veloz' },
@@ -195,10 +302,22 @@ let shopCatalog = {
   ],
   powers: [
     { id: 'power_slam', name: '⚡ Pisão Sísmico [R]', cost: 150, cooldown: 5, icon: '⚡', desc: 'Explosão sísmica 360° que repele e fere inimigos' },
-    { id: 'power_beam', name: '🏹 Raio Astral Cósmico [F]', cost: 300, cooldown: 8, icon: '🏹', desc: 'Feixe concentrado perfurante de longo alcance' }
+    { id: 'power_beam', name: '🏹 Raio Astral Cósmico [F]', cost: 300, cooldown: 8, icon: '🏹', desc: 'Feixe concentrado perfurante de longo alcance' },
+    { id: 'power_fire', name: '🔥 Meteoro Flamejante [C]', cost: 350, cooldown: 7, icon: '🔥', desc: 'Chuva de meteoros incandescentes em área' },
+    { id: 'power_shield', name: '🛡️ Escudo Divino [V]', cost: 250, cooldown: 12, icon: '🛡️', desc: 'Barreira protetora que bloqueia dano por 6s' }
   ]
 };
 
+// Dados de Rede e Mundo
+let socket = null;
+let myId = null;
+let arena = { width: 5000, height: 5000 };
+let cities = CITIES;
+let buildings = BUILDINGS;
+let npcs = NPCS;
+let shopCatalog = SHOP_CATALOG;
+let selectedClass = 'warrior';
+let selectedColor = '#00e5ff';
 let obstacles = [];
 let localPlayer = null;
 
@@ -214,13 +333,13 @@ let serverWorldBoss = null;
 let particles = [];
 let activeSpecialEffects = [];
 
-const camera = { x: 1800, y: 1800 };
+const camera = { x: 2500, y: 2500 };
 
 const keys = {
   w: false, a: false, s: false, d: false,
   ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false,
   Space: false, Shift: false,
-  r: false, f: false, e: false, '1': false, '2': false
+  r: false, f: false, c: false, v: false, e: false, '1': false, '2': false
 };
 const mouse = { x: screenWidth / 2, y: screenHeight / 2, down: false };
 let nearbyNpc = null;
@@ -309,71 +428,78 @@ function connectWebSocket(customHost = null) {
   }
 }
 
-// Simulação Offline com Mundo Completo
+// -------------------------------------------------------------
+// Simulação Offline com Mundo Gigante (5000 x 5000) de Grama
+// -------------------------------------------------------------
 function startOfflineSimulation() {
   if (isOfflineMode) return;
   isOfflineMode = true;
 
   const dot = document.getElementById('server-status-dot');
   const pingInd = document.getElementById('ping-indicator');
-  if (dot) dot.innerText = '🤖 Modo Jornada (Offline)';
+  if (dot) dot.innerText = '🌿 Mundo de Grama (Offline)';
   if (pingInd) pingInd.innerText = '60 FPS (Local)';
 
+  arena = { width: 5000, height: 5000 };
+  cities = CITIES;
+  buildings = BUILDINGS;
+  npcs = NPCS;
+
   obstacles = [
-    { x: 1800, y: 1450, radius: 40, type: 'city_gate', label: 'Portão Norte' },
-    { x: 1800, y: 2150, radius: 40, type: 'city_gate', label: 'Portão Sul' },
-    { x: 1450, y: 1800, radius: 40, type: 'city_gate', label: 'Portão Oeste' },
-    { x: 2150, y: 1800, radius: 40, type: 'city_gate', label: 'Portão Leste' },
-    { x: 800, y: 800, radius: 95, type: 'sanctuary', label: 'Carvalho Ancestral' },
-    { x: 600, y: 1100, radius: 65, type: 'rock', label: 'Monólito da Floresta' },
-    { x: 2800, y: 800, radius: 95, type: 'pillar', label: 'Templo Glacial' },
-    { x: 800, y: 2800, radius: 95, type: 'pillar', label: 'Labirinto das Sombras' },
-    { x: 2800, y: 2800, radius: 100, type: 'pillar', label: 'Forja Vulcânica' }
+    { x: 1800, y: 1800, radius: 85, type: 'rock', label: 'Pedra Ancestral' },
+    { x: 3200, y: 3200, radius: 95, type: 'pillar', label: 'Ruínas Antigas' },
+    { x: 1800, y: 3200, radius: 90, type: 'rock', label: 'Pico Escarpado' },
+    { x: 3200, y: 1800, radius: 90, type: 'pillar', label: 'Obelisco Cósmico' }
   ];
 
   myId = 'local_hero';
+  const cData = CHARACTER_CLASSES[selectedClass] || CHARACTER_CLASSES.warrior;
+
   localPlayer = {
     id: myId,
     name: document.getElementById('player-name')?.value?.trim() || 'Guilherme',
-    charClass: selectedClass || 'warrior',
-    color: selectedColor || '#00e5ff',
-    x: 1800,
-    y: 1800,
+    charClass: selectedClass,
+    color: cData.color,
+    hairColor: cData.hairColor,
+    skinColor: cData.skinColor,
+    x: 2500,
+    y: 2500,
     vx: 0,
     vy: 0,
-    speed: selectedClass === 'ranger' ? 7.2 : 6.4,
+    walkStep: 0,
+    speed: cData.speed,
     angle: 0,
-    hp: selectedClass === 'warrior' ? 140 : 100,
-    maxHp: selectedClass === 'warrior' ? 140 : 100,
+    hp: cData.baseHp,
+    maxHp: cData.baseHp,
     stamina: 100,
     maxStamina: 100,
+    shieldTimer: 0,
     gold: 150,
     score: 0,
     kills: 0,
     minedCount: 0,
     weapon: 'sword_starter',
     potions: { heal: 1, speed: 1 },
-    powers: { slam: false, beam: false },
-    powerCooldowns: { slam: 0, beam: 0 },
+    powers: { slam: false, beam: false, fire: false, shield: false },
+    powerCooldowns: { slam: 0, beam: 0, fire: 0, shield: 0 },
     dashCooldown: 0,
     attackCooldown: 0,
     speedBoostTimer: 0,
     inSafeZone: true,
     radius: 24,
-    activeQuest: { id: 'q_bots', title: 'Caçar Inimigos', target: 2, current: 0, reward: 150 }
+    activeQuests: POWER_QUESTS.map(q => ({ ...q, current: 0, completed: false }))
   };
   serverPlayers.set(myId, localPlayer);
 
-  // Cristais de Mineração
+  // Spawna 24 Cristais pelo mapa
   serverMineCrystals = [];
   const cryColors = ['#00e5ff', '#ff4757', '#a29bfe', '#2ed573'];
-  for (let i = 0; i < 18; i++) {
-    const a = Math.random() * Math.PI * 2;
-    const r = 500 + Math.random() * 1100;
+  for (let i = 0; i < 24; i++) {
+    const sp = getOfflineSpawnPoint();
     serverMineCrystals.push({
       id: 'cry_' + i,
-      x: 1800 + Math.cos(a) * r,
-      y: 1800 + Math.sin(a) * r,
+      x: sp.x,
+      y: sp.y,
       hp: 3,
       maxHp: 3,
       radius: 20,
@@ -383,86 +509,94 @@ function startOfflineSimulation() {
     });
   }
 
-  // Barris e Caixas
+  // Spawna 30 Barris
   serverBreakables = [];
-  for (let i = 0; i < 22; i++) {
-    const a = Math.random() * Math.PI * 2;
-    const r = 400 + Math.random() * 1200;
+  for (let i = 0; i < 30; i++) {
+    const sp = getOfflineSpawnPoint();
     serverBreakables.push({
       id: 'brk_' + i,
-      x: 1800 + Math.cos(a) * r,
-      y: 1800 + Math.sin(a) * r,
+      x: sp.x,
+      y: sp.y,
       radius: 16,
       gold: 25
     });
   }
 
-  // Baús de Ouro
+  // Spawna 20 Baús
   serverChests = [];
-  for (let i = 0; i < 16; i++) {
-    const a = Math.random() * Math.PI * 2;
-    const r = 600 + Math.random() * 1000;
+  for (let i = 0; i < 20; i++) {
+    const sp = getOfflineSpawnPoint();
     serverChests.push({
       id: 'ch_' + i,
-      x: 1800 + Math.cos(a) * r,
-      y: 1800 + Math.sin(a) * r,
+      x: sp.x,
+      y: sp.y,
       radius: 18,
       gold: 50
     });
   }
 
-  // Orbes
+  // Spawna 40 Orbes
   serverOrbs = [];
-  for (let i = 0; i < 30; i++) {
-    const a = Math.random() * Math.PI * 2;
-    const r = 500 + Math.random() * 1100;
+  for (let i = 0; i < 40; i++) {
+    const sp = getOfflineSpawnPoint();
     serverOrbs.push({
       id: 'orb_' + i,
-      x: 1800 + Math.cos(a) * r,
-      y: 1800 + Math.sin(a) * r,
+      x: sp.x,
+      y: sp.y,
       type: Math.random() > 0.5 ? 'heal' : 'energy',
       value: 30,
       radius: 14
     });
   }
 
-  // Colosso
+  // Chefe do Mundo (Colosso Titânico)
   serverWorldBoss = {
     id: 'world_colossus',
     name: '👑 Colosso Titânico Ancestral',
-    x: 2700,
-    y: 1200,
-    radius: 55,
-    hp: 450,
-    maxHp: 450,
+    x: 3700,
+    y: 2500,
+    radius: 60,
+    hp: 500,
+    maxHp: 500,
     color: '#e67e22',
     speed: 3.2,
     angle: 0
   };
 
-  // 12 Bots Espalhados
-  const BOT_NAMES = ['Arconte Sylas', 'Valquíria Kira', 'Titã Gorok', 'Sombra Vane', 'Sentinela Kael', 'Caçador Rex', 'Guardião Thorne', 'Lorde Malakor', 'Druida Rowan', 'Lâmina Lyra', 'Paladino Uther', 'Andarilho Jarek'];
+  // 14 Bots Humanoides Espalhados
+  const BOT_NAMES = [
+    'Arconte Sylas', 'Valquíria Kira', 'Titã Gorok', 'Sombra Vane',
+    'Sentinela Kael', 'Caçador Rex', 'Guardião Thorne', 'Oráculo Zeph',
+    'Lorde Malakor', 'Druida Rowan', 'Lâmina Lyra', 'Paladino Uther',
+    'Cavaleiro Galahad', 'Arqueira Diana'
+  ];
   const clList = ['warrior', 'mage', 'ranger', 'shadow'];
   serverBots.clear();
   BOT_NAMES.forEach((bName, idx) => {
-    const a = (idx / BOT_NAMES.length) * Math.PI * 2;
-    const r = 700 + Math.random() * 800;
+    const sp = getOfflineSpawnPoint();
+    const bClass = clList[idx % clList.length];
+    const bData = CHARACTER_CLASSES[bClass];
+
     serverBots.set('bot_' + idx, {
       id: 'bot_' + idx,
       isBot: true,
       name: bName + ' (BOT)',
-      charClass: clList[idx % clList.length],
-      color: ['#ff4757', '#ffa502', '#70a1ff', '#2ed573', '#a29bfe'][idx % 5],
-      x: 1800 + Math.cos(a) * r,
-      y: 1800 + Math.sin(a) * r,
+      charClass: bClass,
+      color: bData.color,
+      hairColor: bData.hairColor,
+      skinColor: bData.skinColor,
+      x: sp.x,
+      y: sp.y,
       vx: 0,
       vy: 0,
+      walkStep: 0,
       speed: 5.5,
       angle: Math.random() * Math.PI * 2,
       hp: 110,
       maxHp: 110,
       gold: 50,
       score: 0,
+      shieldTimer: 0,
       weapon: idx % 2 === 0 ? 'sword_rune' : 'sword_starter',
       radius: 24,
       dashCooldown: 0,
@@ -470,22 +604,30 @@ function startOfflineSimulation() {
     });
   });
 
-  // Loop de Simulação Offline
+  // Loop de Simulação Offline (30 FPS)
   offlineSimulationInterval = setInterval(() => {
     if (!isOfflineMode || !localPlayer) return;
 
-    const dCity = Math.hypot(localPlayer.x - city.x, localPlayer.y - city.y);
-    localPlayer.inSafeZone = dCity < city.radius;
+    let inCity = false;
+    for (const c of cities) {
+      if (Math.hypot(localPlayer.x - c.x, localPlayer.y - c.y) < c.radius) {
+        inCity = true; break;
+      }
+    }
+    localPlayer.inSafeZone = inCity;
     if (localPlayer.inSafeZone && localPlayer.hp < localPlayer.maxHp) {
       localPlayer.hp = Math.min(localPlayer.maxHp, localPlayer.hp + 6 / 30);
     }
 
+    if (localPlayer.shieldTimer > 0) localPlayer.shieldTimer -= 1 / 30;
     if (localPlayer.dashCooldown > 0) localPlayer.dashCooldown -= 1 / 30;
     if (localPlayer.attackCooldown > 0) localPlayer.attackCooldown -= 1 / 30;
     if (localPlayer.stamina < 100) localPlayer.stamina = Math.min(100, localPlayer.stamina + 20 / 30);
     if (localPlayer.speedBoostTimer > 0) localPlayer.speedBoostTimer -= 1 / 30;
     if (localPlayer.powerCooldowns.slam > 0) localPlayer.powerCooldowns.slam -= 1 / 30;
     if (localPlayer.powerCooldowns.beam > 0) localPlayer.powerCooldowns.beam -= 1 / 30;
+    if (localPlayer.powerCooldowns.fire > 0) localPlayer.powerCooldowns.fire -= 1 / 30;
+    if (localPlayer.powerCooldowns.shield > 0) localPlayer.powerCooldowns.shield -= 1 / 30;
 
     let dx = 0, dy = 0;
     if (keys.w || keys.ArrowUp) dy -= 1;
@@ -509,6 +651,7 @@ function startOfflineSimulation() {
 
     const len = Math.hypot(dx, dy);
     if (len > 0) {
+      localPlayer.walkStep += 0.28;
       const nextX = Math.max(localPlayer.radius, Math.min(arena.width - localPlayer.radius, localPlayer.x + (dx / len) * spd));
       const nextY = Math.max(localPlayer.radius, Math.min(arena.height - localPlayer.radius, localPlayer.y + (dy / len) * spd));
 
@@ -541,7 +684,7 @@ function startOfflineSimulation() {
             sfx.playCoin();
             addParticle(cr.x, cr.y, '#ffd32a', 20, 7);
             updateKillfeed([{ text: `💎 ${localPlayer.name} minerou uma Gema (+${cr.gold} 🪙)!` }]);
-            checkQuestProgress('mined');
+            checkOfflineQuestProgress('mine');
             serverMineCrystals.splice(i, 1);
           }
           break;
@@ -570,6 +713,7 @@ function startOfflineSimulation() {
         sfx.playCoin();
         addParticle(ch.x, ch.y, '#ffd32a', 15, 6);
         updateKillfeed([{ text: `🪙 ${localPlayer.name} abriu um baú (+${ch.gold} Ouro)!` }]);
+        checkOfflineQuestProgress('chest');
         serverChests.splice(i, 1);
         break;
       }
@@ -622,7 +766,7 @@ function startOfflineSimulation() {
       }
     }
 
-    // Chefe do Mundo (Colosso) Offline
+    // Chefe do Mundo (Colosso Titânico)
     if (serverWorldBoss && serverWorldBoss.hp > 0) {
       const dToBoss = Math.hypot(localPlayer.x - serverWorldBoss.x, localPlayer.y - serverWorldBoss.y);
       if (dToBoss < 700 && !localPlayer.inSafeZone) {
@@ -630,7 +774,7 @@ function startOfflineSimulation() {
         serverWorldBoss.x += Math.cos(serverWorldBoss.angle) * serverWorldBoss.speed;
         serverWorldBoss.y += Math.sin(serverWorldBoss.angle) * serverWorldBoss.speed;
 
-        if (dToBoss < 140) {
+        if (dToBoss < 140 && localPlayer.shieldTimer <= 0) {
           localPlayer.hp = Math.max(0, localPlayer.hp - 35);
           sfx.playSlam();
           addParticle(serverWorldBoss.x, serverWorldBoss.y, '#e67e22', 15, 6);
@@ -638,11 +782,19 @@ function startOfflineSimulation() {
       }
     }
 
-    // Bots IA Offline
+    // Bots IA Humanoides
     for (const b of serverBots.values()) {
       if (b.hp <= 0) continue;
+      b.walkStep = (b.walkStep || 0) + 0.22;
+
+      let bInCity = false;
+      for (const c of cities) {
+        if (Math.hypot(b.x - c.x, b.y - c.y) < c.radius) { bInCity = true; break; }
+      }
+      b.inSafeZone = bInCity;
+
       const dToPlayer = Math.hypot(localPlayer.x - b.x, localPlayer.y - b.y);
-      if (dToPlayer < 700 && !localPlayer.inSafeZone) {
+      if (dToPlayer < 750 && !localPlayer.inSafeZone && !b.inSafeZone) {
         b.angle = Math.atan2(localPlayer.y - b.y, localPlayer.x - b.x);
         if (dToPlayer > 260) {
           b.x += Math.cos(b.angle) * b.speed;
@@ -667,8 +819,8 @@ function startOfflineSimulation() {
           });
         }
       } else {
-        b.x += Math.cos(b.angle) * (b.speed * 0.5);
-        b.y += Math.sin(b.angle) * (b.speed * 0.5);
+        b.x += Math.cos(b.angle) * (b.speed * 0.4);
+        b.y += Math.sin(b.angle) * (b.speed * 0.4);
         if (Math.random() < 0.02) b.angle += (Math.random() - 0.5) * 1.5;
       }
       if (b.attackCooldown > 0) b.attackCooldown -= 1 / 30;
@@ -681,7 +833,11 @@ function startOfflineSimulation() {
 
       let hit = false;
       if (pr.x < 0 || pr.x > arena.width || pr.y < 0 || pr.y > arena.height || pr.lifetime <= 0) hit = true;
-      if (!hit && Math.hypot(pr.x - city.x, pr.y - city.y) < city.radius) hit = true;
+
+      // Colisão com Zonas Seguras
+      for (const c of cities) {
+        if (Math.hypot(pr.x - c.x, pr.y - c.y) < c.radius) { hit = true; break; }
+      }
 
       // Colisão com o Colosso
       if (!hit && serverWorldBoss && serverWorldBoss.hp > 0 && Math.hypot(pr.x - serverWorldBoss.x, pr.y - serverWorldBoss.y) < serverWorldBoss.radius + 6) {
@@ -701,13 +857,14 @@ function startOfflineSimulation() {
       }
 
       if (!hit) {
-        if (pr.ownerId !== localPlayer.id && !localPlayer.inSafeZone && Math.hypot(pr.x - localPlayer.x, pr.y - localPlayer.y) < localPlayer.radius + 6) {
+        if (pr.ownerId !== localPlayer.id && !localPlayer.inSafeZone && localPlayer.shieldTimer <= 0 &&
+            Math.hypot(pr.x - localPlayer.x, pr.y - localPlayer.y) < localPlayer.radius + 6) {
           hit = true;
           localPlayer.hp = Math.max(0, localPlayer.hp - pr.damage);
           sfx.playHit();
           addParticle(pr.x, pr.y, pr.color, 8, 5);
           if (localPlayer.hp <= 0) {
-            setTimeout(() => { localPlayer.hp = localPlayer.maxHp; localPlayer.x = 1800; localPlayer.y = 1800; }, 2500);
+            setTimeout(() => { localPlayer.hp = localPlayer.maxHp; localPlayer.x = 2500; localPlayer.y = 2500; }, 2500);
           }
         }
 
@@ -723,11 +880,12 @@ function startOfflineSimulation() {
               localPlayer.gold += 70;
               sfx.playCoin();
               updateKillfeed([{ text: `⚡ ${localPlayer.name} derrotou ${b.name} (+70 🪙)!` }]);
-              checkQuestProgress('kill');
+              checkOfflineQuestProgress('kill');
               setTimeout(() => {
+                const sp = getOfflineSpawnPoint();
                 b.hp = b.maxHp;
-                b.x = 1800 + (Math.random() - 0.5) * 1600;
-                b.y = 1800 + (Math.random() - 0.5) * 1600;
+                b.x = sp.x;
+                b.y = sp.y;
               }, 3000);
             }
             break;
@@ -742,38 +900,47 @@ function startOfflineSimulation() {
   }, 1000 / 30);
 }
 
-function checkQuestProgress(actionType) {
-  if (!localPlayer || !localPlayer.activeQuest) return;
-  const q = localPlayer.activeQuest;
-  if (q.id === 'q_bots' && actionType === 'kill') {
-    q.current++;
-    if (q.current >= q.target) {
-      localPlayer.gold += q.reward;
-      sfx.playCoin();
-      updateKillfeed([{ text: `📜 MISSÃO CONCLUÍDA: ${q.title} (+${q.reward} 🪙)!` }]);
-      localPlayer.activeQuest = { id: 'q_gems', title: 'Minerar 3 Gemas', target: 3, current: 0, reward: 180 };
+function getOfflineSpawnPoint() {
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const x = 300 + Math.random() * (arena.width - 600);
+    const y = 300 + Math.random() * (arena.height - 600);
+    let inCity = false;
+    for (const c of cities) {
+      if (Math.hypot(x - c.x, y - c.y) < c.radius + 80) { inCity = true; break; }
     }
-  } else if (q.id === 'q_gems' && actionType === 'mined') {
-    q.current++;
-    if (q.current >= q.target) {
-      localPlayer.gold += q.reward;
-      sfx.playCoin();
-      updateKillfeed([{ text: `📜 MISSÃO CONCLUÍDA: ${q.title} (+${q.reward} 🪙)!` }]);
-      localPlayer.activeQuest = { id: 'q_boss', title: 'Derrotar o Colosso', target: 1, current: 0, reward: 300 };
+    if (!inCity) return { x, y };
+  }
+  return { x: 2500 + (Math.random() - 0.5) * 800, y: 2500 + (Math.random() - 0.5) * 800 };
+}
+
+function checkOfflineQuestProgress(actionType) {
+  if (!localPlayer || !localPlayer.activeQuests) return;
+  for (const q of localPlayer.activeQuests) {
+    if (!q.completed && q.type === actionType) {
+      q.current++;
+      if (q.current >= q.target) {
+        q.completed = true;
+        const pKey = q.rewardPower.replace('power_', '');
+        localPlayer.powers[pKey] = true;
+        sfx.playCoin();
+        updateKillfeed([{ text: `✨ MISSÃO CONCLUÍDA: ${q.name}! Desbloqueado: ${q.powerName}!` }]);
+      }
     }
   }
+  renderQuestsList();
 }
 
 function handleServerMessage(msg) {
   if (msg.type === 'welcome') {
     myId = msg.id;
-    arena = msg.arena;
-    city = msg.city || city;
+    arena = msg.arena || arena;
+    cities = msg.cities || cities;
     buildings = msg.buildings || buildings;
     npcs = msg.npcs || npcs;
     shopCatalog = msg.catalog || shopCatalog;
-    obstacles = msg.obstacles;
+    obstacles = msg.obstacles || obstacles;
     localPlayer = msg.player;
+    renderQuestsList();
   } else if (msg.type === 'state') {
     serverPlayers.clear();
     for (const p of msg.players) {
@@ -797,6 +964,10 @@ function handleServerMessage(msg) {
     updateLeaderboard();
   } else if (msg.type === 'killfeed') {
     updateKillfeed(msg.feed);
+  } else if (msg.type === 'power_unlocked') {
+    sfx.playCoin();
+    updateKillfeed([{ text: msg.text }]);
+    renderQuestsList();
   } else if (msg.type === 'chat') {
     addChatMessage(msg.sender, msg.color, msg.text);
   } else if (msg.type === 'hit') {
@@ -806,15 +977,15 @@ function handleServerMessage(msg) {
     if (msg.name === 'dash') {
       sfx.playDash();
       addParticle(msg.x, msg.y, msg.color || '#00e5ff', 12, 6);
-    } else if (msg.name === 'chest_opened') {
-      sfx.playCoin();
-      addParticle(msg.x, msg.y, '#ffd32a', 18, 7);
     } else if (msg.name === 'heal') {
       sfx.playPotion();
       addParticle(msg.x, msg.y, '#2ed573', 15, 6);
     } else if (msg.name === 'speed_boost') {
       sfx.playPotion();
       addParticle(msg.x, msg.y, '#ffd32a', 15, 7);
+    } else if (msg.name === 'shield_up') {
+      sfx.playShield();
+      addParticle(msg.x, msg.y, '#00e5ff', 20, 6);
     } else if (msg.name === 'seismic_slam') {
       sfx.playSlam();
       activeSpecialEffects.push({
@@ -822,7 +993,7 @@ function handleServerMessage(msg) {
         x: msg.x,
         y: msg.y,
         radius: 10,
-        maxRadius: msg.radius || 200,
+        maxRadius: msg.radius || 210,
         color: msg.color || '#ffd32a',
         alpha: 1
       });
@@ -846,6 +1017,7 @@ function handleServerMessage(msg) {
       localPlayer.powers = msg.powers;
       updateHUD(localPlayer);
       renderShopItems();
+      renderQuestsList();
     }
   }
 }
@@ -868,6 +1040,8 @@ function sendInput() {
       dash: keys.Space || keys.Shift,
       powerSlam: keys.r,
       powerBeam: keys.f,
+      powerFire: keys.c,
+      powerShield: keys.v,
       useHeal: keys['1'],
       useSpeed: keys['2'],
       angle: angle
@@ -877,6 +1051,8 @@ function sendInput() {
   if (keys.Space) keys.Space = false;
   if (keys.r) keys.r = false;
   if (keys.f) keys.f = false;
+  if (keys.c) keys.c = false;
+  if (keys.v) keys.v = false;
   if (keys['1']) keys['1'] = false;
   if (keys['2']) keys['2'] = false;
 }
@@ -912,43 +1088,42 @@ function updateHUD(player) {
     bossBar.style.display = 'none';
   }
 
-  // Rastreador de Missões
-  if (player.activeQuest) {
-    document.getElementById('quest-desc').innerText = `⚔️ ${player.activeQuest.title} (${player.activeQuest.current}/${player.activeQuest.target})`;
-    document.querySelector('.quest-reward').innerText = `Recompensa: 🪙 ${player.activeQuest.reward} Ouro`;
+  // Rastreador da Missão Atual
+  const curQuest = (player.activeQuests || POWER_QUESTS).find(q => !q.completed) || (player.activeQuests || POWER_QUESTS)[0];
+  if (curQuest) {
+    document.getElementById('quest-desc').innerText = `${curQuest.name} (${curQuest.current || 0}/${curQuest.target})`;
+    document.querySelector('.quest-reward').innerText = `Recompensa: ✨ ${curQuest.powerName || 'Super Poder'}`;
   }
 
   document.getElementById('count-heal-pot').innerText = player.potions?.heal || 0;
   document.getElementById('count-speed-pot').innerText = player.potions?.speed || 0;
 
-  const slamSlot = document.getElementById('slot-power-slam');
-  const beamSlot = document.getElementById('slot-power-beam');
-  const slamCd = document.getElementById('cd-slam');
-  const beamCd = document.getElementById('cd-beam');
-
-  if (player.powers?.slam) {
-    slamSlot.classList.remove('locked');
-    if (player.powerCooldowns?.slam > 0) {
-      slamCd.style.display = 'flex';
-      slamCd.innerText = Math.ceil(player.powerCooldowns.slam) + 's';
-    } else slamCd.style.display = 'none';
-  } else {
-    slamSlot.classList.add('locked');
-    slamCd.style.display = 'none';
-  }
-
-  if (player.powers?.beam) {
-    beamSlot.classList.remove('locked');
-    if (player.powerCooldowns?.beam > 0) {
-      beamCd.style.display = 'flex';
-      beamCd.innerText = Math.ceil(player.powerCooldowns.beam) + 's';
-    } else beamCd.style.display = 'none';
-  } else {
-    beamSlot.classList.add('locked');
-    beamCd.style.display = 'none';
-  }
+  // Slots de Poderes
+  updatePowerSlot('slot-power-slam', 'cd-slam', player.powers?.slam, player.powerCooldowns?.slam);
+  updatePowerSlot('slot-power-beam', 'cd-beam', player.powers?.beam, player.powerCooldowns?.beam);
+  updatePowerSlot('slot-power-fire', 'cd-fire', player.powers?.fire, player.powerCooldowns?.fire);
+  updatePowerSlot('slot-power-shield', 'cd-shield', player.powers?.shield, player.powerCooldowns?.shield);
 
   checkNpcProximity(player);
+}
+
+function updatePowerSlot(slotId, cdId, isUnlocked, cdTime) {
+  const slot = document.getElementById(slotId);
+  const cdEl = document.getElementById(cdId);
+  if (!slot || !cdEl) return;
+
+  if (isUnlocked) {
+    slot.classList.remove('locked');
+    if (cdTime > 0) {
+      cdEl.style.display = 'flex';
+      cdEl.innerText = Math.ceil(cdTime) + 's';
+    } else {
+      cdEl.style.display = 'none';
+    }
+  } else {
+    slot.classList.add('locked');
+    cdEl.style.display = 'none';
+  }
 }
 
 function checkNpcProximity(player) {
@@ -970,6 +1145,54 @@ function checkNpcProximity(player) {
 }
 
 // -------------------------------------------------------------
+// Modal de Missões de Poderes
+// -------------------------------------------------------------
+function openQuestsModal() {
+  renderQuestsList();
+  document.getElementById('quests-modal').style.display = 'flex';
+}
+
+function closeQuestsModal() {
+  document.getElementById('quests-modal').style.display = 'none';
+}
+
+function renderQuestsList() {
+  const container = document.getElementById('quests-list-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const quests = localPlayer?.activeQuests || POWER_QUESTS;
+
+  quests.forEach(q => {
+    const card = document.createElement('div');
+    const isCompleted = q.completed || (localPlayer?.powers && localPlayer.powers[q.rewardPower.replace('power_', '')]);
+    card.className = 'quest-card' + (isCompleted ? ' completed' : '');
+
+    const current = Math.min(q.target, q.current || (isCompleted ? q.target : 0));
+    const percent = Math.min(100, Math.round((current / q.target) * 100));
+
+    card.innerHTML = `
+      <div class="quest-card-info">
+        <h4>${q.name}</h4>
+        <p>${q.desc}</p>
+        <span class="quest-card-reward">Recompensa: ✨ Desbloqueia ${q.powerName}</span>
+      </div>
+      <div class="quest-card-status">
+        ${isCompleted ? `
+          <span class="quest-badge-done">✨ PODER DESBLOQUEADO</span>
+        ` : `
+          <div class="quest-progress-bar-bg">
+            <div class="quest-progress-bar-fill" style="width: ${percent}%;"></div>
+          </div>
+          <span class="quest-status-text">${current} / ${q.target} (${percent}%)</span>
+        `}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// -------------------------------------------------------------
 // Loja
 // -------------------------------------------------------------
 function openShop(npc = null) {
@@ -977,7 +1200,11 @@ function openShop(npc = null) {
   const title = document.getElementById('shop-npc-title');
   if (npc) {
     title.innerHTML = `${npc.icon} ${npc.name}`;
-    if (npc.type !== 'quests') currentShopTab = npc.type;
+    if (npc.type === 'quests') {
+      openQuestsModal();
+      return;
+    }
+    currentShopTab = npc.type;
   }
   document.querySelectorAll('.shop-tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === currentShopTab);
@@ -1001,7 +1228,7 @@ function renderShopItems() {
 
     let isOwned = false;
     if (currentShopTab === 'weapons' && localPlayer?.weapon === item.id) isOwned = true;
-    if (currentShopTab === 'powers' && ((item.id === 'power_slam' && localPlayer?.powers?.slam) || (item.id === 'power_beam' && localPlayer?.powers?.beam))) isOwned = true;
+    if (currentShopTab === 'powers' && localPlayer?.powers && localPlayer.powers[item.id.replace('power_', '')]) isOwned = true;
 
     card.innerHTML = `
       <div class="shop-item-info">
@@ -1009,7 +1236,7 @@ function renderShopItems() {
         <p>${item.desc}</p>
       </div>
       <button class="btn-buy-item ${isOwned ? 'owned' : ''}" data-id="${item.id}" data-category="${currentShopTab}">
-        ${isOwned ? 'EQUIPADO' : `🪙 ${item.cost} Ouro`}
+        ${isOwned ? 'DOMINADO' : `🪙 ${item.cost} Ouro`}
       </button>
     `;
     container.appendChild(card);
@@ -1025,7 +1252,7 @@ function buyItem(category, itemId) {
   if (!item || !localPlayer) return;
 
   if (localPlayer.gold < item.cost) {
-    alert('Ouro insuficiente! Explore o mapa, quebre baús e minere gemas para conseguir mais ouro!');
+    alert('Ouro insuficiente! Explore o grande mundo, derrote inimigos, abra baús e minere gemas para enriquecer!');
     return;
   }
 
@@ -1040,16 +1267,17 @@ function buyItem(category, itemId) {
       if (itemId === 'potion_speed') localPlayer.potions.speed++;
     }
     if (category === 'powers') {
-      if (itemId === 'power_slam') localPlayer.powers.slam = true;
-      if (itemId === 'power_beam') localPlayer.powers.beam = true;
+      const pKey = itemId.replace('power_', '');
+      localPlayer.powers[pKey] = true;
     }
     updateHUD(localPlayer);
     renderShopItems();
+    renderQuestsList();
   }
 }
 
 // -------------------------------------------------------------
-// Renderização do Jogo (60+ FPS)
+// Renderização do Jogo (Cenário de Grama & Personagens Humanoides)
 // -------------------------------------------------------------
 function render() {
   requestAnimationFrame(render);
@@ -1064,13 +1292,13 @@ function render() {
   ctx.save();
   ctx.translate(screenWidth / 2 - camera.x, screenHeight / 2 - camera.y);
 
-  // 1. Grade do Mundo
+  // 1. Cenário de Grama Verde & Natureza
   drawWorldBackground();
 
-  // 2. Cidade, Muralhas e Prédios
-  drawCityAndBuildings();
+  // 2. As 4 Cidades, Estradas e Prédios
+  drawCitiesAndBuildings();
 
-  // 3. Orbes Sagrados
+  // 3. Orbes Sagrados de Cura e Vigor
   for (const orb of serverOrbs) {
     ctx.save();
     ctx.beginPath();
@@ -1082,7 +1310,7 @@ function render() {
     ctx.restore();
   }
 
-  // 4. Cristais de Gema Mineráveis
+  // 4. Cristais de Gemas Mineráveis
   for (const cr of serverMineCrystals) {
     drawCrystal(cr);
   }
@@ -1092,22 +1320,22 @@ function render() {
     drawBreakable(br);
   }
 
-  // 6. Baús de Ouro
+  // 6. Baús de Tesouro
   for (const ch of serverChests) {
     drawChest(ch);
   }
 
-  // 7. Obstáculos dos Biomas
+  // 7. Obstáculos do Mundo (Pedras & Ruínas)
   for (const obs of obstacles) {
     drawObstacle(obs);
   }
 
-  // 8. Chefe do Mundo (Colosso)
+  // 8. Chefe Titânico (Colosso)
   if (serverWorldBoss && serverWorldBoss.hp > 0) {
     drawBoss(serverWorldBoss);
   }
 
-  // 9. NPCs da Cidade
+  // 9. NPCs das 4 Cidades
   for (const npc of npcs) {
     drawNpc(npc);
   }
@@ -1129,19 +1357,19 @@ function render() {
     ctx.restore();
   }
 
-  // 12. Projéteis
+  // 12. Projéteis Mágicos
   for (const pr of serverProjectiles) {
     ctx.save();
     ctx.beginPath();
-    ctx.arc(pr.x, pr.y, 6, 0, Math.PI * 2);
+    ctx.arc(pr.x, pr.y, 7, 0, Math.PI * 2);
     ctx.fillStyle = pr.color || '#00e5ff';
     ctx.shadowColor = ctx.fillStyle;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 12;
     ctx.fill();
     ctx.restore();
   }
 
-  // 13. Bots e Jogadores com Visual de Personagem
+  // 13. Jogador e Bots desenhados como PESSOAS (Humanoides, não bolas!)
   for (const bot of serverBots.values()) drawCharacter(bot);
   for (const player of serverPlayers.values()) drawCharacter(player);
 
@@ -1150,71 +1378,164 @@ function render() {
   drawMinimap();
 }
 
+// -------------------------------------------------------------
+// Desenho do Cenário de Grama Viva (Vasta Natureza)
+// -------------------------------------------------------------
 function drawWorldBackground() {
-  const gridSize = 120;
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-  ctx.lineWidth = 1;
+  const tileSize = 200;
+  const startX = Math.max(0, Math.floor((camera.x - screenWidth / 2) / tileSize) * tileSize);
+  const endX = Math.min(arena.width, Math.ceil((camera.x + screenWidth / 2) / tileSize) * tileSize);
+  const startY = Math.max(0, Math.floor((camera.y - screenHeight / 2) / tileSize) * tileSize);
+  const endY = Math.min(arena.height, Math.ceil((camera.y + screenHeight / 2) / tileSize) * tileSize);
 
-  const startX = Math.max(0, Math.floor((camera.x - screenWidth / 2) / gridSize) * gridSize);
-  const endX = Math.min(arena.width, Math.ceil((camera.x + screenWidth / 2) / gridSize) * gridSize);
-  const startY = Math.max(0, Math.floor((camera.y - screenHeight / 2) / gridSize) * gridSize);
-  const endY = Math.min(arena.height, Math.ceil((camera.y + screenHeight / 2) / gridSize) * gridSize);
+  // Fundo Verde Grama Base
+  for (let x = startX; x <= endX; x += tileSize) {
+    for (let y = startY; y <= endY; y += tileSize) {
+      const tileHash = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+      const shade = Math.floor(Math.abs(tileHash) % 3);
+      
+      // Tons de grama viva
+      if (shade === 0) ctx.fillStyle = '#2e7d32'; // Verde floresta viçoso
+      else if (shade === 1) ctx.fillStyle = '#388e3c'; // Verde grama viva
+      else ctx.fillStyle = '#43a047'; // Verde folha iluminado
 
+      ctx.fillRect(x, y, tileSize, tileSize);
+
+      // Pequenos tufos de grama e flores decorativas
+      const decoType = Math.floor(Math.abs(tileHash * 10) % 5);
+      if (decoType === 1) {
+        // Tufo de grama escura
+        ctx.fillStyle = '#1b5e20';
+        ctx.fillRect(x + 50, y + 40, 4, 10);
+        ctx.fillRect(x + 56, y + 36, 4, 14);
+        ctx.fillRect(x + 62, y + 42, 4, 8);
+      } else if (decoType === 2) {
+        // Florzinha Vermelha
+        ctx.fillStyle = '#e74c3c';
+        ctx.beginPath();
+        ctx.arc(x + 120, y + 80, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#f1c40f';
+        ctx.beginPath();
+        ctx.arc(x + 120, y + 80, 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (decoType === 3) {
+        // Florzinha Amarela
+        ctx.fillStyle = '#f1c40f';
+        ctx.beginPath();
+        ctx.arc(x + 70, y + 140, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (decoType === 4) {
+        // Florzinha Azul Astral
+        ctx.fillStyle = '#00d2d3';
+        ctx.beginPath();
+        ctx.arc(x + 150, y + 130, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // Caminhos de Terra / Estradas entre as Cidades
+  ctx.save();
+  ctx.strokeStyle = '#8d6e63';
+  ctx.lineWidth = 42;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   ctx.beginPath();
-  for (let x = startX; x <= endX; x += gridSize) {
-    ctx.moveTo(x, startY); ctx.lineTo(x, endY);
-  }
-  for (let y = startY; y <= endY; y += gridSize) {
-    ctx.moveTo(startX, y); ctx.lineTo(endX, y);
-  }
+  // Estrada Capital (2500,2500) <-> Vila dos Bosques (1200, 1200)
+  ctx.moveTo(2500, 2500); ctx.lineTo(1200, 1200);
+  // Estrada Capital (2500,2500) <-> Vila do Lago (3800, 1200)
+  ctx.moveTo(2500, 2500); ctx.lineTo(3800, 1200);
+  // Estrada Capital (2500,2500) <-> Vila do Oásis (2500, 3900)
+  ctx.moveTo(2500, 2500); ctx.lineTo(2500, 3900);
   ctx.stroke();
 
-  ctx.strokeStyle = '#00e5ff';
+  // Centro da estrada com cascalho claro
+  ctx.strokeStyle = '#a1887f';
+  ctx.lineWidth = 26;
+  ctx.stroke();
+  ctx.restore();
+
+  // Lago Glacial de Água Cristalina próximo à Vila do Lago (3800, 1600)
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(3800, 1550, 240, 160, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#2980b9';
+  ctx.fill();
+  ctx.strokeStyle = '#3498db';
   ctx.lineWidth = 8;
+  ctx.stroke();
+  // Brilho da água
+  ctx.beginPath();
+  ctx.ellipse(3800, 1550, 190, 120, 0, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(52, 152, 219, 0.45)';
+  ctx.fill();
+  ctx.restore();
+
+  // Borda do Grande Mundo (Muralha de Pedra Ancestral)
+  ctx.strokeStyle = '#34495e';
+  ctx.lineWidth = 16;
   ctx.strokeRect(0, 0, arena.width, arena.height);
 }
 
-function drawCityAndBuildings() {
-  // Chão da Cidade
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(city.x, city.y, city.radius, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(25, 35, 52, 0.75)';
-  ctx.fill();
+// -------------------------------------------------------------
+// Desenho das 4 Cidades e seus Edifícios
+// -------------------------------------------------------------
+function drawCitiesAndBuildings() {
+  for (const c of cities) {
+    ctx.save();
+    // Chão de Pavimento / Praça da Cidade
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+    if (c.theme === 'forest') ctx.fillStyle = 'rgba(46, 125, 50, 0.65)';
+    else if (c.theme === 'lake') ctx.fillStyle = 'rgba(41, 128, 185, 0.55)';
+    else if (c.theme === 'desert') ctx.fillStyle = 'rgba(211, 84, 0, 0.5)';
+    else ctx.fillStyle = 'rgba(52, 73, 94, 0.7)'; // Capital
+    ctx.fill();
 
-  ctx.strokeStyle = '#2ed573';
-  ctx.lineWidth = 4;
-  ctx.shadowColor = '#2ed573';
-  ctx.shadowBlur = 16;
-  ctx.stroke();
+    // Bordadura luminosa da Zona Segura
+    ctx.strokeStyle = '#2ed573';
+    ctx.lineWidth = 4;
+    ctx.shadowColor = '#2ed573';
+    ctx.shadowBlur = 14;
+    ctx.stroke();
 
-  // Fonte Central
-  ctx.beginPath();
-  ctx.arc(city.x, city.y, 45, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(46, 213, 115, 0.3)';
-  ctx.fill();
-  ctx.strokeStyle = '#2ed573';
-  ctx.lineWidth = 2;
-  ctx.stroke();
+    // Fonte ou Monumento Central
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, 40, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(46, 213, 115, 0.3)';
+    ctx.fill();
+    ctx.strokeStyle = '#2ed573';
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
-  ctx.font = 'bold 12px Segoe UI, sans-serif';
-  ctx.fillStyle = '#2ed573';
-  ctx.textAlign = 'center';
-  ctx.fillText('🏛️ ' + city.name, city.x, city.y - 55);
+    // Nome da Cidade
+    ctx.font = 'bold 13px Segoe UI, sans-serif';
+    ctx.fillStyle = '#2ed573';
+    ctx.textAlign = 'center';
+    ctx.fillText('🏛️ ' + c.name, c.x, c.y - c.radius + 28);
+    ctx.restore();
+  }
 
-  // Prédios, Casas e Lojas
+  // Prédios, Casas, Lojas e Torres
   for (const b of buildings) {
-    // Sombra do Prédio
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-    ctx.fillRect(b.x - b.w / 2 + 5, b.y - b.h / 2 + 5, b.w, b.h);
+    ctx.save();
+    // Sombra do Edifício
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.fillRect(b.x - b.w / 2 + 6, b.y - b.h / 2 + 6, b.w, b.h);
 
     // Paredes
     ctx.fillStyle = b.wallColor;
     ctx.fillRect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h);
 
-    // Telhado
+    // Telhado Inclinado
     ctx.fillStyle = b.roofColor;
     ctx.fillRect(b.x - b.w / 2 - 4, b.y - b.h / 2 - 4, b.w + 8, b.h * 0.45);
+
+    // Janelas
+    ctx.fillStyle = '#ffd32a';
+    ctx.fillRect(b.x - b.w / 4 - 6, b.y - b.h / 4, 12, 12);
+    ctx.fillRect(b.x + b.w / 4 - 6, b.y - b.h / 4, 12, 12);
 
     // Porta
     ctx.fillStyle = '#1e272e';
@@ -1222,36 +1543,194 @@ function drawCityAndBuildings() {
 
     // Nome do Edifício
     ctx.font = 'bold 10px Segoe UI, sans-serif';
-    ctx.fillStyle = '#f1f2f6';
+    ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
+    ctx.shadowColor = '#000000';
+    ctx.shadowBlur = 4;
     ctx.fillText(b.name, b.x, b.y - b.h / 2 - 8);
+    ctx.restore();
   }
+}
+
+// -------------------------------------------------------------
+// Desenho de Personagens Humanoides (PESSOAS, NÃO BOLAS!)
+// -------------------------------------------------------------
+function drawCharacter(ent) {
+  if (ent.hp <= 0) return;
+
+  ctx.save();
+  ctx.translate(ent.x, ent.y);
+
+  // 1. Sombra nos Pés do Humano
+  ctx.beginPath();
+  ctx.ellipse(0, 14, 16, 7, 0, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+  ctx.fill();
+
+  // Escudo Divino Ativo [V]
+  if (ent.shieldTimer > 0) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(0, 0, 36, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 229, 255, 0.2)';
+    ctx.fill();
+    ctx.strokeStyle = '#00e5ff';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = '#00e5ff';
+    ctx.shadowBlur = 18;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // 2. Pernas Animadas Andando (Passos reais para frente/trás)
+  const walkStep = ent.walkStep || 0;
+  const legCycle = Math.sin(walkStep) * 8;
+
+  ctx.save();
+  ctx.rotate(ent.angle);
+
+  // Perna Esquerda
+  ctx.fillStyle = '#2c3e50';
+  ctx.fillRect(-10, -12 + legCycle, 6, 12);
+  // Bota Esquerda
+  ctx.fillStyle = '#4a3728';
+  ctx.fillRect(-11, -2 + legCycle, 8, 5);
+
+  // Perna Direita
+  ctx.fillStyle = '#2c3e50';
+  ctx.fillRect(-10, 2 - legCycle, 6, 12);
+  // Bota Direita
+  ctx.fillStyle = '#4a3728';
+  ctx.fillRect(-11, 10 - legCycle, 8, 5);
+
+  // 3. Tronco e Túnica / Armadura da Classe
+  ctx.fillStyle = ent.color || '#ff4757';
+  ctx.beginPath();
+  ctx.roundRect(-12, -10, 18, 20, 4);
+  ctx.fill();
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Cinto com Fivela de Ouro
+  ctx.fillStyle = '#3e2723';
+  ctx.fillRect(-6, -10, 4, 20);
+  ctx.fillStyle = '#f1c40f';
+  ctx.fillRect(-6, -3, 4, 6);
+
+  // 4. Braços e Mãos Segurando a Arma
+  const skin = ent.skinColor || '#ffdcb4';
+
+  // Braço Esquerdo
+  ctx.fillStyle = ent.color || '#ff4757';
+  ctx.fillRect(0, -14, 8, 6);
+  ctx.fillStyle = skin;
+  ctx.fillRect(6, -14, 5, 5); // Mão esquerda
+
+  // Braço Direito (Estendido segurando a arma)
+  ctx.fillStyle = ent.color || '#ff4757';
+  ctx.fillRect(0, 8, 12, 6);
+  ctx.fillStyle = skin;
+  ctx.fillRect(10, 8, 5, 5); // Mão direita
+
+  // 5. Arma Equipada no Braço
+  drawWeaponSprite(ent.weapon || 'sword_starter', ent.charClass);
+
+  // 6. Cabeça, Rosto e Cabelo/Capacete da Pessoa
+  ctx.beginPath();
+  ctx.arc(-2, 0, 11, 0, Math.PI * 2);
+  ctx.fillStyle = skin;
+  ctx.fill();
+
+  // Cabelo ou Capacete
+  ctx.beginPath();
+  ctx.arc(-4, 0, 11, Math.PI * 0.5, Math.PI * 1.5);
+  ctx.fillStyle = ent.hairColor || '#2c3e50';
+  ctx.fill();
+
+  // Olhos Olhando na Direção do Movimento
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(3, -5, 4, 3);
+  ctx.fillRect(3, 2, 4, 3);
+  ctx.fillStyle = '#2c3e50';
+  ctx.fillRect(5, -4, 2, 2);
+  ctx.fillRect(5, 3, 2, 2);
+
+  ctx.restore(); // Restaura rotação da pessoa
+
+  // 7. Barra de Vida e Nome acima da Pessoa
+  const barWidth = 46;
+  const barHeight = 5;
+  const hpRatio = Math.max(0, ent.hp / ent.maxHp);
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+  ctx.fillRect(-barWidth / 2, -32, barWidth, barHeight);
+  ctx.fillStyle = ent.isBot ? '#ffa502' : '#2ed573';
+  ctx.fillRect(-barWidth / 2, -32, barWidth * hpRatio, barHeight);
+
+  // Nome e Ícone da Classe
+  ctx.font = 'bold 11px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = ent.id === myId ? '#ffd32a' : '#ffffff';
+  ctx.shadowColor = '#000000';
+  ctx.shadowBlur = 4;
+  const clIcons = { warrior: '🗡️', mage: '🧙‍♂️', ranger: '🏹', shadow: '🥷' };
+  const icon = clIcons[ent.charClass] || '⚔️';
+  ctx.fillText(`${icon} ${ent.name}`, 0, -38);
 
   ctx.restore();
 }
 
+function drawWeaponSprite(weaponId, charClass) {
+  if (weaponId === 'sword_fire') {
+    // Lâmina Flamejante de Fogo Estelar
+    ctx.fillStyle = '#ff4757';
+    ctx.fillRect(14, 8, 22, 5);
+    ctx.fillStyle = '#ffd32a';
+    ctx.fillRect(14, 7, 6, 7); // Guarda de ouro
+  } else if (weaponId === 'staff_astral') {
+    // Cajado Arcano com Orbe Luminoso
+    ctx.fillStyle = '#8e44ad';
+    ctx.fillRect(10, 8, 24, 4);
+    ctx.beginPath();
+    ctx.arc(36, 10, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffd32a';
+    ctx.shadowColor = '#ffd32a';
+    ctx.shadowBlur = 10;
+    ctx.fill();
+  } else if (weaponId === 'sword_rune') {
+    // Espada Rúnica Prateada
+    ctx.fillStyle = '#ced6e0';
+    ctx.fillRect(14, 9, 20, 4);
+    ctx.fillStyle = '#a29bfe';
+    ctx.fillRect(14, 8, 4, 6);
+  } else {
+    // Espada Inicial
+    ctx.fillStyle = '#747d8c';
+    ctx.fillRect(14, 9, 18, 4);
+    ctx.fillStyle = '#2f3542';
+    ctx.fillRect(14, 8, 3, 6);
+  }
+}
+
+// -------------------------------------------------------------
+// Desenho de Elementos do Mundo
+// -------------------------------------------------------------
 function drawCrystal(cr) {
   ctx.save();
   ctx.translate(cr.x, cr.y);
-
-  // Brilho da Gema
   ctx.beginPath();
   ctx.arc(0, 0, cr.radius, 0, Math.PI * 2);
   ctx.fillStyle = cr.color;
   ctx.shadowColor = cr.color;
   ctx.shadowBlur = 14;
   ctx.fill();
-
   ctx.font = '18px Segoe UI, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('💎', 0, 0);
-
-  // HP do Cristal
   ctx.font = 'bold 9px Segoe UI, sans-serif';
   ctx.fillStyle = '#fff';
   ctx.fillText(`[${cr.hp}/${cr.maxHp}]`, 0, -22);
-
   ctx.restore();
 }
 
@@ -1281,117 +1760,46 @@ function drawChest(ch) {
 function drawBoss(boss) {
   ctx.save();
   ctx.translate(boss.x, boss.y);
-
-  // Sombra gigante
   ctx.beginPath();
   ctx.arc(0, 8, boss.radius, 0, Math.PI * 2);
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.fill();
-
-  // Corpo do Colosso
   ctx.beginPath();
   ctx.arc(0, 0, boss.radius, 0, Math.PI * 2);
   ctx.fillStyle = '#3e2723';
   ctx.strokeStyle = '#e67e22';
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 5;
   ctx.shadowColor = '#e67e22';
   ctx.shadowBlur = 18;
   ctx.stroke();
   ctx.fill();
-
-  // Olhos brilhantes
   ctx.fillStyle = '#ffd32a';
-  ctx.fillRect(-14, -10, 8, 6);
-  ctx.fillRect(6, -10, 8, 6);
-
-  // Nome e Ícone
-  ctx.font = 'bold 13px Segoe UI, sans-serif';
+  ctx.fillRect(-16, -12, 10, 8);
+  ctx.fillRect(6, -12, 10, 8);
+  ctx.font = 'bold 14px Segoe UI, sans-serif';
   ctx.fillStyle = '#e67e22';
   ctx.textAlign = 'center';
-  ctx.fillText(boss.name, 0, -65);
-
+  ctx.fillText(boss.name, 0, -70);
   ctx.restore();
 }
 
 function drawNpc(npc) {
   ctx.save();
   ctx.translate(npc.x, npc.y);
-
   ctx.beginPath();
   ctx.arc(0, 0, npc.radius, 0, Math.PI * 2);
   ctx.fillStyle = '#1e272e';
   ctx.strokeStyle = '#ffd32a';
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2.5;
   ctx.stroke();
   ctx.fill();
-
   ctx.font = '18px Segoe UI, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(npc.icon, 0, -2);
-
   ctx.font = 'bold 11px Segoe UI, sans-serif';
   ctx.fillStyle = '#ffd32a';
   ctx.fillText(npc.name, 0, -32);
-
-  ctx.restore();
-}
-
-function drawCharacter(ent) {
-  if (ent.hp <= 0) return;
-
-  ctx.save();
-  ctx.translate(ent.x, ent.y);
-
-  // Sombra
-  ctx.beginPath();
-  ctx.arc(0, 4, ent.radius || 24, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-  ctx.fill();
-
-  // Direcionamento e Arma
-  ctx.save();
-  ctx.rotate(ent.angle);
-  const wColor = ent.weapon === 'sword_fire' ? '#ff4757' : (ent.weapon === 'staff_astral' ? '#ffd32a' : '#ced6e0');
-  ctx.fillStyle = wColor;
-  ctx.fillRect(10, -4, 22, 8);
-  ctx.restore();
-
-  // Corpo do Personagem
-  ctx.beginPath();
-  ctx.arc(0, 0, ent.radius || 24, 0, Math.PI * 2);
-  ctx.fillStyle = ent.color || '#00e5ff';
-  ctx.shadowColor = ent.color || '#00e5ff';
-  ctx.shadowBlur = ent.id === myId ? 16 : 8;
-  ctx.fill();
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Ícone da Classe no Centro do Corpo
-  const clIcons = { warrior: '🗡️', mage: '🧙‍♂️', ranger: '🏹', shadow: '🥷' };
-  const icon = clIcons[ent.charClass] || '⚔️';
-  ctx.font = '13px Segoe UI, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(icon, 0, 0);
-
-  // Barra de Vida
-  const barWidth = 44;
-  const barHeight = 5;
-  const hpRatio = Math.max(0, ent.hp / ent.maxHp);
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-  ctx.fillRect(-barWidth / 2, -36, barWidth, barHeight);
-  ctx.fillStyle = ent.isBot ? '#ffa502' : '#2ed573';
-  ctx.fillRect(-barWidth / 2, -36, barWidth * hpRatio, barHeight);
-
-  // Nome
-  ctx.shadowBlur = 0;
-  ctx.font = 'bold 11px Segoe UI, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(ent.name, 0, -42);
-
   ctx.restore();
 }
 
@@ -1432,22 +1840,10 @@ function drawObstacle(obs) {
   ctx.save();
   ctx.beginPath();
   ctx.arc(obs.x, obs.y, obs.radius, 0, Math.PI * 2);
-  if (obs.type === 'city_gate') {
-    ctx.fillStyle = 'rgba(46, 213, 115, 0.2)';
-    ctx.strokeStyle = '#2ed573';
-    ctx.lineWidth = 3;
-    ctx.fill(); ctx.stroke();
-  } else if (obs.type === 'sanctuary') {
-    ctx.fillStyle = 'rgba(46, 213, 115, 0.15)';
-    ctx.strokeStyle = '#2ed573';
-    ctx.lineWidth = 3;
-    ctx.fill(); ctx.stroke();
-  } else {
-    ctx.fillStyle = '#1e272e';
-    ctx.strokeStyle = '#70a1ff';
-    ctx.lineWidth = 3;
-    ctx.fill(); ctx.stroke();
-  }
+  ctx.fillStyle = '#2d3436';
+  ctx.strokeStyle = '#636e72';
+  ctx.lineWidth = 3;
+  ctx.fill(); ctx.stroke();
   ctx.restore();
 }
 
@@ -1456,11 +1852,26 @@ function drawMinimap() {
   const sx = 160 / arena.width;
   const sy = 160 / arena.height;
 
-  // Cidade
-  mCtx.fillStyle = 'rgba(46, 213, 115, 0.25)';
+  // Fundo Verde do Minimapa
+  mCtx.fillStyle = '#2e7d32';
+  mCtx.fillRect(0, 0, 160, 160);
+
+  // Lago Glacial no Minimapa
+  mCtx.fillStyle = '#2980b9';
   mCtx.beginPath();
-  mCtx.arc(city.x * sx, city.y * sy, city.radius * sx, 0, Math.PI * 2);
+  mCtx.arc(3800 * sx, 1550 * sy, 8, 0, Math.PI * 2);
   mCtx.fill();
+
+  // As 4 Cidades no Minimapa
+  for (const c of cities) {
+    mCtx.fillStyle = 'rgba(46, 213, 115, 0.4)';
+    mCtx.beginPath();
+    mCtx.arc(c.x * sx, c.y * sy, c.radius * sx, 0, Math.PI * 2);
+    mCtx.fill();
+    mCtx.strokeStyle = '#2ed573';
+    mCtx.lineWidth = 1;
+    mCtx.stroke();
+  }
 
   // Gemas
   mCtx.fillStyle = '#00e5ff';
@@ -1470,7 +1881,7 @@ function drawMinimap() {
   mCtx.fillStyle = '#ffd32a';
   for (const ch of serverChests) mCtx.fillRect(ch.x * sx - 1, ch.y * sy - 1, 3, 3);
 
-  // Colosso
+  // Chefe Titânico
   if (serverWorldBoss && serverWorldBoss.hp > 0) {
     mCtx.fillStyle = '#e67e22';
     mCtx.beginPath();
@@ -1493,7 +1904,7 @@ function drawMinimap() {
     if (p.hp > 0) {
       mCtx.fillStyle = p.id === myId ? '#ffffff' : '#00e5ff';
       mCtx.beginPath();
-      mCtx.arc(p.x * sx, p.y * sy, p.id === myId ? 4 : 3, 0, Math.PI * 2);
+      mCtx.arc(p.x * sx, p.y * sy, p.id === myId ? 4.5 : 3, 0, Math.PI * 2);
       mCtx.fill();
     }
   }
@@ -1540,7 +1951,7 @@ function escapeHtml(str) {
 }
 
 // -------------------------------------------------------------
-// Controles de Entrada
+// Controles de Entrada (Teclado, Mouse e Poderes)
 // -------------------------------------------------------------
 window.addEventListener('keydown', (e) => {
   const chatInput = document.getElementById('chat-input');
@@ -1566,12 +1977,17 @@ window.addEventListener('keydown', (e) => {
     if (nearbyNpc) openShop(nearbyNpc);
   }
 
-  if (e.key === 'Escape') closeShop();
+  if (e.key === 'Escape') {
+    closeShop();
+    closeQuestsModal();
+  }
 
   if (e.key === '1') { keys['1'] = true; useHealPotion(); }
   if (e.key === '2') { keys['2'] = true; useSpeedPotion(); }
   if (e.key === 'r' || e.key === 'R') { keys.r = true; castPowerSlam(); }
   if (e.key === 'f' || e.key === 'F') { keys.f = true; castPowerBeam(); }
+  if (e.key === 'c' || e.key === 'C') { keys.c = true; castPowerFire(); }
+  if (e.key === 'v' || e.key === 'V') { keys.v = true; castPowerShield(); }
 
   if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
   if (e.code === 'Space') keys.Space = true;
@@ -1584,6 +2000,8 @@ window.addEventListener('keyup', (e) => {
   if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') keys.Shift = false;
   if (e.key === 'r' || e.key === 'R') keys.r = false;
   if (e.key === 'f' || e.key === 'F') keys.f = false;
+  if (e.key === 'c' || e.key === 'C') keys.c = false;
+  if (e.key === 'v' || e.key === 'V') keys.v = false;
   if (e.key === '1') keys['1'] = false;
   if (e.key === '2') keys['2'] = false;
 });
@@ -1627,14 +2045,14 @@ function castPowerSlam() {
       x: localPlayer.x,
       y: localPlayer.y,
       radius: 10,
-      maxRadius: 200,
+      maxRadius: 210,
       color: '#ffd32a',
       alpha: 1
     });
 
     for (const b of serverBots.values()) {
-      if (b.hp > 0 && !b.inSafeZone && Math.hypot(b.x - localPlayer.x, b.y - localPlayer.y) < 200) {
-        b.hp -= 40;
+      if (b.hp > 0 && !b.inSafeZone && Math.hypot(b.x - localPlayer.x, b.y - localPlayer.y) < 210) {
+        b.hp -= 42;
         const pa = Math.atan2(b.y - localPlayer.y, b.x - localPlayer.x);
         b.x += Math.cos(pa) * 60;
         b.y += Math.sin(pa) * 60;
@@ -1643,7 +2061,7 @@ function castPowerSlam() {
           localPlayer.gold += 70;
           sfx.playCoin();
           updateKillfeed([{ text: `💥 ${localPlayer.name} aniquilou ${b.name} (+70 🪙)!` }]);
-          checkQuestProgress('kill');
+          checkOfflineQuestProgress('kill');
         }
       }
     }
@@ -1659,8 +2077,8 @@ function castPowerBeam() {
     localPlayer.powerCooldowns.beam = 8;
     sfx.playBeam();
     const beamEnd = {
-      x: localPlayer.x + Math.cos(localPlayer.angle) * 950,
-      y: localPlayer.y + Math.sin(localPlayer.angle) * 950
+      x: localPlayer.x + Math.cos(localPlayer.angle) * 980,
+      y: localPlayer.y + Math.sin(localPlayer.angle) * 980
     };
     activeSpecialEffects.push({
       type: 'laser_beam',
@@ -1674,19 +2092,66 @@ function castPowerBeam() {
 
     for (const b of serverBots.values()) {
       if (b.hp > 0 && !b.inSafeZone) {
-        if (distanceToSegment(b.x, b.y, localPlayer.x, localPlayer.y, beamEnd.x, beamEnd.y) < b.radius + 20) {
-          b.hp -= 55;
+        if (distanceToSegment(b.x, b.y, localPlayer.x, localPlayer.y, beamEnd.x, beamEnd.y) < b.radius + 25) {
+          b.hp -= 60;
           addParticle(b.x, b.y, '#00e5ff', 10, 6);
           if (b.hp <= 0) {
             localPlayer.score += 100;
             localPlayer.gold += 70;
             sfx.playCoin();
             updateKillfeed([{ text: `🏹 ${localPlayer.name} perfurou ${b.name} (+70 🪙)!` }]);
-            checkQuestProgress('kill');
+            checkOfflineQuestProgress('kill');
           }
         }
       }
     }
+    updateHUD(localPlayer);
+  }
+}
+
+function castPowerFire() {
+  if (!localPlayer || !localPlayer.powers?.fire || localPlayer.inSafeZone) return;
+  if (localPlayer.powerCooldowns?.fire > 0) return;
+
+  if (isOfflineMode) {
+    localPlayer.powerCooldowns.fire = 7;
+    sfx.playMeteor();
+    for (let i = 0; i < 5; i++) {
+      const spread = (i - 2) * 0.25;
+      serverProjectiles.push({
+        id: Math.random(),
+        ownerId: localPlayer.id,
+        color: '#ff4757',
+        damage: 38,
+        x: localPlayer.x + Math.cos(localPlayer.angle + spread) * 32,
+        y: localPlayer.y + Math.sin(localPlayer.angle + spread) * 32,
+        vx: Math.cos(localPlayer.angle + spread) * 16,
+        vy: Math.sin(localPlayer.angle + spread) * 16,
+        lifetime: 55
+      });
+    }
+    activeSpecialEffects.push({
+      type: 'slam_wave',
+      x: localPlayer.x,
+      y: localPlayer.y,
+      radius: 10,
+      maxRadius: 150,
+      color: '#ff4757',
+      alpha: 1
+    });
+    updateHUD(localPlayer);
+  }
+}
+
+function castPowerShield() {
+  if (!localPlayer || !localPlayer.powers?.shield) return;
+  if (localPlayer.powerCooldowns?.shield > 0) return;
+
+  if (isOfflineMode) {
+    localPlayer.powerCooldowns.shield = 12;
+    localPlayer.shieldTimer = 6;
+    sfx.playShield();
+    addParticle(localPlayer.x, localPlayer.y, '#00e5ff', 24, 7);
     updateHUD(localPlayer);
   }
 }
@@ -1711,6 +2176,12 @@ document.getElementById('slot-potion-heal').addEventListener('click', useHealPot
 document.getElementById('slot-potion-speed').addEventListener('click', useSpeedPotion);
 document.getElementById('slot-power-slam').addEventListener('click', castPowerSlam);
 document.getElementById('slot-power-beam').addEventListener('click', castPowerBeam);
+document.getElementById('slot-power-fire').addEventListener('click', castPowerFire);
+document.getElementById('slot-power-shield').addEventListener('click', castPowerShield);
+
+document.getElementById('btn-open-quests').addEventListener('click', openQuestsModal);
+document.getElementById('btn-close-quests').addEventListener('click', closeQuestsModal);
+
 document.getElementById('npc-interact-prompt').addEventListener('click', () => {
   if (nearbyNpc) openShop(nearbyNpc);
 });
@@ -1762,7 +2233,15 @@ document.getElementById('btn-start').addEventListener('click', () => {
   } else if (localPlayer) {
     localPlayer.name = nameInput;
     localPlayer.charClass = selectedClass;
-    localPlayer.color = selectedColor;
+    const cData = CHARACTER_CLASSES[selectedClass];
+    if (cData) {
+      localPlayer.color = selectedColor || cData.color;
+      localPlayer.hairColor = cData.hairColor;
+      localPlayer.skinColor = cData.skinColor;
+      localPlayer.maxHp = cData.baseHp;
+      localPlayer.hp = cData.baseHp;
+      localPlayer.speed = cData.speed;
+    }
   }
 
   document.getElementById('lobby-screen').style.display = 'none';
