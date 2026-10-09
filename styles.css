@@ -497,35 +497,61 @@ canvas#minimapCanvas {
 /* Barra de Ações Rápidas (Poções & Poderes) */
 #quick-slots {
   position: absolute;
-  bottom: 24px;
-  left: 300px;
+  bottom: 20px;
+  left: 280px;
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: calc(100vw - 320px);
   pointer-events: auto;
+  z-index: 25;
 }
 
 .quick-slot {
-  width: 52px;
-  height: 52px;
-  background: rgba(12, 17, 28, 0.9);
+  width: 48px;
+  height: 48px;
+  background: rgba(12, 17, 28, 0.92);
   border: 1px solid rgba(0, 229, 255, 0.3);
-  border-radius: 10px;
+  border-radius: 9px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   position: relative;
-  transition: transform 0.15s, border-color 0.15s;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  user-select: none;
 }
 
 .quick-slot:hover {
   transform: translateY(-3px);
   border-color: #00e5ff;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+}
+
+.quick-slot.skill-slot {
+  border-color: rgba(0, 229, 255, 0.5);
+  background: rgba(9, 25, 45, 0.92);
+}
+
+.quick-slot.active-sprint {
+  border-color: #ffd32a;
+  background: rgba(45, 38, 12, 0.95);
+  box-shadow: 0 0 15px rgba(255, 211, 42, 0.8);
+  transform: translateY(-3px) scale(1.05);
+}
+
+.quick-slot.potion-slot {
+  border-color: rgba(46, 213, 115, 0.45);
+  background: rgba(10, 32, 20, 0.92);
+}
+
+.quick-slot.power-slot {
+  border-color: rgba(255, 165, 2, 0.4);
 }
 
 .quick-slot.locked {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
   filter: grayscale(1);
 }
@@ -534,13 +560,14 @@ canvas#minimapCanvas {
   position: absolute;
   top: 2px;
   left: 4px;
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 800;
   color: #70a1ff;
+  text-shadow: 0 1px 2px #000;
 }
 
 .slot-icon {
-  font-size: 20px;
+  font-size: 19px;
 }
 
 .slot-count {
@@ -549,7 +576,8 @@ canvas#minimapCanvas {
   right: 4px;
   font-size: 11px;
   font-weight: 800;
-  color: #fff;
+  color: #2ed573;
+  text-shadow: 0 1px 3px #000;
 }
 
 .slot-cooldown-overlay {
@@ -558,8 +586,8 @@ canvas#minimapCanvas {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.65);
-  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.72);
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
