@@ -392,3 +392,287 @@ canvas#minimapCanvas {
     display: flex;
   }
 }
+
+/* -----------------------------------------------------------
+   ELEMENTOS DE RPG (OURO, CIDADE, LOJA E PODERES)
+   ----------------------------------------------------------- */
+/* Badge de Ouro no Topo */
+#gold-badge {
+  position: absolute;
+  top: 20px;
+  left: 260px;
+  background: rgba(12, 17, 28, 0.85);
+  border: 1px solid rgba(255, 211, 42, 0.4);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffd32a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+/* Banner de Zona Segura (Cidade) */
+#safe-zone-banner {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(46, 213, 115, 0.2);
+  border: 1px solid #2ed573;
+  color: #2ed573;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  display: none;
+  animation: pulseGlow 2s infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.8; box-shadow: 0 0 10px rgba(46, 213, 115, 0.3); }
+  50% { opacity: 1; box-shadow: 0 0 20px rgba(46, 213, 115, 0.6); }
+}
+
+/* Barra de Ações Rápidas (Poções & Poderes) */
+#quick-slots {
+  position: absolute;
+  bottom: 24px;
+  left: 300px;
+  display: flex;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.quick-slot {
+  width: 52px;
+  height: 52px;
+  background: rgba(12, 17, 28, 0.9);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.quick-slot:hover {
+  transform: translateY(-3px);
+  border-color: #00e5ff;
+}
+
+.quick-slot.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+.slot-key {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  color: #70a1ff;
+}
+
+.slot-icon {
+  font-size: 20px;
+}
+
+.slot-count {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.slot-cooldown-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffd32a;
+}
+
+/* Prompt de Interação com NPC */
+#npc-interact-prompt {
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(10, 14, 23, 0.9);
+  border: 1px solid #ffd32a;
+  padding: 10px 20px;
+  border-radius: 25px;
+  color: #ffd32a;
+  font-weight: 700;
+  font-size: 14px;
+  display: none;
+  box-shadow: 0 0 20px rgba(255, 211, 42, 0.4);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* -----------------------------------------------------------
+   MODAL DA LOJA DA CIDADE
+   ----------------------------------------------------------- */
+#shop-modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(5px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  pointer-events: auto;
+}
+
+.shop-window {
+  background: linear-gradient(145deg, #151d2f, #0d121d);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 229, 255, 0.2);
+  border-radius: 16px;
+  width: 580px;
+  max-width: 95%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.shop-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shop-header h2 {
+  font-size: 20px;
+  color: #00e5ff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shop-close-btn {
+  background: none;
+  border: none;
+  color: #ff4757;
+  font-size: 24px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.shop-tabs {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.shop-tab-btn {
+  flex: 1;
+  padding: 12px;
+  background: none;
+  border: none;
+  color: #8899aa;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+
+.shop-tab-btn.active {
+  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.1);
+  border-bottom: 2px solid #00e5ff;
+}
+
+.shop-items-list {
+  padding: 18px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shop-item-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.shop-item-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(0, 229, 255, 0.3);
+}
+
+.shop-item-info h4 {
+  font-size: 15px;
+  color: #f1f2f6;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shop-item-info p {
+  font-size: 12px;
+  color: #8899aa;
+}
+
+.btn-buy-item {
+  padding: 8px 18px;
+  background: linear-gradient(135deg, #ffd32a, #ffa502);
+  border: none;
+  border-radius: 8px;
+  color: #111;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.btn-buy-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(255, 211, 42, 0.5);
+}
+
+.btn-buy-item.owned {
+  background: #2ed573;
+  color: #fff;
+  cursor: default;
+  pointer-events: none;
+}
+
