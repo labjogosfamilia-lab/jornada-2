@@ -1128,5 +1128,77 @@ canvas#minimapCanvas {
   margin: 0 4px;
 }
 
+/* Botão Salvar Progresso no Topo */
+.btn-save-game {
+  background: rgba(46, 213, 115, 0.2);
+  border: 1px solid #2ed573;
+  color: #2ed573;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-save-game:hover {
+  background: #2ed573;
+  color: #0b101b;
+  box-shadow: 0 0 15px rgba(46, 213, 115, 0.6);
+  transform: scale(1.05);
+}
+
+/* Notificação Toast de Jogo Salvo */
+.save-toast {
+  position: absolute;
+  top: 75px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(12, 20, 32, 0.95);
+  border: 1.5px solid #2ed573;
+  color: #2ed573;
+  padding: 10px 24px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow: 0 0 25px rgba(46, 213, 115, 0.5);
+  z-index: 200;
+  pointer-events: none;
+  animation: fadeInOut 2.5s ease forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -10px); }
+  15% { opacity: 1; transform: translate(-50%, 0); }
+  80% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -10px); }
+}
+
+/* Botão de Continuar Jogo no Lobby */
+.btn-continue {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.btn-continue:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(243, 156, 18, 0.6);
+}
+
+
 
 
