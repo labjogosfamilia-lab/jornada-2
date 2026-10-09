@@ -254,6 +254,66 @@ class SoundFX {
     osc.start();
     osc.stop(this.ctx.currentTime + 0.6);
   }
+
+  playThunder() {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(35, this.ctx.currentTime + 0.6);
+    gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.6);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.6);
+  }
+
+  playBlizzard() {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(950, this.ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(1400, this.ctx.currentTime + 0.35);
+    gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.35);
+  }
+
+  playBlackHole() {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(160, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(25, this.ctx.currentTime + 0.7);
+    gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.7);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.7);
+  }
+
+  playDragon() {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.8);
+    gain.gain.setValueAtTime(0.45, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.8);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.8);
+  }
 }
 
 const sfx = new SoundFX();
@@ -399,7 +459,11 @@ const POWER_QUESTS = [
   { id: 'q_beam', name: '🏹 Harmonia Astral', desc: 'Minere 2 Cristais de Gemas', target: 2, type: 'mine', rewardPower: 'power_beam', powerName: 'Raio Astral [F]' },
   { id: 'q_fire', name: '🔥 Fogo Ancestral', desc: 'Derrote 3 Inimigos na Floresta', target: 3, type: 'kill', rewardPower: 'power_fire', powerName: 'Meteoro Flamejante [C]' },
   { id: 'q_shield', name: '🛡️ Relíquia Sagrada', desc: 'Abra 3 Baús de Tesouro', target: 3, type: 'chest', rewardPower: 'power_shield', powerName: 'Escudo Divino [V]' },
-  { id: 'q_nature', name: '🌪️ Fúria da Floresta', desc: 'Derrote 1 Titã Guardião da Floresta', target: 1, type: 'boss', rewardPower: 'power_nature', powerName: 'Ciclone de Folhas [T]' }
+  { id: 'q_nature', name: '🌪️ Fúria da Floresta', desc: 'Derrote 1 Titã Guardião da Floresta', target: 1, type: 'boss', rewardPower: 'power_nature', powerName: 'Ciclone de Folhas [T]' },
+  { id: 'q_thunder', name: '⚡ Julgamento dos Relâmpagos', desc: 'Derrote 4 Inimigos na Floresta', target: 4, type: 'kill', rewardPower: 'power_thunder', powerName: 'Julgamento do Trovão [G]' },
+  { id: 'q_blizzard', name: '❄️ Coração do Inverno', desc: 'Abra 4 Baús de Tesouro na Floresta', target: 4, type: 'chest', rewardPower: 'power_blizzard', powerName: 'Nevasca Glacial [B]' },
+  { id: 'q_blackhole', name: '🌑 Singularidade do Vazio', desc: 'Minere 4 Cristais de Gemas Sagradas', target: 4, type: 'mine', rewardPower: 'power_blackhole', powerName: 'Singularidade do Vazio [Z]' },
+  { id: 'q_dragon', name: '🐉 Despertar do Dragão Ancestral', desc: 'Derrote 2 Titãs Chefes da Floresta', target: 2, type: 'boss', rewardPower: 'power_dragon', powerName: 'Sopro do Dragão Ancestral [X]' }
 ];
 
 const SHOP_CATALOG = {
@@ -525,7 +589,7 @@ function saveGame(showToast = true) {
     maxXp: localPlayer.maxXp || 100,
     weapon: localPlayer.weapon || 'fist',
     potions: localPlayer.potions || { heal: 0, speed: 0, superHeal: 0, shield: 0, strength: 0 },
-    powers: localPlayer.powers || { slam: false, beam: false, fire: false, shield: false, nature: false },
+    powers: localPlayer.powers || { slam: false, beam: false, fire: false, shield: false, nature: false, thunder: false, blizzard: false, blackhole: false, dragon: false },
     activeQuests: localPlayer.activeQuests || POWER_QUESTS,
     kills: localPlayer.kills || 0,
     score: localPlayer.score || 0,
@@ -656,7 +720,8 @@ const keys = {
   w: false, a: false, s: false, d: false,
   ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false,
   Space: false, Shift: false, q: false,
-  r: false, f: false, c: false, v: false, t: false, e: false,
+  r: false, f: false, c: false, v: false, t: false,
+  g: false, b: false, z: false, x: false, e: false,
   '1': false, '2': false, '3': false, '4': false, '5': false
 };
 const mouse = { x: screenWidth / 2, y: screenHeight / 2, down: false };
@@ -1011,8 +1076,8 @@ function startOfflineSimulation() {
     minedCount: 0,
     weapon: 'fist',
     potions: { heal: 0, speed: 0, superHeal: 0, shield: 0, strength: 0 },
-    powers: { slam: false, beam: false, fire: false, shield: false, nature: false },
-    powerCooldowns: { slam: 0, beam: 0, fire: 0, shield: 0, nature: 0 },
+    powers: { slam: false, beam: false, fire: false, shield: false, nature: false, thunder: false, blizzard: false, blackhole: false, dragon: false },
+    powerCooldowns: { slam: 0, beam: 0, fire: 0, shield: 0, nature: 0, thunder: 0, blizzard: 0, blackhole: 0, dragon: 0 },
     level: 1,
     xp: 0,
     maxXp: 100,
@@ -1210,6 +1275,10 @@ function startOfflineSimulation() {
     if (localPlayer.powerCooldowns.fire > 0) localPlayer.powerCooldowns.fire -= 1 / 30;
     if (localPlayer.powerCooldowns.shield > 0) localPlayer.powerCooldowns.shield -= 1 / 30;
     if (localPlayer.powerCooldowns.nature > 0) localPlayer.powerCooldowns.nature -= 1 / 30;
+    if (localPlayer.powerCooldowns.thunder > 0) localPlayer.powerCooldowns.thunder -= 1 / 30;
+    if (localPlayer.powerCooldowns.blizzard > 0) localPlayer.powerCooldowns.blizzard -= 1 / 30;
+    if (localPlayer.powerCooldowns.blackhole > 0) localPlayer.powerCooldowns.blackhole -= 1 / 30;
+    if (localPlayer.powerCooldowns.dragon > 0) localPlayer.powerCooldowns.dragon -= 1 / 30;
 
     // Movimentação só se não estiver morto
     if (!localPlayer.isDead) {
@@ -1753,6 +1822,65 @@ function handleServerMessage(msg) {
       });
       const ent = (localPlayer && localPlayer.id === msg.ownerId) ? localPlayer : (serverPlayers.get(msg.ownerId) || serverBots.get(msg.ownerId));
       if (ent) ent.slashTimer = 0.22;
+    } else if (msg.name === 'nature_cyclone') {
+      sfx.playNatureCyclone();
+      activeSpecialEffects.push({
+        type: 'nature_cyclone',
+        x: msg.x,
+        y: msg.y,
+        radius: 10,
+        color: msg.color || '#2ed573',
+        alpha: 1
+      });
+    } else if (msg.name === 'thunder_strike') {
+      sfx.playThunder();
+      triggerScreenShake(9);
+      activeSpecialEffects.push({
+        type: 'thunder_strike',
+        x: msg.x,
+        y: msg.y,
+        radius: msg.radius || 280,
+        color: msg.color || '#f1c40f',
+        alpha: 1,
+        progress: 0
+      });
+    } else if (msg.name === 'blizzard_blast') {
+      sfx.playBlizzard();
+      activeSpecialEffects.push({
+        type: 'blizzard_blast',
+        x: msg.x,
+        y: msg.y,
+        radius: 10,
+        maxRadius: msg.radius || 320,
+        color: msg.color || '#74b9ff',
+        alpha: 1
+      });
+    } else if (msg.name === 'black_hole') {
+      sfx.playBlackHole();
+      triggerScreenShake(7);
+      activeSpecialEffects.push({
+        type: 'black_hole',
+        x: msg.x,
+        y: msg.y,
+        radius: 10,
+        maxRadius: msg.radius || 350,
+        color: '#6c5ce7',
+        duration: 90,
+        alpha: 1
+      });
+    } else if (msg.name === 'dragon_breath') {
+      sfx.playDragon();
+      triggerScreenShake(10);
+      activeSpecialEffects.push({
+        type: 'dragon_breath',
+        x: msg.x,
+        y: msg.y,
+        angle: msg.angle || 0,
+        reach: msg.reach || 460,
+        color: '#ff4757',
+        alpha: 1,
+        progress: 0
+      });
     }
   } else if (msg.type === 'inventory_update') {
     if (localPlayer) {
@@ -1789,6 +1917,10 @@ function sendInput() {
       powerFire: keys.c,
       powerShield: keys.v,
       powerNature: keys.t,
+      powerThunder: keys.g,
+      powerBlizzard: keys.b,
+      powerBlackHole: keys.z,
+      powerDragon: keys.x,
       useHeal: keys['1'],
       useSpeed: keys['2'],
       useSuperHeal: keys['3'],
@@ -1805,6 +1937,10 @@ function sendInput() {
   if (keys.c) keys.c = false;
   if (keys.v) keys.v = false;
   if (keys.t) keys.t = false;
+  if (keys.g) keys.g = false;
+  if (keys.b) keys.b = false;
+  if (keys.z) keys.z = false;
+  if (keys.x) keys.x = false;
   if (keys['1']) keys['1'] = false;
   if (keys['2']) keys['2'] = false;
   if (keys['3']) keys['3'] = false;
@@ -1906,6 +2042,10 @@ function updateHUD(player) {
   updatePowerSlot('slot-power-fire', 'cd-fire', player.powers?.fire, player.powerCooldowns?.fire);
   updatePowerSlot('slot-power-shield', 'cd-shield', player.powers?.shield, player.powerCooldowns?.shield);
   updatePowerSlot('slot-power-nature', 'cd-nature', player.powers?.nature, player.powerCooldowns?.nature);
+  updatePowerSlot('slot-power-thunder', 'cd-thunder', player.powers?.thunder, player.powerCooldowns?.thunder);
+  updatePowerSlot('slot-power-blizzard', 'cd-blizzard', player.powers?.blizzard, player.powerCooldowns?.blizzard);
+  updatePowerSlot('slot-power-blackhole', 'cd-blackhole', player.powers?.blackhole, player.powerCooldowns?.blackhole);
+  updatePowerSlot('slot-power-dragon', 'cd-dragon', player.powers?.dragon, player.powerCooldowns?.dragon);
 
   checkNpcProximity(player);
 }
@@ -3289,6 +3429,199 @@ function drawSpecialEffects() {
       ctx.stroke();
 
       ctx.restore();
+    } else if (fx.type === 'thunder_strike') {
+      fx.progress = (fx.progress || 0) + 0.08;
+      fx.alpha -= 0.045;
+      if (fx.alpha <= 0 || fx.progress >= 1) { activeSpecialEffects.splice(i, 1); continue; }
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, fx.alpha);
+
+      // Onda de choque elétrica no chão
+      const curR = (fx.radius || 280) * fx.progress;
+      ctx.beginPath();
+      ctx.arc(fx.x, fx.y, curR, 0, Math.PI * 2);
+      ctx.strokeStyle = '#f1c40f';
+      ctx.lineWidth = 4;
+      ctx.shadowColor = '#00d2d3';
+      ctx.shadowBlur = 18;
+      ctx.stroke();
+
+      // Relâmpagos em Zigue-zague caindo dos céus
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      let boltY = fx.y - 700;
+      let boltX = fx.x + (Math.sin(fx.progress * 20) * 40);
+      ctx.moveTo(boltX, boltY);
+      while (boltY < fx.y) {
+        boltY += 45;
+        boltX += (Math.random() - 0.5) * 60;
+        ctx.lineTo(boltX, boltY);
+      }
+      ctx.lineTo(fx.x, fx.y);
+      ctx.stroke();
+
+      // Feixe secundário de trovão azul elétrico
+      ctx.strokeStyle = '#00d2d3';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      let b2Y = fx.y - 650;
+      let b2X = fx.x - 20;
+      ctx.moveTo(b2X, b2Y);
+      while (b2Y < fx.y) {
+        b2Y += 50;
+        b2X += (Math.random() - 0.5) * 50;
+        ctx.lineTo(b2X, b2Y);
+      }
+      ctx.lineTo(fx.x, fx.y);
+      ctx.stroke();
+
+      // Impacto radiante no solo
+      ctx.beginPath();
+      ctx.arc(fx.x, fx.y, 45 * (1 - fx.progress), 0, Math.PI * 2);
+      ctx.fillStyle = '#f1c40f';
+      ctx.shadowBlur = 25;
+      ctx.fill();
+
+      ctx.restore();
+    } else if (fx.type === 'blizzard_blast') {
+      fx.radius += 10;
+      fx.alpha -= 0.038;
+      if (fx.alpha <= 0) { activeSpecialEffects.splice(i, 1); continue; }
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, fx.alpha);
+
+      // Círculo de gelo expansivo
+      ctx.beginPath();
+      ctx.arc(fx.x, fx.y, fx.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = '#74b9ff';
+      ctx.lineWidth = 5;
+      ctx.shadowColor = '#00cec9';
+      ctx.shadowBlur = 18;
+      ctx.stroke();
+
+      // 8 Estilhaços de Cristais Árticos pontiagudos girando
+      const shards = 8;
+      for (let s = 0; s < shards; s++) {
+        const a = (s / shards) * Math.PI * 2 + (fx.radius * 0.02);
+        const sx = fx.x + Math.cos(a) * fx.radius;
+        const sy = fx.y + Math.sin(a) * fx.radius;
+
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.rotate(a + Math.PI / 2);
+
+        ctx.fillStyle = '#dfe6e9';
+        ctx.beginPath();
+        ctx.moveTo(0, -18);
+        ctx.lineTo(6, 0);
+        ctx.lineTo(0, 18);
+        ctx.lineTo(-6, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = '#74b9ff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      ctx.restore();
+    } else if (fx.type === 'black_hole') {
+      fx.duration = (fx.duration || 90) - 1;
+      fx.rot = (fx.rot || 0) + 0.18;
+      if (fx.duration <= 0) { activeSpecialEffects.splice(i, 1); continue; }
+
+      const pulse = 1 + Math.sin(Date.now() * 0.015) * 0.15;
+      const coreR = 36 * pulse;
+
+      ctx.save();
+      ctx.translate(fx.x, fx.y);
+      ctx.rotate(fx.rot);
+
+      // Anel de Acreção de Energia do Vazio
+      ctx.beginPath();
+      ctx.arc(0, 0, (fx.maxRadius || 350) * 0.45 * pulse, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(108, 92, 231, 0.4)';
+      ctx.lineWidth = 12;
+      ctx.shadowColor = '#a29bfe';
+      ctx.shadowBlur = 24;
+      ctx.stroke();
+
+      // Braços espirais da singularidade
+      for (let k = 0; k < 4; k++) {
+        const sa = (k / 4) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 75, sa, sa + 1.2);
+        ctx.strokeStyle = '#a29bfe';
+        ctx.lineWidth = 3.5;
+        ctx.stroke();
+      }
+
+      // Núcleo Negro Gravitacional Absoluto
+      ctx.beginPath();
+      ctx.arc(0, 0, coreR, 0, Math.PI * 2);
+      ctx.fillStyle = '#0a0a14';
+      ctx.shadowColor = '#6c5ce7';
+      ctx.shadowBlur = 30;
+      ctx.fill();
+      ctx.strokeStyle = '#6c5ce7';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      ctx.restore();
+    } else if (fx.type === 'dragon_breath') {
+      fx.progress = (fx.progress || 0) + 0.055;
+      fx.alpha -= 0.035;
+      if (fx.alpha <= 0 || fx.progress >= 1) { activeSpecialEffects.splice(i, 1); continue; }
+
+      ctx.save();
+      ctx.translate(fx.x, fx.y);
+      ctx.rotate(fx.angle);
+      ctx.globalAlpha = Math.max(0, fx.alpha);
+
+      const reach = fx.reach || 460;
+      const curReach = reach * Math.min(1, fx.progress * 1.5);
+      const halfCone = 0.55; // ~63 graus
+
+      // Camada Externa: Chamas Dracônicas Vermelhas
+      ctx.beginPath();
+      ctx.moveTo(15, 0);
+      ctx.lineTo(curReach, -Math.sin(halfCone) * curReach);
+      ctx.lineTo(curReach * 1.08, 0);
+      ctx.lineTo(curReach, Math.sin(halfCone) * curReach);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(255, 71, 87, 0.55)';
+      ctx.shadowColor = '#ff4757';
+      ctx.shadowBlur = 25;
+      ctx.fill();
+
+      // Camada Média: Fogo Dourado Ancestral
+      ctx.beginPath();
+      ctx.moveTo(25, 0);
+      ctx.lineTo(curReach * 0.85, -Math.sin(halfCone * 0.7) * curReach * 0.85);
+      ctx.lineTo(curReach * 0.95, 0);
+      ctx.lineTo(curReach * 0.85, Math.sin(halfCone * 0.7) * curReach * 0.85);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(255, 165, 2, 0.75)';
+      ctx.fill();
+
+      // Núcleo Incandescente Branco/Amarelo
+      ctx.beginPath();
+      ctx.moveTo(35, 0);
+      ctx.lineTo(curReach * 0.55, -Math.sin(halfCone * 0.4) * curReach * 0.55);
+      ctx.lineTo(curReach * 0.65, 0);
+      ctx.lineTo(curReach * 0.55, Math.sin(halfCone * 0.4) * curReach * 0.55);
+      ctx.closePath();
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#ffd32a';
+      ctx.shadowBlur = 20;
+      ctx.fill();
+
+      ctx.restore();
     }
   }
 }
@@ -3472,6 +3805,10 @@ window.addEventListener('keydown', (e) => {
     if (k === 'c' || e.code === 'KeyC') { keys.c = true; castPowerFire(); }
     if (k === 'v' || e.code === 'KeyV') { keys.v = true; castPowerShield(); }
     if (k === 't' || e.code === 'KeyT') { keys.t = true; castPowerNature(); }
+    if (k === 'g' || e.code === 'KeyG') { keys.g = true; castPowerThunder(); }
+    if (k === 'b' || e.code === 'KeyB') { keys.b = true; castPowerBlizzard(); }
+    if (k === 'z' || e.code === 'KeyZ') { keys.z = true; castPowerBlackHole(); }
+    if (k === 'x' || e.code === 'KeyX') { keys.x = true; castPowerDragon(); }
     if ((k === 'e' || e.code === 'KeyE') && nearbyNpc) openShop(nearbyNpc);
   }
 });
@@ -3485,6 +3822,10 @@ window.addEventListener('keyup', (e) => {
   if (k === 'c' || e.code === 'KeyC') keys.c = false;
   if (k === 'v' || e.code === 'KeyV') keys.v = false;
   if (k === 't' || e.code === 'KeyT') keys.t = false;
+  if (k === 'g' || e.code === 'KeyG') keys.g = false;
+  if (k === 'b' || e.code === 'KeyB') keys.b = false;
+  if (k === 'z' || e.code === 'KeyZ') keys.z = false;
+  if (k === 'x' || e.code === 'KeyX') keys.x = false;
   if (k === '1' || e.code === 'Digit1') keys['1'] = false;
   if (k === '2' || e.code === 'Digit2') keys['2'] = false;
   if (k === '3' || e.code === 'Digit3') keys['3'] = false;
@@ -3501,6 +3842,11 @@ function setKey(e, isPressed) {
   if (code === 'KeyS' || k === 's') keys.s = isPressed;
   if (code === 'KeyA' || k === 'a') keys.a = isPressed;
   if (code === 'KeyD' || k === 'd') keys.d = isPressed;
+
+  if (code === 'KeyG' || k === 'g') keys.g = isPressed;
+  if (code === 'KeyB' || k === 'b') keys.b = isPressed;
+  if (code === 'KeyZ' || k === 'z') keys.z = isPressed;
+  if (code === 'KeyX' || k === 'x') keys.x = isPressed;
 
   if (code === 'ArrowUp' || e.key === 'ArrowUp') keys.ArrowUp = isPressed;
   if (code === 'ArrowDown' || e.key === 'ArrowDown') keys.ArrowDown = isPressed;
@@ -3861,6 +4207,294 @@ function castPowerNature() {
   }
 }
 
+function castPowerThunder() {
+  if (!localPlayer || localPlayer.isDead || !localPlayer.powers?.thunder) return;
+  if (localPlayer.powerCooldowns?.thunder > 0) return;
+
+  if (isOfflineMode) {
+    localPlayer.powerCooldowns.thunder = 9;
+    sfx.playThunder();
+    triggerScreenShake(9);
+    activeSpecialEffects.push({
+      type: 'thunder_strike',
+      x: localPlayer.x,
+      y: localPlayer.y,
+      radius: 280,
+      color: '#f1c40f',
+      alpha: 1,
+      progress: 0
+    });
+
+    for (const b of serverBots.values()) {
+      if (b.hp > 0 && !b.isDead && Math.hypot(b.x - localPlayer.x, b.y - localPlayer.y) < 280) {
+        b.hp -= 55;
+        addFloatingText(b.x, b.y - 25, '⚡ -55', '#f1c40f', 16, true);
+        addParticle(b.x, b.y, '#f1c40f', 14, 6);
+        const pa = Math.atan2(b.y - localPlayer.y, b.x - localPlayer.x);
+        b.x += Math.cos(pa) * 75;
+        b.y += Math.sin(pa) * 75;
+        if (b.hp <= 0) {
+          b.hp = 0;
+          b.isDead = true;
+          localPlayer.score += 100;
+          localPlayer.gold += 70;
+          addPlayerXp(40);
+          sfx.playCoin();
+          updateKillfeed([{ text: `⚡ ${localPlayer.name} fulminou ${b.name} com o Trovão (+70 🪙)!` }]);
+          checkOfflineQuestProgress('kill');
+          setTimeout(() => {
+            const sp = getOfflineSpawnPoint();
+            b.hp = b.maxHp;
+            b.isDead = false;
+            b.x = sp.x;
+            b.y = sp.y;
+          }, 3000);
+        }
+      }
+    }
+
+    const bosses = [serverWorldBoss, serverSecondBoss, serverThirdBoss, serverFourthBoss];
+    for (const boss of bosses) {
+      if (boss && boss.hp > 0 && Math.hypot(boss.x - localPlayer.x, boss.y - localPlayer.y) < 300) {
+        boss.hp -= 65;
+        addFloatingText(boss.x, boss.y - 40, '⚡ -65', '#f1c40f', 20, true);
+        addParticle(boss.x, boss.y, '#f1c40f', 18, 7);
+        if (boss.hp <= 0) {
+          localPlayer.gold += 300;
+          localPlayer.score += 600;
+          addPlayerXp(250);
+          checkOfflineQuestProgress('boss');
+          addFloatingText(boss.x, boss.y - 50, '+300 🪙', '#ffd32a', 22, true);
+          sfx.playCoin();
+          updateKillfeed([{ text: `👑 ${localPlayer.name} fulminou ${boss.name.toUpperCase()} (+300 🪙)!` }]);
+          boss.hp = 0;
+        }
+      }
+    }
+    updateHUD(localPlayer);
+  }
+}
+
+function castPowerBlizzard() {
+  if (!localPlayer || localPlayer.isDead || !localPlayer.powers?.blizzard) return;
+  if (localPlayer.powerCooldowns?.blizzard > 0) return;
+
+  if (isOfflineMode) {
+    localPlayer.powerCooldowns.blizzard = 8;
+    sfx.playBlizzard();
+    activeSpecialEffects.push({
+      type: 'blizzard_blast',
+      x: localPlayer.x,
+      y: localPlayer.y,
+      radius: 10,
+      maxRadius: 320,
+      color: '#74b9ff',
+      alpha: 1
+    });
+
+    // Dispara 8 estilhaços de gelo em 360 graus
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      serverProjectiles.push({
+        id: Math.random(),
+        ownerId: localPlayer.id,
+        color: '#74b9ff',
+        damage: 34,
+        x: localPlayer.x + Math.cos(a) * 35,
+        y: localPlayer.y + Math.sin(a) * 35,
+        vx: Math.cos(a) * 15,
+        vy: Math.sin(a) * 15,
+        lifetime: 60
+      });
+    }
+
+    for (const b of serverBots.values()) {
+      if (b.hp > 0 && !b.isDead && Math.hypot(b.x - localPlayer.x, b.y - localPlayer.y) < 260) {
+        b.hp -= 30;
+        addFloatingText(b.x, b.y - 25, '❄️ -30', '#74b9ff', 15);
+        addParticle(b.x, b.y, '#74b9ff', 12, 5);
+        if (b.hp <= 0) {
+          b.hp = 0;
+          b.isDead = true;
+          localPlayer.score += 100;
+          localPlayer.gold += 70;
+          addPlayerXp(40);
+          sfx.playCoin();
+          updateKillfeed([{ text: `❄️ ${localPlayer.name} congelou ${b.name} na Nevasca (+70 🪙)!` }]);
+          checkOfflineQuestProgress('kill');
+          setTimeout(() => {
+            const sp = getOfflineSpawnPoint();
+            b.hp = b.maxHp;
+            b.isDead = false;
+            b.x = sp.x;
+            b.y = sp.y;
+          }, 3000);
+        }
+      }
+    }
+    updateHUD(localPlayer);
+  }
+}
+
+function castPowerBlackHole() {
+  if (!localPlayer || localPlayer.isDead || !localPlayer.powers?.blackhole) return;
+  if (localPlayer.powerCooldowns?.blackhole > 0) return;
+
+  if (isOfflineMode) {
+    localPlayer.powerCooldowns.blackhole = 11;
+    sfx.playBlackHole();
+    triggerScreenShake(8);
+
+    const holeX = localPlayer.x + Math.cos(localPlayer.angle) * 180;
+    const holeY = localPlayer.y + Math.sin(localPlayer.angle) * 180;
+
+    activeSpecialEffects.push({
+      type: 'black_hole',
+      x: holeX,
+      y: holeY,
+      radius: 10,
+      maxRadius: 350,
+      color: '#6c5ce7',
+      duration: 90,
+      alpha: 1
+    });
+
+    // Puxa e causa dano de colapso gravitacional
+    for (const b of serverBots.values()) {
+      if (b.hp > 0 && !b.isDead && Math.hypot(b.x - holeX, b.y - holeY) < 350) {
+        b.hp -= 68;
+        addFloatingText(b.x, b.y - 25, '🌑 -68', '#a29bfe', 17, true);
+        addParticle(b.x, b.y, '#6c5ce7', 15, 6);
+        // Atração gravitacional forte para o centro do buraco negro
+        const pa = Math.atan2(holeY - b.y, holeX - b.x);
+        b.x += Math.cos(pa) * 120;
+        b.y += Math.sin(pa) * 120;
+        if (b.hp <= 0) {
+          b.hp = 0;
+          b.isDead = true;
+          localPlayer.score += 100;
+          localPlayer.gold += 70;
+          addPlayerXp(40);
+          sfx.playCoin();
+          updateKillfeed([{ text: `🌑 ${localPlayer.name} tragou ${b.name} para o Vazio (+70 🪙)!` }]);
+          checkOfflineQuestProgress('kill');
+          setTimeout(() => {
+            const sp = getOfflineSpawnPoint();
+            b.hp = b.maxHp;
+            b.isDead = false;
+            b.x = sp.x;
+            b.y = sp.y;
+          }, 3000);
+        }
+      }
+    }
+
+    const bosses = [serverWorldBoss, serverSecondBoss, serverThirdBoss, serverFourthBoss];
+    for (const boss of bosses) {
+      if (boss && boss.hp > 0 && Math.hypot(boss.x - holeX, boss.y - holeY) < 360) {
+        boss.hp -= 75;
+        addFloatingText(boss.x, boss.y - 40, '🌑 -75', '#a29bfe', 20, true);
+        addParticle(boss.x, boss.y, '#6c5ce7', 18, 7);
+        if (boss.hp <= 0) {
+          localPlayer.gold += 300;
+          localPlayer.score += 600;
+          addPlayerXp(250);
+          checkOfflineQuestProgress('boss');
+          addFloatingText(boss.x, boss.y - 50, '+300 🪙', '#ffd32a', 22, true);
+          sfx.playCoin();
+          updateKillfeed([{ text: `👑 ${localPlayer.name} engoliu ${boss.name.toUpperCase()} no Vazio (+300 🪙)!` }]);
+          boss.hp = 0;
+        }
+      }
+    }
+    updateHUD(localPlayer);
+  }
+}
+
+function castPowerDragon() {
+  if (!localPlayer || localPlayer.isDead || !localPlayer.powers?.dragon) return;
+  if (localPlayer.powerCooldowns?.dragon > 0) return;
+
+  if (isOfflineMode) {
+    localPlayer.powerCooldowns.dragon = 13;
+    sfx.playDragon();
+    triggerScreenShake(11);
+
+    activeSpecialEffects.push({
+      type: 'dragon_breath',
+      x: localPlayer.x,
+      y: localPlayer.y,
+      angle: localPlayer.angle,
+      reach: 460,
+      color: '#ff4757',
+      alpha: 1,
+      progress: 0
+    });
+
+    const maxReach = 460;
+    const maxCone = 0.65; // ~74 graus
+
+    for (const b of serverBots.values()) {
+      if (b.hp > 0 && !b.isDead) {
+        const dist = Math.hypot(b.x - localPlayer.x, b.y - localPlayer.y);
+        if (dist <= maxReach) {
+          const dir = Math.atan2(b.y - localPlayer.y, b.x - localPlayer.x);
+          if (calcAngleDiff(dir, localPlayer.angle) < maxCone) {
+            b.hp -= 85;
+            addFloatingText(b.x, b.y - 25, '🐉 -85 CRÍTICO!', '#ff4757', 18, true);
+            addParticle(b.x, b.y, '#ff4757', 16, 7);
+            b.x += Math.cos(localPlayer.angle) * 70;
+            b.y += Math.sin(localPlayer.angle) * 70;
+            if (b.hp <= 0) {
+              b.hp = 0;
+              b.isDead = true;
+              localPlayer.score += 100;
+              localPlayer.gold += 70;
+              addPlayerXp(40);
+              sfx.playCoin();
+              updateKillfeed([{ text: `🐉 ${localPlayer.name} incinerou ${b.name} com o Sopro Dracônico (+70 🪙)!` }]);
+              checkOfflineQuestProgress('kill');
+              setTimeout(() => {
+                const sp = getOfflineSpawnPoint();
+                b.hp = b.maxHp;
+                b.isDead = false;
+                b.x = sp.x;
+                b.y = sp.y;
+              }, 3000);
+            }
+          }
+        }
+      }
+    }
+
+    const bosses = [serverWorldBoss, serverSecondBoss, serverThirdBoss, serverFourthBoss];
+    for (const boss of bosses) {
+      if (boss && boss.hp > 0) {
+        const dist = Math.hypot(boss.x - localPlayer.x, boss.y - localPlayer.y);
+        if (dist <= maxReach + boss.radius) {
+          const dir = Math.atan2(boss.y - localPlayer.y, boss.x - localPlayer.x);
+          if (calcAngleDiff(dir, localPlayer.angle) < maxCone) {
+            boss.hp -= 110;
+            addFloatingText(boss.x, boss.y - 45, '🐉 -110 TITÂNICO!', '#ff4757', 24, true);
+            addParticle(boss.x, boss.y, '#ff4757', 22, 8);
+            if (boss.hp <= 0) {
+              localPlayer.gold += 300;
+              localPlayer.score += 600;
+              addPlayerXp(250);
+              checkOfflineQuestProgress('boss');
+              addFloatingText(boss.x, boss.y - 50, '+300 🪙', '#ffd32a', 22, true);
+              sfx.playCoin();
+              updateKillfeed([{ text: `👑 ${localPlayer.name} incinerou ${boss.name.toUpperCase()} com Fogo Dracônico (+300 🪙)!` }]);
+              boss.hp = 0;
+            }
+          }
+        }
+      }
+    }
+    updateHUD(localPlayer);
+  }
+}
+
 function distanceToSegment(px, py, x1, y1, x2, y2) {
   const dx = x2 - x1; const dy = y2 - y1;
   const l2 = dx * dx + dy * dy;
@@ -3906,12 +4540,15 @@ if (mSprint) {
   mSprint.addEventListener('mouseup', endSp);
 }
 
-document.getElementById('slot-power-slam').addEventListener('click', castPowerSlam);
-document.getElementById('slot-power-beam').addEventListener('click', castPowerBeam);
-document.getElementById('slot-power-fire').addEventListener('click', castPowerFire);
-document.getElementById('slot-power-shield').addEventListener('click', castPowerShield);
-const slotNature = document.getElementById('slot-power-nature');
-if (slotNature) slotNature.addEventListener('click', castPowerNature);
+document.getElementById('slot-power-slam')?.addEventListener('click', castPowerSlam);
+document.getElementById('slot-power-beam')?.addEventListener('click', castPowerBeam);
+document.getElementById('slot-power-fire')?.addEventListener('click', castPowerFire);
+document.getElementById('slot-power-shield')?.addEventListener('click', castPowerShield);
+document.getElementById('slot-power-nature')?.addEventListener('click', castPowerNature);
+document.getElementById('slot-power-thunder')?.addEventListener('click', castPowerThunder);
+document.getElementById('slot-power-blizzard')?.addEventListener('click', castPowerBlizzard);
+document.getElementById('slot-power-blackhole')?.addEventListener('click', castPowerBlackHole);
+document.getElementById('slot-power-dragon')?.addEventListener('click', castPowerDragon);
 
 // Botão de Tela Cheia
 const btnFullscreen = document.getElementById('btn-fullscreen');
@@ -3992,9 +4629,17 @@ if (btnContinue) {
       localPlayer.xp = saved.xp || 0;
       localPlayer.maxXp = saved.maxXp || 100;
       localPlayer.weapon = saved.weapon || 'fist';
-      localPlayer.potions = saved.potions || { heal: 0, speed: 0, superHeal: 0, shield: 0, strength: 0 };
-      localPlayer.powers = saved.powers || { slam: false, beam: false, fire: false, shield: false, nature: false };
-      localPlayer.activeQuests = saved.activeQuests || POWER_QUESTS;
+      localPlayer.powers = {
+        slam: false, beam: false, fire: false, shield: false, nature: false,
+        thunder: false, blizzard: false, blackhole: false, dragon: false,
+        ...(saved.powers || {})
+      };
+      const savedQuestsMap = new Map((saved.activeQuests || []).map(q => [q.id, q]));
+      localPlayer.activeQuests = POWER_QUESTS.map(q => {
+        const sq = savedQuestsMap.get(q.id);
+        if (sq) return sq;
+        return { ...q, current: 0, completed: false };
+      });
       localPlayer.kills = saved.kills || 0;
       localPlayer.score = saved.score || 0;
       localPlayer.minedCount = saved.minedCount || 0;
