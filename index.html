@@ -59,6 +59,18 @@
         <div id="lb-entries"></div>
       </div>
 
+      <!-- Contador de Ouro da Jornada -->
+      <div id="gold-badge">
+        <span>🪙</span>
+        <span id="gold-val">50</span>
+        <span style="font-size: 11px; color: #8899aa;">Ouro</span>
+      </div>
+
+      <!-- Banner de Zona Segura (Cidade) -->
+      <div id="safe-zone-banner">
+        🛡️ CIDADE DOS GUARDIÕES (ZONA SEGURA)
+      </div>
+
       <!-- Killfeed de Eliminações -->
       <div id="killfeed"></div>
 
@@ -84,6 +96,39 @@
         </div>
       </div>
 
+      <!-- Barra de Ações Rápidas (Poções & Poderes) -->
+      <div id="quick-slots">
+        <!-- Poção de Vida -->
+        <div class="quick-slot" id="slot-potion-heal" title="Poção de Vida [1]">
+          <span class="slot-key">1</span>
+          <span class="slot-icon">🧪</span>
+          <span class="slot-count" id="count-heal-pot">1</span>
+        </div>
+        <!-- Poção de Vigor -->
+        <div class="quick-slot" id="slot-potion-speed" title="Poção de Vigor [2]">
+          <span class="slot-key">2</span>
+          <span class="slot-icon">⚡</span>
+          <span class="slot-count" id="count-speed-pot">0</span>
+        </div>
+        <!-- Poder Sísmico -->
+        <div class="quick-slot locked" id="slot-power-slam" title="Pisão Sísmico [R]">
+          <span class="slot-key">R</span>
+          <span class="slot-icon">💥</span>
+          <div class="slot-cooldown-overlay" id="cd-slam" style="display: none;"></div>
+        </div>
+        <!-- Raio Astral -->
+        <div class="quick-slot locked" id="slot-power-beam" title="Raio Astral [F]">
+          <span class="slot-key">F</span>
+          <span class="slot-icon">🏹</span>
+          <div class="slot-cooldown-overlay" id="cd-beam" style="display: none;"></div>
+        </div>
+      </div>
+
+      <!-- Prompt de Interação com NPC -->
+      <div id="npc-interact-prompt">
+        💬 Pressione [E] ou Clique para Abrir a Loja
+      </div>
+
       <!-- Minimapa Tático da Arena -->
       <div id="minimap-container">
         <canvas id="minimapCanvas" width="160" height="160"></canvas>
@@ -99,6 +144,24 @@
       <div id="mobile-controls">
         <div class="mobile-btn" id="btn-mobile-dash">💨</div>
         <div class="mobile-btn" id="btn-mobile-attack">⚔️</div>
+      </div>
+    </div>
+
+    <!-- Janela Modal da Loja da Cidade -->
+    <div id="shop-modal">
+      <div class="shop-window">
+        <div class="shop-header">
+          <h2 id="shop-npc-title">🏛️ Mercado da Cidade</h2>
+          <button class="shop-close-btn" id="btn-close-shop">×</button>
+        </div>
+        <div class="shop-tabs">
+          <button class="shop-tab-btn active" data-tab="weapons">⚔️ Espadas & Armas</button>
+          <button class="shop-tab-btn" data-tab="potions">🧪 Poções de Alquimia</button>
+          <button class="shop-tab-btn" data-tab="powers">✨ Super Poderes</button>
+        </div>
+        <div class="shop-items-list" id="shop-items-container">
+          <!-- Itens injetados via JS -->
+        </div>
       </div>
     </div>
   </div>
