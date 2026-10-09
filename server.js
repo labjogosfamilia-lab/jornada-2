@@ -318,13 +318,22 @@ const SHOP_CATALOG = {
   weapons: [
     { id: 'fist', name: 'Punhos do Sobrevivente', cost: 0, damage: 14, color: '#ffdcb4', desc: 'Desarmado: socos velozes corpo a corpo' },
     { id: 'sword_starter', name: 'Lâmina de Carvalho Rústica', cost: 60, damage: 24, color: '#00e5ff', desc: 'Espada de madeira: corte corpo a corpo balanceado' },
-    { id: 'sword_rune', name: 'Lâmina Rúnica da Floresta', cost: 150, damage: 36, color: '#2ed573', desc: '+50% Dano & corte rúnico veloz corpo a corpo' },
-    { id: 'sword_fire', name: 'Lâmina do Fogo da Mata', cost: 320, damage: 54, color: '#ff4757', desc: 'Lâmina flamejante: corte incandescente devastador' },
-    { id: 'staff_astral', name: 'Cajado Ancião dos Druidas', cost: 500, damage: 34, triple: true, color: '#ffd32a', desc: 'Cajado druídico: disparo triplo mágico à distância' }
+    { id: 'sword_iron', name: 'Espada de Ferro Forjado', cost: 120, damage: 34, color: '#dfe4ea', desc: 'Aço temperado: lâmina afiada e resistente' },
+    { id: 'sword_rune', name: 'Lâmina Rúnica da Floresta', cost: 220, damage: 46, color: '#2ed573', desc: '+50% Dano & corte rúnico veloz corpo a corpo' },
+    { id: 'sword_poison', name: 'Espada Venenosa da Serpente', cost: 360, damage: 60, color: '#1dd1a1', desc: 'Lâmina embebida em veneno mortal da floresta' },
+    { id: 'sword_fire', name: 'Lâmina do Fogo da Mata', cost: 520, damage: 78, color: '#ff4757', desc: 'Lâmina flamejante: corte incandescente devastador' },
+    { id: 'sword_lightning', name: 'Espada Tempestuosa do Trovão', cost: 750, damage: 98, color: '#00d2d3', desc: 'Lâmina de relâmpagos: velocidade extrema e corte elétrico' },
+    { id: 'sword_shadow', name: 'Lâmina Sombria do Crepúsculo', cost: 1050, damage: 120, color: '#a29bfe', desc: 'Forjada no eclipse: golpes críticos sombrios brutais' },
+    { id: 'staff_astral', name: 'Cajado Ancião dos Druidas', cost: 1250, damage: 45, triple: true, color: '#ffd32a', desc: 'Cajado druídico: disparo triplo mágico à distância' },
+    { id: 'sword_titan', name: 'Espada Colossal dos Titãs', cost: 1650, damage: 155, color: '#ff5252', desc: 'Montante épico de 2 mãos: impacto sísmico colossal' },
+    { id: 'sword_celestial', name: 'Lâmina Celestial da Luz Sagrada', cost: 2300, damage: 195, color: '#ffd32a', desc: 'Espada divina mítica: o poder supremo da floresta' }
   ],
   potions: [
-    { id: 'potion_heal', name: 'Néctar Curativo da Floresta', cost: 40, heal: 50, icon: '🧪', desc: 'Restaura +50 de HP imediatamente' },
-    { id: 'potion_speed', name: 'Extrato de Fúria do Vento', cost: 55, speedBoost: 1.5, icon: '⚡', desc: 'Velocidade e vigor máximo por 10s' }
+    { id: 'potion_heal', name: 'Néctar Curativo da Floresta', cost: 40, heal: 50, icon: '🧪', desc: 'Recupera +50 de HP imediatamente [Tecla 1]' },
+    { id: 'potion_speed', name: 'Extrato de Fúria do Vento', cost: 55, speedBoost: 1.5, icon: '⚡', desc: 'Vigor máximo e corrida acelerada por 10s [Tecla 2]' },
+    { id: 'potion_super_heal', name: 'Elixir Vital Sagrado', cost: 95, heal: 120, icon: '💖', desc: 'Cura Suprema: restaura +120 de Vida [Tecla 3]' },
+    { id: 'potion_shield', name: 'Poção de Casca de Ferro', cost: 80, shield: 90, icon: '🛡️', desc: 'Armadura arbórea: +90 de Escudo Sagrado por 15s [Tecla 4]' },
+    { id: 'potion_strength', name: 'Sangue de Titã Dracônico', cost: 115, strength: 1.6, icon: '🐉', desc: 'Fúria sagrada: +60% Dano de Ataque por 15s [Tecla 5]' }
   ]
 };
 
@@ -558,17 +567,18 @@ function onPlayerJoin(client) {
     deaths: 0,
     level: 1,
     xp: 0,
-    weapon: 'sword_starter',
-    potions: { heal: 2, speed: 0 },
+    weapon: 'fist',
+    potions: { heal: 1, speed: 1, superHeal: 0, shield: 0, strength: 0 },
     powers: { slam: false, beam: false, fire: false, shield: false, nature: false },
     powerCooldowns: { slam: 0, beam: 0, fire: 0, shield: 0, nature: 0 },
     speedBoostTimer: 0,
+    strengthTimer: 0,
     dashCooldown: 0,
     attackCooldown: 0,
     radius: 24,
     inSafeZone: true,
     activeQuests: POWER_QUESTS.map(q => ({ ...q, current: 0, completed: false })),
-    input: { up: false, down: false, left: false, right: false, attack: false, dash: false, powerSlam: false, powerBeam: false, powerFire: false, powerShield: false, powerNature: false, useHeal: false, useSpeed: false, angle: 0 }
+    input: { up: false, down: false, left: false, right: false, attack: false, dash: false, sprint: false, powerSlam: false, powerBeam: false, powerFire: false, powerShield: false, powerNature: false, useHeal: false, useSpeed: false, useSuperHeal: false, useShieldPot: false, useStrengthPot: false, angle: 0 }
   };
 
   players.set(client.id, player);
@@ -616,6 +626,24 @@ function onClientMessage(client, msg) {
       p.speedBoostTimer = 10;
       p.stamina = p.maxStamina;
       broadcast({ type: 'effect', name: 'speed_boost', x: p.x, y: p.y, color: '#ffd32a' });
+    }
+
+    if (msg.input?.useSuperHeal && (p.potions.superHeal || 0) > 0 && p.hp < p.maxHp) {
+      p.potions.superHeal--;
+      p.hp = Math.min(p.maxHp, p.hp + 120);
+      broadcast({ type: 'effect', name: 'heal', x: p.x, y: p.y, color: '#ff6b81' });
+    }
+
+    if (msg.input?.useShieldPot && (p.potions.shield || 0) > 0) {
+      p.potions.shield--;
+      p.shieldTimer = Math.max(p.shieldTimer || 0, 15);
+      broadcast({ type: 'effect', name: 'shield_up', x: p.x, y: p.y, color: '#00e5ff' });
+    }
+
+    if (msg.input?.useStrengthPot && (p.potions.strength || 0) > 0) {
+      p.potions.strength--;
+      p.strengthTimer = 15;
+      broadcast({ type: 'effect', name: 'power_fire', x: p.x, y: p.y, color: '#ff4757' });
     }
 
     // Super Poderes (DESBLOQUEADOS APENAS POR MISSÃO!)
@@ -695,6 +723,9 @@ function handleShopPurchase(player, category, itemId) {
   } else if (category === 'potions') {
     if (itemId === 'potion_heal') player.potions.heal = (player.potions.heal || 0) + 1;
     if (itemId === 'potion_speed') player.potions.speed = (player.potions.speed || 0) + 1;
+    if (itemId === 'potion_super_heal') player.potions.superHeal = (player.potions.superHeal || 0) + 1;
+    if (itemId === 'potion_shield') player.potions.shield = (player.potions.shield || 0) + 1;
+    if (itemId === 'potion_strength') player.potions.strength = (player.potions.strength || 0) + 1;
   }
 
   sendTo(clients.get(player.socket), {
@@ -815,7 +846,12 @@ function distanceToSegment(px, py, x1, y1, x2, y2) {
 }
 
 function executeMeleeAttack(attacker, weapon) {
-  const reach = (attacker.weapon === 'fist' ? 52 : 78) + 20;
+  let attackDmg = weapon.damage;
+  if (attacker.strengthTimer > 0) {
+    attackDmg = Math.round(attackDmg * 1.6);
+  }
+  const isTitan = attacker.weapon === 'sword_titan';
+  const reach = (attacker.weapon === 'fist' ? 52 : (isTitan ? 92 : 78)) + 20;
   const maxCone = 1.25;
 
   broadcast({
@@ -825,7 +861,7 @@ function executeMeleeAttack(attacker, weapon) {
     x: attacker.x,
     y: attacker.y,
     angle: attacker.angle,
-    radius: attacker.weapon === 'fist' ? 52 : 78,
+    radius: attacker.weapon === 'fist' ? 52 : (isTitan ? 92 : 78),
     color: weapon.color,
     weaponId: attacker.weapon
   });
@@ -840,7 +876,7 @@ function executeMeleeAttack(attacker, weapon) {
       while (diff < -Math.PI) diff += Math.PI * 2;
       while (diff > Math.PI) diff -= Math.PI * 2;
       if (Math.abs(diff) < maxCone) {
-        t.hp = Math.max(0, t.hp - weapon.damage);
+        t.hp = Math.max(0, t.hp - attackDmg);
         // Knockback da lâmina
         t.x += Math.cos(attacker.angle) * 20;
         t.y += Math.sin(attacker.angle) * 20;
@@ -861,7 +897,7 @@ function executeMeleeAttack(attacker, weapon) {
       while (diff < -Math.PI) diff += Math.PI * 2;
       while (diff > Math.PI) diff -= Math.PI * 2;
       if (Math.abs(diff) < maxCone) {
-        boss.hp = Math.max(0, boss.hp - weapon.damage);
+        boss.hp = Math.max(0, boss.hp - attackDmg);
         broadcast({ type: 'hit', x: boss.x, y: boss.y, color: weapon.color });
         checkBossDeath(attacker, boss);
       }
@@ -1030,7 +1066,20 @@ function updateBotAI(bot, now) {
       }
       bot.input.attack = minDist <= 85;
     }
+
+    // Bot Correr no Shift & Dash no Q
+    if (minDist > 140 && bot.stamina > 5) {
+      bot.input.sprint = true;
+    } else {
+      bot.input.sprint = false;
+    }
+
+    if (bot.dashCooldown <= 0 && bot.stamina >= 20 && minDist > 120 && minDist < 360 && Math.random() < 0.05) {
+      bot.input.dash = true;
+    }
   } else {
+    bot.input.sprint = false;
+    bot.input.dash = false;
     if (bot.isWandering === undefined) bot.isWandering = Math.random() > 0.4;
     if (Math.random() < 0.02) {
       bot.isWandering = !bot.isWandering;
@@ -1112,9 +1161,13 @@ function gameTick() {
 
     if (ent.dashCooldown > 0) ent.dashCooldown -= 1 / TICK_RATE;
     if (ent.attackCooldown > 0) ent.attackCooldown -= 1 / TICK_RATE;
-    if (ent.stamina < ent.maxStamina) ent.stamina = Math.min(ent.maxStamina, ent.stamina + 20 / TICK_RATE);
     if (ent.speedBoostTimer > 0) ent.speedBoostTimer -= 1 / TICK_RATE;
+    if (ent.strengthTimer > 0) ent.strengthTimer -= 1 / TICK_RATE;
     if (ent.shieldTimer > 0) ent.shieldTimer -= 1 / TICK_RATE;
+
+    if (!ent.isSprinting && ent.stamina < ent.maxStamina) {
+      ent.stamina = Math.min(ent.maxStamina, ent.stamina + 22 / TICK_RATE);
+    }
 
     if (ent.powerCooldowns) {
       if (ent.powerCooldowns.slam > 0) ent.powerCooldowns.slam -= 1 / TICK_RATE;
@@ -1140,16 +1193,24 @@ function gameTick() {
     let curSpeed = ent.speed;
     if (ent.speedBoostTimer > 0) curSpeed *= 1.45;
 
-    if (len > 0) {
+    // CORRER NO SHIFT
+    ent.isSprinting = false;
+    if (ent.input.sprint && len > 0 && ent.stamina > 2) {
+      ent.isSprinting = true;
+      curSpeed *= 1.7; // 70% mais rápido!
+      ent.stamina = Math.max(0, ent.stamina - 0.32);
+      ent.walkStep = (ent.walkStep || 0) + 0.44;
+    } else if (len > 0) {
       ent.walkStep = (ent.walkStep || 0) + 0.25;
     } else {
       ent.walkStep = 0;
     }
 
-    if (ent.input.dash && ent.dashCooldown <= 0 && ent.stamina >= 25) {
-      ent.stamina -= 25;
-      ent.dashCooldown = 1.3;
-      curSpeed *= 3.4;
+    // DASH NO Q (ou Espaço)
+    if (ent.input.dash && ent.dashCooldown <= 0 && ent.stamina >= 15) {
+      ent.stamina -= 15;
+      ent.dashCooldown = 0.9;
+      curSpeed *= 3.6;
       broadcast({ type: 'effect', name: 'dash', x: ent.x, y: ent.y, color: ent.color });
       ent.input.dash = false;
     }
