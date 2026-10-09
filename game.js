@@ -1,5 +1,5 @@
 // =============================================================
-// JORNADA II: ARENA & CIDADE DOS CAMPEÕES (CLIENTE MULTIPLAYER)
+// JORNADA II: CIDADE, CASAS, CLASSES & GEMAS MÍSTICAS
 // =============================================================
 
 // Áudio Procedural com Web Audio API
@@ -23,7 +23,7 @@ class SoundFX {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'sawtooth';
-    const startFreq = color === '#ff4757' ? 400 : (color === '#ffd32a' ? 700 : 550);
+    const startFreq = color === '#ff4757' ? 420 : (color === '#ffd32a' ? 700 : 540);
     osc.frequency.setValueAtTime(startFreq, this.ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.12);
     gain.gain.setValueAtTime(0.14, this.ctx.currentTime);
@@ -77,8 +77,8 @@ class SoundFX {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(987.77, this.ctx.currentTime); // B5
-    osc.frequency.setValueAtTime(1318.51, this.ctx.currentTime + 0.08); // E6
+    osc.frequency.setValueAtTime(987.77, this.ctx.currentTime);
+    osc.frequency.setValueAtTime(1318.51, this.ctx.currentTime + 0.08);
     gain.gain.setValueAtTime(0.16, this.ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
     osc.connect(gain);
@@ -136,7 +136,7 @@ class SoundFX {
 const sfx = new SoundFX();
 
 // -------------------------------------------------------------
-// Inicialização do Canvas e Estado do Jogo
+// Canvas e Estado
 // -------------------------------------------------------------
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -159,11 +159,27 @@ resizeCanvas();
 let socket = null;
 let myId = null;
 let arena = { width: 3600, height: 3600 };
-let city = { x: 1800, y: 1800, radius: 320, name: 'Cidade dos Guardiões' };
+let city = { x: 1800, y: 1800, radius: 350, name: 'Cidade dos Guardiões' };
+let selectedClass = 'warrior';
+let selectedColor = '#00e5ff';
+
+// Prédios da Cidade
+let buildings = [
+  { id: 'b_castle', name: 'Castelo Real', x: 1800, y: 1610, w: 160, h: 90, roofColor: '#2f3542', wallColor: '#57606f', type: 'castle' },
+  { id: 'b_blacksmith', name: 'Ferraria de Brok', x: 1660, y: 1750, w: 90, h: 80, roofColor: '#e74c3c', wallColor: '#795548', type: 'shop' },
+  { id: 'b_alchemy', name: 'Alquimia da Sylva', x: 1940, y: 1750, w: 90, h: 80, roofColor: '#27ae60', wallColor: '#5d4037', type: 'shop' },
+  { id: 'b_mage', name: 'Torre Arcana', x: 1800, y: 1980, w: 85, h: 85, roofColor: '#8e44ad', wallColor: '#34495e', type: 'tower' },
+  { id: 'b_tavern', name: 'Taverna', x: 1650, y: 1610, w: 75, h: 65, roofColor: '#d35400', wallColor: '#6d4c41', type: 'house' },
+  { id: 'b_house1', name: 'Casa do Guarda', x: 1950, y: 1610, w: 75, h: 65, roofColor: '#c0392b', wallColor: '#6d4c41', type: 'house' },
+  { id: 'b_house2', name: 'Casa do Viajante', x: 1660, y: 1890, w: 75, h: 65, roofColor: '#e67e22', wallColor: '#6d4c41', type: 'house' },
+  { id: 'b_house3', name: 'Câmara Magos', x: 1940, y: 1890, w: 75, h: 65, roofColor: '#9b59b6', wallColor: '#4e342e', type: 'house' }
+];
+
 let npcs = [
   { id: 'npc_blacksmith', name: 'Brok, o Ferreiro', icon: '🔨', x: 1720, y: 1760, radius: 28, type: 'weapons' },
   { id: 'npc_alchemist', name: 'Sylva, a Alquimista', icon: '🧪', x: 1880, y: 1760, radius: 28, type: 'potions' },
-  { id: 'npc_mage', name: 'Mago Elidor', icon: '🧙‍♂️', x: 1800, y: 1880, radius: 28, type: 'powers' }
+  { id: 'npc_mage', name: 'Mago Elidor', icon: '🧙‍♂️', x: 1800, y: 1910, radius: 28, type: 'powers' },
+  { id: 'npc_king', name: 'Capitão das Missões', icon: '📜', x: 1800, y: 1680, radius: 28, type: 'quests' }
 ];
 
 let shopCatalog = {
@@ -190,15 +206,16 @@ let localPlayer = null;
 let serverPlayers = new Map();
 let serverBots = new Map();
 let serverProjectiles = [];
+let serverMineCrystals = [];
+let serverBreakables = [];
 let serverChests = [];
 let serverOrbs = [];
+let serverWorldBoss = null;
 let particles = [];
-let activeSpecialEffects = []; // Linhas de raio astral e ondas sísmicas
+let activeSpecialEffects = [];
 
-// Câmera
 const camera = { x: 1800, y: 1800 };
 
-// Teclado e Entrada
 const keys = {
   w: false, a: false, s: false, d: false,
   ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false,
@@ -209,7 +226,6 @@ const mouse = { x: screenWidth / 2, y: screenHeight / 2, down: false };
 let nearbyNpc = null;
 let currentShopTab = 'weapons';
 
-// Partículas
 function addParticle(x, y, color, count = 6, speed = 4) {
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
@@ -293,47 +309,48 @@ function connectWebSocket(customHost = null) {
   }
 }
 
-// Simulação Local com Bots caso servidor esteja offline
+// Simulação Offline com Mundo Completo
 function startOfflineSimulation() {
   if (isOfflineMode) return;
   isOfflineMode = true;
 
   const dot = document.getElementById('server-status-dot');
   const pingInd = document.getElementById('ping-indicator');
-  if (dot) dot.innerText = '🤖 Modo Bots (Offline)';
+  if (dot) dot.innerText = '🤖 Modo Jornada (Offline)';
   if (pingInd) pingInd.innerText = '60 FPS (Local)';
 
-  // Gera mapa offline completo
   obstacles = [
-    { x: 1800, y: 1480, radius: 45, type: 'city_gate', label: 'Portão Norte' },
-    { x: 1800, y: 2120, radius: 45, type: 'city_gate', label: 'Portão Sul' },
-    { x: 1480, y: 1800, radius: 45, type: 'city_gate', label: 'Portão Oeste' },
-    { x: 2120, y: 1800, radius: 45, type: 'city_gate', label: 'Portão Leste' },
+    { x: 1800, y: 1450, radius: 40, type: 'city_gate', label: 'Portão Norte' },
+    { x: 1800, y: 2150, radius: 40, type: 'city_gate', label: 'Portão Sul' },
+    { x: 1450, y: 1800, radius: 40, type: 'city_gate', label: 'Portão Oeste' },
+    { x: 2150, y: 1800, radius: 40, type: 'city_gate', label: 'Portão Leste' },
     { x: 800, y: 800, radius: 95, type: 'sanctuary', label: 'Carvalho Ancestral' },
     { x: 600, y: 1100, radius: 65, type: 'rock', label: 'Monólito da Floresta' },
-    { x: 2800, y: 800, radius: 95, type: 'pillar', label: 'Templo Glacial de Niflheim' },
+    { x: 2800, y: 800, radius: 95, type: 'pillar', label: 'Templo Glacial' },
     { x: 800, y: 2800, radius: 95, type: 'pillar', label: 'Labirinto das Sombras' },
-    { x: 2800, y: 2800, radius: 100, type: 'pillar', label: 'Núcleo da Forja Ardente' }
+    { x: 2800, y: 2800, radius: 100, type: 'pillar', label: 'Forja Vulcânica' }
   ];
 
   myId = 'local_hero';
   localPlayer = {
     id: myId,
     name: document.getElementById('player-name')?.value?.trim() || 'Guilherme',
+    charClass: selectedClass || 'warrior',
     color: selectedColor || '#00e5ff',
     x: 1800,
     y: 1800,
     vx: 0,
     vy: 0,
-    speed: 6.5,
+    speed: selectedClass === 'ranger' ? 7.2 : 6.4,
     angle: 0,
-    hp: 100,
-    maxHp: 100,
+    hp: selectedClass === 'warrior' ? 140 : 100,
+    maxHp: selectedClass === 'warrior' ? 140 : 100,
     stamina: 100,
     maxStamina: 100,
-    gold: 150, // Ouro para testar lojas
+    gold: 150,
     score: 0,
     kills: 0,
+    minedCount: 0,
     weapon: 'sword_starter',
     potions: { heal: 1, speed: 1 },
     powers: { slam: false, beam: false },
@@ -342,58 +359,108 @@ function startOfflineSimulation() {
     attackCooldown: 0,
     speedBoostTimer: 0,
     inSafeZone: true,
-    radius: 24
+    radius: 24,
+    activeQuest: { id: 'q_bots', title: 'Caçar Inimigos', target: 2, current: 0, reward: 150 }
   };
   serverPlayers.set(myId, localPlayer);
 
+  // Cristais de Mineração
+  serverMineCrystals = [];
+  const cryColors = ['#00e5ff', '#ff4757', '#a29bfe', '#2ed573'];
+  for (let i = 0; i < 18; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const r = 500 + Math.random() * 1100;
+    serverMineCrystals.push({
+      id: 'cry_' + i,
+      x: 1800 + Math.cos(a) * r,
+      y: 1800 + Math.sin(a) * r,
+      hp: 3,
+      maxHp: 3,
+      radius: 20,
+      name: 'Gema Mística',
+      color: cryColors[i % cryColors.length],
+      gold: 70
+    });
+  }
+
+  // Barris e Caixas
+  serverBreakables = [];
+  for (let i = 0; i < 22; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const r = 400 + Math.random() * 1200;
+    serverBreakables.push({
+      id: 'brk_' + i,
+      x: 1800 + Math.cos(a) * r,
+      y: 1800 + Math.sin(a) * r,
+      radius: 16,
+      gold: 25
+    });
+  }
+
   // Baús de Ouro
   serverChests = [];
-  for (let i = 0; i < 18; i++) {
-    const angle = Math.random() * Math.PI * 2;
+  for (let i = 0; i < 16; i++) {
+    const a = Math.random() * Math.PI * 2;
     const r = 600 + Math.random() * 1000;
     serverChests.push({
       id: 'ch_' + i,
-      x: 1800 + Math.cos(angle) * r,
-      y: 1800 + Math.sin(angle) * r,
+      x: 1800 + Math.cos(a) * r,
+      y: 1800 + Math.sin(a) * r,
       radius: 18,
-      gold: 40 + Math.floor(Math.random() * 30)
+      gold: 50
     });
   }
 
   // Orbes
   serverOrbs = [];
-  for (let i = 0; i < 35; i++) {
-    const angle = Math.random() * Math.PI * 2;
+  for (let i = 0; i < 30; i++) {
+    const a = Math.random() * Math.PI * 2;
     const r = 500 + Math.random() * 1100;
     serverOrbs.push({
       id: 'orb_' + i,
-      x: 1800 + Math.cos(angle) * r,
-      y: 1800 + Math.sin(angle) * r,
+      x: 1800 + Math.cos(a) * r,
+      y: 1800 + Math.sin(a) * r,
       type: Math.random() > 0.5 ? 'heal' : 'energy',
       value: 30,
       radius: 14
     });
   }
 
-  // 12 Bots ESPALHADOS pelos 4 biomas
+  // Colosso
+  serverWorldBoss = {
+    id: 'world_colossus',
+    name: '👑 Colosso Titânico Ancestral',
+    x: 2700,
+    y: 1200,
+    radius: 55,
+    hp: 450,
+    maxHp: 450,
+    color: '#e67e22',
+    speed: 3.2,
+    angle: 0
+  };
+
+  // 12 Bots Espalhados
   const BOT_NAMES = ['Arconte Sylas', 'Valquíria Kira', 'Titã Gorok', 'Sombra Vane', 'Sentinela Kael', 'Caçador Rex', 'Guardião Thorne', 'Lorde Malakor', 'Druida Rowan', 'Lâmina Lyra', 'Paladino Uther', 'Andarilho Jarek'];
+  const clList = ['warrior', 'mage', 'ranger', 'shadow'];
   serverBots.clear();
   BOT_NAMES.forEach((bName, idx) => {
-    const angle = (idx / BOT_NAMES.length) * Math.PI * 2;
-    const r = 700 + Math.random() * 800; // Espalhados longe da cidade!
+    const a = (idx / BOT_NAMES.length) * Math.PI * 2;
+    const r = 700 + Math.random() * 800;
     serverBots.set('bot_' + idx, {
       id: 'bot_' + idx,
       isBot: true,
       name: bName + ' (BOT)',
+      charClass: clList[idx % clList.length],
       color: ['#ff4757', '#ffa502', '#70a1ff', '#2ed573', '#a29bfe'][idx % 5],
-      x: 1800 + Math.cos(angle) * r,
-      y: 1800 + Math.sin(angle) * r,
+      x: 1800 + Math.cos(a) * r,
+      y: 1800 + Math.sin(a) * r,
       vx: 0,
       vy: 0,
       speed: 5.5,
       angle: Math.random() * Math.PI * 2,
-      hp: 100,
-      maxHp: 100,
+      hp: 110,
+      maxHp: 110,
       gold: 50,
       score: 0,
       weapon: idx % 2 === 0 ? 'sword_rune' : 'sword_starter',
@@ -403,18 +470,16 @@ function startOfflineSimulation() {
     });
   });
 
-  // Loop de simulação offline
+  // Loop de Simulação Offline
   offlineSimulationInterval = setInterval(() => {
     if (!isOfflineMode || !localPlayer) return;
 
-    // Checa se está na Cidade
     const dCity = Math.hypot(localPlayer.x - city.x, localPlayer.y - city.y);
     localPlayer.inSafeZone = dCity < city.radius;
     if (localPlayer.inSafeZone && localPlayer.hp < localPlayer.maxHp) {
       localPlayer.hp = Math.min(localPlayer.maxHp, localPlayer.hp + 6 / 30);
     }
 
-    // Cooldowns
     if (localPlayer.dashCooldown > 0) localPlayer.dashCooldown -= 1 / 30;
     if (localPlayer.attackCooldown > 0) localPlayer.attackCooldown -= 1 / 30;
     if (localPlayer.stamina < 100) localPlayer.stamina = Math.min(100, localPlayer.stamina + 20 / 30);
@@ -422,7 +487,6 @@ function startOfflineSimulation() {
     if (localPlayer.powerCooldowns.slam > 0) localPlayer.powerCooldowns.slam -= 1 / 30;
     if (localPlayer.powerCooldowns.beam > 0) localPlayer.powerCooldowns.beam -= 1 / 30;
 
-    // Movimentação
     let dx = 0, dy = 0;
     if (keys.w || keys.ArrowUp) dy -= 1;
     if (keys.s || keys.ArrowDown) dy += 1;
@@ -445,11 +509,59 @@ function startOfflineSimulation() {
 
     const len = Math.hypot(dx, dy);
     if (len > 0) {
-      localPlayer.x = Math.max(localPlayer.radius, Math.min(arena.width - localPlayer.radius, localPlayer.x + (dx / len) * spd));
-      localPlayer.y = Math.max(localPlayer.radius, Math.min(arena.height - localPlayer.radius, localPlayer.y + (dy / len) * spd));
+      const nextX = Math.max(localPlayer.radius, Math.min(arena.width - localPlayer.radius, localPlayer.x + (dx / len) * spd));
+      const nextY = Math.max(localPlayer.radius, Math.min(arena.height - localPlayer.radius, localPlayer.y + (dy / len) * spd));
+
+      let blocked = false;
+      for (const b of buildings) {
+        if (nextX > b.x - b.w / 2 && nextX < b.x + b.w / 2 &&
+            nextY > b.y - b.h / 2 && nextY < b.y + b.h / 2) {
+          blocked = true; break;
+        }
+      }
+      if (!blocked) {
+        localPlayer.x = nextX;
+        localPlayer.y = nextY;
+      }
     }
 
-    // Coleta de Baús de Ouro
+    // Mineração de Cristais de Gema Offline
+    if (mouse.down && localPlayer.attackCooldown <= 0 && !localPlayer.inSafeZone) {
+      for (let i = serverMineCrystals.length - 1; i >= 0; i--) {
+        const cr = serverMineCrystals[i];
+        if (Math.hypot(localPlayer.x - cr.x, localPlayer.y - cr.y) < localPlayer.radius + cr.radius + 15) {
+          cr.hp--;
+          localPlayer.gold += 20;
+          sfx.playHit();
+          addParticle(cr.x, cr.y, cr.color, 10, 5);
+          if (cr.hp <= 0) {
+            localPlayer.gold += cr.gold;
+            localPlayer.score += 40;
+            localPlayer.minedCount++;
+            sfx.playCoin();
+            addParticle(cr.x, cr.y, '#ffd32a', 20, 7);
+            updateKillfeed([{ text: `💎 ${localPlayer.name} minerou uma Gema (+${cr.gold} 🪙)!` }]);
+            checkQuestProgress('mined');
+            serverMineCrystals.splice(i, 1);
+          }
+          break;
+        }
+      }
+    }
+
+    // Quebra de Barris
+    for (let i = serverBreakables.length - 1; i >= 0; i--) {
+      const br = serverBreakables[i];
+      if (Math.hypot(localPlayer.x - br.x, localPlayer.y - br.y) < localPlayer.radius + br.radius) {
+        localPlayer.gold += br.gold;
+        sfx.playCoin();
+        addParticle(br.x, br.y, '#e67e22', 12, 5);
+        serverBreakables.splice(i, 1);
+        break;
+      }
+    }
+
+    // Baús
     for (let i = serverChests.length - 1; i >= 0; i--) {
       const ch = serverChests[i];
       if (Math.hypot(localPlayer.x - ch.x, localPlayer.y - ch.y) < localPlayer.radius + ch.radius) {
@@ -457,17 +569,17 @@ function startOfflineSimulation() {
         localPlayer.score += 25;
         sfx.playCoin();
         addParticle(ch.x, ch.y, '#ffd32a', 15, 6);
-        updateKillfeed([{ text: `🪙 ${localPlayer.name} abriu um baú ancestral (+${ch.gold} Ouro)!` }]);
+        updateKillfeed([{ text: `🪙 ${localPlayer.name} abriu um baú (+${ch.gold} Ouro)!` }]);
         serverChests.splice(i, 1);
         break;
       }
     }
 
-    // Coleta de Orbes
+    // Orbes
     for (let i = serverOrbs.length - 1; i >= 0; i--) {
       const o = serverOrbs[i];
       if (Math.hypot(localPlayer.x - o.x, localPlayer.y - o.y) < localPlayer.radius + o.radius) {
-        if (o.type === 'heal') localPlayer.hp = Math.min(100, localPlayer.hp + 30);
+        if (o.type === 'heal') localPlayer.hp = Math.min(localPlayer.maxHp, localPlayer.hp + 30);
         else localPlayer.stamina = Math.min(100, localPlayer.stamina + 30);
         sfx.playPotion();
         serverOrbs.splice(i, 1);
@@ -475,7 +587,7 @@ function startOfflineSimulation() {
       }
     }
 
-    // Ataque local com arma ativa (somente fora da cidade)
+    // Ataque
     if (mouse.down && localPlayer.attackCooldown <= 0 && !localPlayer.inSafeZone) {
       localPlayer.attackCooldown = 0.28;
       const wData = shopCatalog.weapons.find(w => w.id === localPlayer.weapon) || shopCatalog.weapons[0];
@@ -510,14 +622,27 @@ function startOfflineSimulation() {
       }
     }
 
+    // Chefe do Mundo (Colosso) Offline
+    if (serverWorldBoss && serverWorldBoss.hp > 0) {
+      const dToBoss = Math.hypot(localPlayer.x - serverWorldBoss.x, localPlayer.y - serverWorldBoss.y);
+      if (dToBoss < 700 && !localPlayer.inSafeZone) {
+        serverWorldBoss.angle = Math.atan2(localPlayer.y - serverWorldBoss.y, localPlayer.x - serverWorldBoss.x);
+        serverWorldBoss.x += Math.cos(serverWorldBoss.angle) * serverWorldBoss.speed;
+        serverWorldBoss.y += Math.sin(serverWorldBoss.angle) * serverWorldBoss.speed;
+
+        if (dToBoss < 140) {
+          localPlayer.hp = Math.max(0, localPlayer.hp - 35);
+          sfx.playSlam();
+          addParticle(serverWorldBoss.x, serverWorldBoss.y, '#e67e22', 15, 6);
+        }
+      }
+    }
+
     // Bots IA Offline
     for (const b of serverBots.values()) {
       if (b.hp <= 0) continue;
-      const dToCity = Math.hypot(b.x - city.x, b.y - city.y);
-      b.inSafeZone = dToCity < city.radius;
-
       const dToPlayer = Math.hypot(localPlayer.x - b.x, localPlayer.y - b.y);
-      if (dToPlayer < 750 && !localPlayer.inSafeZone && !b.inSafeZone) {
+      if (dToPlayer < 700 && !localPlayer.inSafeZone) {
         b.angle = Math.atan2(localPlayer.y - b.y, localPlayer.x - b.x);
         if (dToPlayer > 260) {
           b.x += Math.cos(b.angle) * b.speed;
@@ -527,7 +652,7 @@ function startOfflineSimulation() {
           b.y += Math.sin(b.angle + Math.PI / 2) * b.speed;
         }
 
-        if (Math.random() < 0.06 && (!b.attackCooldown || b.attackCooldown <= 0)) {
+        if (Math.random() < 0.05 && (!b.attackCooldown || b.attackCooldown <= 0)) {
           b.attackCooldown = 0.5;
           serverProjectiles.push({
             id: Math.random(),
@@ -542,26 +667,38 @@ function startOfflineSimulation() {
           });
         }
       } else {
-        // Passeia pelo bioma
-        b.x += Math.cos(b.angle) * (b.speed * 0.6);
-        b.y += Math.sin(b.angle) * (b.speed * 0.6);
+        b.x += Math.cos(b.angle) * (b.speed * 0.5);
+        b.y += Math.sin(b.angle) * (b.speed * 0.5);
         if (Math.random() < 0.02) b.angle += (Math.random() - 0.5) * 1.5;
       }
       if (b.attackCooldown > 0) b.attackCooldown -= 1 / 30;
     }
 
-    // Projéteis offline
+    // Projéteis Offline
     for (let i = serverProjectiles.length - 1; i >= 0; i--) {
       const pr = serverProjectiles[i];
-      pr.x += pr.vx;
-      pr.y += pr.vy;
-      pr.lifetime--;
+      pr.x += pr.vx; pr.y += pr.vy; pr.lifetime--;
 
       let hit = false;
       if (pr.x < 0 || pr.x > arena.width || pr.y < 0 || pr.y > arena.height || pr.lifetime <= 0) hit = true;
-
-      // Destrói ao atingir muralha da cidade
       if (!hit && Math.hypot(pr.x - city.x, pr.y - city.y) < city.radius) hit = true;
+
+      // Colisão com o Colosso
+      if (!hit && serverWorldBoss && serverWorldBoss.hp > 0 && Math.hypot(pr.x - serverWorldBoss.x, pr.y - serverWorldBoss.y) < serverWorldBoss.radius + 6) {
+        hit = true;
+        serverWorldBoss.hp -= pr.damage;
+        sfx.playHit();
+        addParticle(pr.x, pr.y, '#e67e22', 10, 5);
+        if (serverWorldBoss.hp <= 0) {
+          localPlayer.gold += 250;
+          localPlayer.score += 500;
+          localPlayer.powers.slam = true;
+          localPlayer.powers.beam = true;
+          sfx.playCoin();
+          updateKillfeed([{ text: `👑 ${localPlayer.name} derrotou o COLOSSO TITÂNICO (+250 🪙)!` }]);
+          serverWorldBoss.hp = 0;
+        }
+      }
 
       if (!hit) {
         if (pr.ownerId !== localPlayer.id && !localPlayer.inSafeZone && Math.hypot(pr.x - localPlayer.x, pr.y - localPlayer.y) < localPlayer.radius + 6) {
@@ -570,7 +707,7 @@ function startOfflineSimulation() {
           sfx.playHit();
           addParticle(pr.x, pr.y, pr.color, 8, 5);
           if (localPlayer.hp <= 0) {
-            setTimeout(() => { localPlayer.hp = 100; localPlayer.x = 1800; localPlayer.y = 1800; }, 2500);
+            setTimeout(() => { localPlayer.hp = localPlayer.maxHp; localPlayer.x = 1800; localPlayer.y = 1800; }, 2500);
           }
         }
 
@@ -583,11 +720,12 @@ function startOfflineSimulation() {
             if (b.hp <= 0) {
               b.hp = 0;
               localPlayer.score += 100;
-              localPlayer.gold += 65;
+              localPlayer.gold += 70;
               sfx.playCoin();
-              updateKillfeed([{ text: `⚡ ${localPlayer.name} derrotou ${b.name} (+65 🪙)!` }]);
+              updateKillfeed([{ text: `⚡ ${localPlayer.name} derrotou ${b.name} (+70 🪙)!` }]);
+              checkQuestProgress('kill');
               setTimeout(() => {
-                b.hp = 100;
+                b.hp = b.maxHp;
                 b.x = 1800 + (Math.random() - 0.5) * 1600;
                 b.y = 1800 + (Math.random() - 0.5) * 1600;
               }, 3000);
@@ -604,11 +742,34 @@ function startOfflineSimulation() {
   }, 1000 / 30);
 }
 
+function checkQuestProgress(actionType) {
+  if (!localPlayer || !localPlayer.activeQuest) return;
+  const q = localPlayer.activeQuest;
+  if (q.id === 'q_bots' && actionType === 'kill') {
+    q.current++;
+    if (q.current >= q.target) {
+      localPlayer.gold += q.reward;
+      sfx.playCoin();
+      updateKillfeed([{ text: `📜 MISSÃO CONCLUÍDA: ${q.title} (+${q.reward} 🪙)!` }]);
+      localPlayer.activeQuest = { id: 'q_gems', title: 'Minerar 3 Gemas', target: 3, current: 0, reward: 180 };
+    }
+  } else if (q.id === 'q_gems' && actionType === 'mined') {
+    q.current++;
+    if (q.current >= q.target) {
+      localPlayer.gold += q.reward;
+      sfx.playCoin();
+      updateKillfeed([{ text: `📜 MISSÃO CONCLUÍDA: ${q.title} (+${q.reward} 🪙)!` }]);
+      localPlayer.activeQuest = { id: 'q_boss', title: 'Derrotar o Colosso', target: 1, current: 0, reward: 300 };
+    }
+  }
+}
+
 function handleServerMessage(msg) {
   if (msg.type === 'welcome') {
     myId = msg.id;
     arena = msg.arena;
     city = msg.city || city;
+    buildings = msg.buildings || buildings;
     npcs = msg.npcs || npcs;
     shopCatalog = msg.catalog || shopCatalog;
     obstacles = msg.obstacles;
@@ -627,8 +788,11 @@ function handleServerMessage(msg) {
     for (const b of msg.bots) serverBots.set(b.id, b);
 
     serverProjectiles = msg.projectiles;
+    serverMineCrystals = msg.mineCrystals || [];
+    serverBreakables = msg.breakables || [];
     serverChests = msg.chests || [];
     serverOrbs = msg.orbs || [];
+    serverWorldBoss = msg.worldBoss || null;
 
     updateLeaderboard();
   } else if (msg.type === 'killfeed') {
@@ -693,39 +857,28 @@ function sendInput() {
   if (!socket || socket.readyState !== WebSocket.OPEN || !localPlayer) return;
 
   const angle = Math.atan2(mouse.y - screenHeight / 2, mouse.x - screenWidth / 2);
-  const isUp = keys.w || keys.ArrowUp;
-  const isDown = keys.s || keys.ArrowDown;
-  const isLeft = keys.a || keys.ArrowLeft;
-  const isRight = keys.d || keys.ArrowRight;
-  const isAttack = mouse.down;
-  const isDash = keys.Space || keys.Shift;
-  const isSlam = keys.r;
-  const isBeam = keys.f;
-  const isUseHeal = keys['1'];
-  const isUseSpeed = keys['2'];
-
   socket.send(JSON.stringify({
     type: 'input',
     input: {
-      up: isUp,
-      down: isDown,
-      left: isLeft,
-      right: isRight,
-      attack: isAttack,
-      dash: isDash,
-      powerSlam: isSlam,
-      powerBeam: isBeam,
-      useHeal: isUseHeal,
-      useSpeed: isUseSpeed,
+      up: keys.w || keys.ArrowUp,
+      down: keys.s || keys.ArrowDown,
+      left: keys.a || keys.ArrowLeft,
+      right: keys.d || keys.ArrowRight,
+      attack: mouse.down,
+      dash: keys.Space || keys.Shift,
+      powerSlam: keys.r,
+      powerBeam: keys.f,
+      useHeal: keys['1'],
+      useSpeed: keys['2'],
       angle: angle
     }
   }));
 
-  if (isDash) keys.Space = false;
-  if (isSlam) keys.r = false;
-  if (isBeam) keys.f = false;
-  if (isUseHeal) keys['1'] = false;
-  if (isUseSpeed) keys['2'] = false;
+  if (keys.Space) keys.Space = false;
+  if (keys.r) keys.r = false;
+  if (keys.f) keys.f = false;
+  if (keys['1']) keys['1'] = false;
+  if (keys['2']) keys['2'] = false;
 }
 setInterval(sendInput, 1000 / 30);
 
@@ -733,7 +886,6 @@ setInterval(sendInput, 1000 / 30);
 // Atualização de HUD
 // -------------------------------------------------------------
 function updateHUD(player) {
-  // HP e Stamina
   const hpPercent = Math.max(0, Math.min(100, (player.hp / player.maxHp) * 100));
   const staminaPercent = Math.max(0, Math.min(100, (player.stamina / 100) * 100));
 
@@ -742,22 +894,33 @@ function updateHUD(player) {
   document.getElementById('stamina-bar').style.width = `${staminaPercent}%`;
   document.getElementById('stamina-val').innerText = `${Math.round(player.stamina)} / 100`;
 
-  // Ouro
   document.getElementById('gold-val').innerText = player.gold || 0;
 
-  // Safe Zone Banner
   const banner = document.getElementById('safe-zone-banner');
-  if (banner) {
-    banner.style.display = player.inSafeZone ? 'block' : 'none';
+  if (banner) banner.style.display = player.inSafeZone ? 'block' : 'none';
+
+  // Barra do Chefe
+  const bossBar = document.getElementById('boss-hud-bar');
+  const bossFill = document.getElementById('boss-hp-fill');
+  const bossVal = document.getElementById('boss-hp-val');
+  if (serverWorldBoss && serverWorldBoss.hp > 0) {
+    bossBar.style.display = 'block';
+    const bRatio = Math.max(0, (serverWorldBoss.hp / serverWorldBoss.maxHp) * 100);
+    bossFill.style.width = `${bRatio}%`;
+    bossVal.innerText = `${Math.round(serverWorldBoss.hp)} / ${serverWorldBoss.maxHp}`;
+  } else {
+    bossBar.style.display = 'none';
   }
 
-  // Poções no Quick Slot
-  const healCount = player.potions?.heal || 0;
-  const speedCount = player.potions?.speed || 0;
-  document.getElementById('count-heal-pot').innerText = healCount;
-  document.getElementById('count-speed-pot').innerText = speedCount;
+  // Rastreador de Missões
+  if (player.activeQuest) {
+    document.getElementById('quest-desc').innerText = `⚔️ ${player.activeQuest.title} (${player.activeQuest.current}/${player.activeQuest.target})`;
+    document.querySelector('.quest-reward').innerText = `Recompensa: 🪙 ${player.activeQuest.reward} Ouro`;
+  }
 
-  // Poderes e Cooldowns
+  document.getElementById('count-heal-pot').innerText = player.potions?.heal || 0;
+  document.getElementById('count-speed-pot').innerText = player.potions?.speed || 0;
+
   const slamSlot = document.getElementById('slot-power-slam');
   const beamSlot = document.getElementById('slot-power-beam');
   const slamCd = document.getElementById('cd-slam');
@@ -768,9 +931,7 @@ function updateHUD(player) {
     if (player.powerCooldowns?.slam > 0) {
       slamCd.style.display = 'flex';
       slamCd.innerText = Math.ceil(player.powerCooldowns.slam) + 's';
-    } else {
-      slamCd.style.display = 'none';
-    }
+    } else slamCd.style.display = 'none';
   } else {
     slamSlot.classList.add('locked');
     slamCd.style.display = 'none';
@@ -781,47 +942,42 @@ function updateHUD(player) {
     if (player.powerCooldowns?.beam > 0) {
       beamCd.style.display = 'flex';
       beamCd.innerText = Math.ceil(player.powerCooldowns.beam) + 's';
-    } else {
-      beamCd.style.display = 'none';
-    }
+    } else beamCd.style.display = 'none';
   } else {
     beamSlot.classList.add('locked');
     beamCd.style.display = 'none';
   }
 
-  // Proximidade com NPCs para abrir a Loja
   checkNpcProximity(player);
 }
 
 function checkNpcProximity(player) {
-  let foundNpc = null;
+  let found = null;
   for (const npc of npcs) {
-    const dist = Math.hypot(player.x - npc.x, player.y - npc.y);
-    if (dist < 85) {
-      foundNpc = npc;
+    if (Math.hypot(player.x - npc.x, player.y - npc.y) < 85) {
+      found = npc;
       break;
     }
   }
-
-  nearbyNpc = foundNpc;
+  nearbyNpc = found;
   const promptEl = document.getElementById('npc-interact-prompt');
-  if (foundNpc) {
+  if (found) {
     promptEl.style.display = 'block';
-    promptEl.innerHTML = `💬 [E] Falar com <b>${foundNpc.name}</b>`;
+    promptEl.innerHTML = `💬 [E] Falar com <b>${found.name}</b>`;
   } else {
     promptEl.style.display = 'none';
   }
 }
 
 // -------------------------------------------------------------
-// Sistema da Loja da Cidade
+// Loja
 // -------------------------------------------------------------
 function openShop(npc = null) {
   const modal = document.getElementById('shop-modal');
   const title = document.getElementById('shop-npc-title');
   if (npc) {
     title.innerHTML = `${npc.icon} ${npc.name}`;
-    currentShopTab = npc.type; // Abre direto na aba correspondente
+    if (npc.type !== 'quests') currentShopTab = npc.type;
   }
   document.querySelectorAll('.shop-tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === currentShopTab);
@@ -859,13 +1015,8 @@ function renderShopItems() {
     container.appendChild(card);
   });
 
-  // Eventos de Compra
   container.querySelectorAll('.btn-buy-item:not(.owned)').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const cat = btn.dataset.category;
-      const itemId = btn.dataset.id;
-      buyItem(cat, itemId);
-    });
+    btn.addEventListener('click', () => buyItem(btn.dataset.category, btn.dataset.id));
   });
 }
 
@@ -874,18 +1025,13 @@ function buyItem(category, itemId) {
   if (!item || !localPlayer) return;
 
   if (localPlayer.gold < item.cost) {
-    alert('Ouro insuficiente! Explore os biomas e derrote inimigos para conseguir mais ouro!');
+    alert('Ouro insuficiente! Explore o mapa, quebre baús e minere gemas para conseguir mais ouro!');
     return;
   }
 
   if (socket && socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({
-      type: 'buy_item',
-      category: category,
-      itemId: itemId
-    }));
+    socket.send(JSON.stringify({ type: 'buy_item', category, itemId }));
   } else {
-    // Processamento Offline
     localPlayer.gold -= item.cost;
     sfx.playCoin();
     if (category === 'weapons') localPlayer.weapon = item.id;
@@ -903,7 +1049,7 @@ function buyItem(category, itemId) {
 }
 
 // -------------------------------------------------------------
-// Renderização Principal do Jogo (60+ FPS)
+// Renderização do Jogo (60+ FPS)
 // -------------------------------------------------------------
 function render() {
   requestAnimationFrame(render);
@@ -918,11 +1064,11 @@ function render() {
   ctx.save();
   ctx.translate(screenWidth / 2 - camera.x, screenHeight / 2 - camera.y);
 
-  // 1. Grade de Fundo e Biomas
+  // 1. Grade do Mundo
   drawWorldBackground();
 
-  // 2. Cidade Sagrada Central (Safe Zone)
-  drawCity();
+  // 2. Cidade, Muralhas e Prédios
+  drawCityAndBuildings();
 
   // 3. Orbes Sagrados
   for (const orb of serverOrbs) {
@@ -936,36 +1082,44 @@ function render() {
     ctx.restore();
   }
 
-  // 4. Baús de Ouro (Chests)
+  // 4. Cristais de Gema Mineráveis
+  for (const cr of serverMineCrystals) {
+    drawCrystal(cr);
+  }
+
+  // 5. Barris e Caixas Destrutíveis
+  for (const br of serverBreakables) {
+    drawBreakable(br);
+  }
+
+  // 6. Baús de Ouro
   for (const ch of serverChests) {
     drawChest(ch);
   }
 
-  // 5. Obstáculos e Templos
+  // 7. Obstáculos dos Biomas
   for (const obs of obstacles) {
     drawObstacle(obs);
   }
 
-  // 6. NPCs da Cidade
+  // 8. Chefe do Mundo (Colosso)
+  if (serverWorldBoss && serverWorldBoss.hp > 0) {
+    drawBoss(serverWorldBoss);
+  }
+
+  // 9. NPCs da Cidade
   for (const npc of npcs) {
     drawNpc(npc);
   }
 
-  // 7. Efeitos Especiais de Poderes (Ondas Sísmicas e Raios Astrais)
+  // 10. Efeitos Especiais de Poderes
   drawSpecialEffects();
 
-  // 8. Partículas
+  // 11. Partículas
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.alpha -= p.decay;
-
-    if (p.alpha <= 0) {
-      particles.splice(i, 1);
-      continue;
-    }
-
+    p.x += p.vx; p.y += p.vy; p.alpha -= p.decay;
+    if (p.alpha <= 0) { particles.splice(i, 1); continue; }
     ctx.save();
     ctx.globalAlpha = p.alpha;
     ctx.beginPath();
@@ -975,7 +1129,7 @@ function render() {
     ctx.restore();
   }
 
-  // 9. Projéteis
+  // 12. Projéteis
   for (const pr of serverProjectiles) {
     ctx.save();
     ctx.beginPath();
@@ -987,19 +1141,12 @@ function render() {
     ctx.restore();
   }
 
-  // 10. Bots Espalhados
-  for (const bot of serverBots.values()) {
-    drawEntity(bot);
-  }
-
-  // 11. Jogadores
-  for (const player of serverPlayers.values()) {
-    drawEntity(player);
-  }
+  // 13. Bots e Jogadores com Visual de Personagem
+  for (const bot of serverBots.values()) drawCharacter(bot);
+  for (const player of serverPlayers.values()) drawCharacter(player);
 
   ctx.restore();
 
-  // 12. Minimapa Tático
   drawMinimap();
 }
 
@@ -1015,39 +1162,35 @@ function drawWorldBackground() {
 
   ctx.beginPath();
   for (let x = startX; x <= endX; x += gridSize) {
-    ctx.moveTo(x, startY);
-    ctx.lineTo(x, endY);
+    ctx.moveTo(x, startY); ctx.lineTo(x, endY);
   }
   for (let y = startY; y <= endY; y += gridSize) {
-    ctx.moveTo(startX, y);
-    ctx.lineTo(endX, y);
+    ctx.moveTo(startX, y); ctx.lineTo(endX, y);
   }
   ctx.stroke();
 
-  // Limite da Arena do Mundo
   ctx.strokeStyle = '#00e5ff';
   ctx.lineWidth = 8;
   ctx.strokeRect(0, 0, arena.width, arena.height);
 }
 
-function drawCity() {
-  // Pavimentação da Cidade (Círculo de Pedra Sagrada)
+function drawCityAndBuildings() {
+  // Chão da Cidade
   ctx.save();
   ctx.beginPath();
   ctx.arc(city.x, city.y, city.radius, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(20, 32, 50, 0.7)';
+  ctx.fillStyle = 'rgba(25, 35, 52, 0.75)';
   ctx.fill();
 
-  // Barreira Rúnica da Safe Zone
   ctx.strokeStyle = '#2ed573';
   ctx.lineWidth = 4;
   ctx.shadowColor = '#2ed573';
   ctx.shadowBlur = 16;
   ctx.stroke();
 
-  // Fonte Sagrada de Cura no Centro
+  // Fonte Central
   ctx.beginPath();
-  ctx.arc(city.x, city.y, 40, 0, Math.PI * 2);
+  ctx.arc(city.x, city.y, 45, 0, Math.PI * 2);
   ctx.fillStyle = 'rgba(46, 213, 115, 0.3)';
   ctx.fill();
   ctx.strokeStyle = '#2ed573';
@@ -1057,33 +1200,116 @@ function drawCity() {
   ctx.font = 'bold 12px Segoe UI, sans-serif';
   ctx.fillStyle = '#2ed573';
   ctx.textAlign = 'center';
-  ctx.fillText('🏛️ ' + city.name, city.x, city.y - 50);
-  ctx.font = '10px Segoe UI, sans-serif';
-  ctx.fillStyle = '#8899aa';
-  ctx.fillText('(Zona Segura & Regeneração)', city.x, city.y - 36);
+  ctx.fillText('🏛️ ' + city.name, city.x, city.y - 55);
 
+  // Prédios, Casas e Lojas
+  for (const b of buildings) {
+    // Sombra do Prédio
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+    ctx.fillRect(b.x - b.w / 2 + 5, b.y - b.h / 2 + 5, b.w, b.h);
+
+    // Paredes
+    ctx.fillStyle = b.wallColor;
+    ctx.fillRect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h);
+
+    // Telhado
+    ctx.fillStyle = b.roofColor;
+    ctx.fillRect(b.x - b.w / 2 - 4, b.y - b.h / 2 - 4, b.w + 8, b.h * 0.45);
+
+    // Porta
+    ctx.fillStyle = '#1e272e';
+    ctx.fillRect(b.x - 10, b.y + b.h / 2 - 18, 20, 18);
+
+    // Nome do Edifício
+    ctx.font = 'bold 10px Segoe UI, sans-serif';
+    ctx.fillStyle = '#f1f2f6';
+    ctx.textAlign = 'center';
+    ctx.fillText(b.name, b.x, b.y - b.h / 2 - 8);
+  }
+
+  ctx.restore();
+}
+
+function drawCrystal(cr) {
+  ctx.save();
+  ctx.translate(cr.x, cr.y);
+
+  // Brilho da Gema
+  ctx.beginPath();
+  ctx.arc(0, 0, cr.radius, 0, Math.PI * 2);
+  ctx.fillStyle = cr.color;
+  ctx.shadowColor = cr.color;
+  ctx.shadowBlur = 14;
+  ctx.fill();
+
+  ctx.font = '18px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('💎', 0, 0);
+
+  // HP do Cristal
+  ctx.font = 'bold 9px Segoe UI, sans-serif';
+  ctx.fillStyle = '#fff';
+  ctx.fillText(`[${cr.hp}/${cr.maxHp}]`, 0, -22);
+
+  ctx.restore();
+}
+
+function drawBreakable(br) {
+  ctx.save();
+  ctx.translate(br.x, br.y);
+  ctx.font = '20px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('📦', 0, 0);
   ctx.restore();
 }
 
 function drawChest(ch) {
   ctx.save();
   ctx.translate(ch.x, ch.y);
-  // Brilho dourado
-  ctx.beginPath();
-  ctx.arc(0, 0, ch.radius, 0, Math.PI * 2);
-  ctx.fillStyle = '#ffd32a';
-  ctx.shadowColor = '#ffd32a';
-  ctx.shadowBlur = 12;
-  ctx.fill();
-
-  ctx.font = '16px Segoe UI, sans-serif';
+  ctx.font = '22px Segoe UI, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('📦', 0, 0);
-
+  ctx.fillText('🪙', 0, 0);
   ctx.font = 'bold 10px Segoe UI, sans-serif';
   ctx.fillStyle = '#ffd32a';
-  ctx.fillText('Baú 🪙', 0, -20);
+  ctx.fillText('Baú', 0, -20);
+  ctx.restore();
+}
+
+function drawBoss(boss) {
+  ctx.save();
+  ctx.translate(boss.x, boss.y);
+
+  // Sombra gigante
+  ctx.beginPath();
+  ctx.arc(0, 8, boss.radius, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fill();
+
+  // Corpo do Colosso
+  ctx.beginPath();
+  ctx.arc(0, 0, boss.radius, 0, Math.PI * 2);
+  ctx.fillStyle = '#3e2723';
+  ctx.strokeStyle = '#e67e22';
+  ctx.lineWidth = 4;
+  ctx.shadowColor = '#e67e22';
+  ctx.shadowBlur = 18;
+  ctx.stroke();
+  ctx.fill();
+
+  // Olhos brilhantes
+  ctx.fillStyle = '#ffd32a';
+  ctx.fillRect(-14, -10, 8, 6);
+  ctx.fillRect(6, -10, 8, 6);
+
+  // Nome e Ícone
+  ctx.font = 'bold 13px Segoe UI, sans-serif';
+  ctx.fillStyle = '#e67e22';
+  ctx.textAlign = 'center';
+  ctx.fillText(boss.name, 0, -65);
+
   ctx.restore();
 }
 
@@ -1091,7 +1317,6 @@ function drawNpc(npc) {
   ctx.save();
   ctx.translate(npc.x, npc.y);
 
-  // Plataforma do NPC
   ctx.beginPath();
   ctx.arc(0, 0, npc.radius, 0, Math.PI * 2);
   ctx.fillStyle = '#1e272e';
@@ -1100,16 +1325,72 @@ function drawNpc(npc) {
   ctx.stroke();
   ctx.fill();
 
-  // Ícone
   ctx.font = '18px Segoe UI, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(npc.icon, 0, -2);
 
-  // Nome do NPC
   ctx.font = 'bold 11px Segoe UI, sans-serif';
   ctx.fillStyle = '#ffd32a';
   ctx.fillText(npc.name, 0, -32);
+
+  ctx.restore();
+}
+
+function drawCharacter(ent) {
+  if (ent.hp <= 0) return;
+
+  ctx.save();
+  ctx.translate(ent.x, ent.y);
+
+  // Sombra
+  ctx.beginPath();
+  ctx.arc(0, 4, ent.radius || 24, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+  ctx.fill();
+
+  // Direcionamento e Arma
+  ctx.save();
+  ctx.rotate(ent.angle);
+  const wColor = ent.weapon === 'sword_fire' ? '#ff4757' : (ent.weapon === 'staff_astral' ? '#ffd32a' : '#ced6e0');
+  ctx.fillStyle = wColor;
+  ctx.fillRect(10, -4, 22, 8);
+  ctx.restore();
+
+  // Corpo do Personagem
+  ctx.beginPath();
+  ctx.arc(0, 0, ent.radius || 24, 0, Math.PI * 2);
+  ctx.fillStyle = ent.color || '#00e5ff';
+  ctx.shadowColor = ent.color || '#00e5ff';
+  ctx.shadowBlur = ent.id === myId ? 16 : 8;
+  ctx.fill();
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Ícone da Classe no Centro do Corpo
+  const clIcons = { warrior: '🗡️', mage: '🧙‍♂️', ranger: '🏹', shadow: '🥷' };
+  const icon = clIcons[ent.charClass] || '⚔️';
+  ctx.font = '13px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(icon, 0, 0);
+
+  // Barra de Vida
+  const barWidth = 44;
+  const barHeight = 5;
+  const hpRatio = Math.max(0, ent.hp / ent.maxHp);
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+  ctx.fillRect(-barWidth / 2, -36, barWidth, barHeight);
+  ctx.fillStyle = ent.isBot ? '#ffa502' : '#2ed573';
+  ctx.fillRect(-barWidth / 2, -36, barWidth * hpRatio, barHeight);
+
+  // Nome
+  ctx.shadowBlur = 0;
+  ctx.font = 'bold 11px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(ent.name, 0, -42);
 
   ctx.restore();
 }
@@ -1120,10 +1401,7 @@ function drawSpecialEffects() {
     if (fx.type === 'slam_wave') {
       fx.radius += 12;
       fx.alpha -= 0.05;
-      if (fx.alpha <= 0) {
-        activeSpecialEffects.splice(i, 1);
-        continue;
-      }
+      if (fx.alpha <= 0) { activeSpecialEffects.splice(i, 1); continue; }
       ctx.save();
       ctx.beginPath();
       ctx.arc(fx.x, fx.y, fx.radius, 0, Math.PI * 2);
@@ -1134,10 +1412,7 @@ function drawSpecialEffects() {
       ctx.restore();
     } else if (fx.type === 'laser_beam') {
       fx.alpha -= 0.08;
-      if (fx.alpha <= 0) {
-        activeSpecialEffects.splice(i, 1);
-        continue;
-      }
+      if (fx.alpha <= 0) { activeSpecialEffects.splice(i, 1); continue; }
       ctx.save();
       ctx.beginPath();
       ctx.moveTo(fx.x1, fx.y1);
@@ -1157,143 +1432,76 @@ function drawObstacle(obs) {
   ctx.save();
   ctx.beginPath();
   ctx.arc(obs.x, obs.y, obs.radius, 0, Math.PI * 2);
-
   if (obs.type === 'city_gate') {
     ctx.fillStyle = 'rgba(46, 213, 115, 0.2)';
     ctx.strokeStyle = '#2ed573';
     ctx.lineWidth = 3;
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#2ed573';
-    ctx.font = 'bold 11px Segoe UI, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('🚪 ' + obs.label, obs.x, obs.y + 4);
+    ctx.fill(); ctx.stroke();
   } else if (obs.type === 'sanctuary') {
     ctx.fillStyle = 'rgba(46, 213, 115, 0.15)';
     ctx.strokeStyle = '#2ed573';
     ctx.lineWidth = 3;
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#2ed573';
-    ctx.font = '12px Segoe UI, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('🌲 ' + obs.label, obs.x, obs.y + 4);
-  } else if (obs.type === 'pillar') {
+    ctx.fill(); ctx.stroke();
+  } else {
     ctx.fillStyle = '#1e272e';
     ctx.strokeStyle = '#70a1ff';
     ctx.lineWidth = 3;
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#70a1ff';
-    ctx.font = '12px Segoe UI, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('🏛️ ' + obs.label, obs.x, obs.y + 4);
-  } else {
-    ctx.fillStyle = '#2f3542';
-    ctx.strokeStyle = '#57606f';
-    ctx.lineWidth = 2;
-    ctx.fill();
-    ctx.stroke();
+    ctx.fill(); ctx.stroke();
   }
-  ctx.restore();
-}
-
-function drawEntity(ent) {
-  if (ent.hp <= 0) return;
-
-  ctx.save();
-  ctx.translate(ent.x, ent.y);
-
-  // Sombra
-  ctx.beginPath();
-  ctx.arc(0, 4, ent.radius || 24, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-  ctx.fill();
-
-  // Direcionamento e Arma Equipada
-  ctx.save();
-  ctx.rotate(ent.angle);
-  const wColor = ent.weapon === 'sword_fire' ? '#ff4757' : (ent.weapon === 'staff_astral' ? '#ffd32a' : '#ced6e0');
-  ctx.fillStyle = wColor;
-  ctx.fillRect(10, -4, 22, 8);
-  ctx.restore();
-
-  // Corpo do Campeão
-  ctx.beginPath();
-  ctx.arc(0, 0, ent.radius || 24, 0, Math.PI * 2);
-  ctx.fillStyle = ent.color || '#00e5ff';
-  ctx.shadowColor = ent.color || '#00e5ff';
-  ctx.shadowBlur = ent.id === myId ? 16 : 8;
-  ctx.fill();
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Barra de Vida
-  const barWidth = 44;
-  const barHeight = 5;
-  const hpRatio = Math.max(0, ent.hp / ent.maxHp);
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-  ctx.fillRect(-barWidth / 2, -36, barWidth, barHeight);
-  ctx.fillStyle = ent.isBot ? '#ffa502' : '#2ed573';
-  ctx.fillRect(-barWidth / 2, -36, barWidth * hpRatio, barHeight);
-
-  // Nome e Ouro
-  ctx.shadowBlur = 0;
-  ctx.font = 'bold 11px Segoe UI, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(ent.name, 0, -42);
-
   ctx.restore();
 }
 
 function drawMinimap() {
   mCtx.clearRect(0, 0, 160, 160);
+  const sx = 160 / arena.width;
+  const sy = 160 / arena.height;
 
-  const scaleX = 160 / arena.width;
-  const scaleY = 160 / arena.height;
-
-  // Cidade no minimapa
+  // Cidade
   mCtx.fillStyle = 'rgba(46, 213, 115, 0.25)';
   mCtx.beginPath();
-  mCtx.arc(city.x * scaleX, city.y * scaleY, city.radius * scaleX, 0, Math.PI * 2);
+  mCtx.arc(city.x * sx, city.y * sy, city.radius * sx, 0, Math.PI * 2);
   mCtx.fill();
 
-  // Baús (Pontos Dourados)
+  // Gemas
+  mCtx.fillStyle = '#00e5ff';
+  for (const cr of serverMineCrystals) mCtx.fillRect(cr.x * sx - 1, cr.y * sy - 1, 2.5, 2.5);
+
+  // Baús
   mCtx.fillStyle = '#ffd32a';
-  for (const ch of serverChests) {
-    mCtx.fillRect(ch.x * scaleX - 1.5, ch.y * scaleY - 1.5, 3, 3);
+  for (const ch of serverChests) mCtx.fillRect(ch.x * sx - 1, ch.y * sy - 1, 3, 3);
+
+  // Colosso
+  if (serverWorldBoss && serverWorldBoss.hp > 0) {
+    mCtx.fillStyle = '#e67e22';
+    mCtx.beginPath();
+    mCtx.arc(serverWorldBoss.x * sx, serverWorldBoss.y * sy, 5, 0, Math.PI * 2);
+    mCtx.fill();
   }
 
-  // Bots (Pontos Laranjas Espalhados)
+  // Bots
   mCtx.fillStyle = '#ffa502';
-  for (const bot of serverBots.values()) {
-    if (bot.hp > 0) {
+  for (const b of serverBots.values()) {
+    if (b.hp > 0) {
       mCtx.beginPath();
-      mCtx.arc(bot.x * scaleX, bot.y * scaleY, 2.5, 0, Math.PI * 2);
+      mCtx.arc(b.x * sx, b.y * sy, 2.5, 0, Math.PI * 2);
       mCtx.fill();
     }
   }
 
-  // Jogadores (Branco / Ciano)
+  // Jogadores
   for (const p of serverPlayers.values()) {
     if (p.hp > 0) {
       mCtx.fillStyle = p.id === myId ? '#ffffff' : '#00e5ff';
       mCtx.beginPath();
-      mCtx.arc(p.x * scaleX, p.y * scaleY, p.id === myId ? 4 : 3, 0, Math.PI * 2);
+      mCtx.arc(p.x * sx, p.y * sy, p.id === myId ? 4 : 3, 0, Math.PI * 2);
       mCtx.fill();
     }
   }
 }
 
-// -------------------------------------------------------------
-// Placar de Líderes e Killfeed
-// -------------------------------------------------------------
 function updateLeaderboard() {
   const all = [...serverPlayers.values(), ...serverBots.values()];
   all.sort((a, b) => (b.score || 0) - (a.score || 0));
-
   const container = document.getElementById('lb-entries');
   container.innerHTML = '';
   all.slice(0, 5).forEach((ent, idx) => {
@@ -1332,7 +1540,7 @@ function escapeHtml(str) {
 }
 
 // -------------------------------------------------------------
-// Controles de Entrada (Teclado, Mouse e Atalhos da Loja)
+// Controles de Entrada
 // -------------------------------------------------------------
 window.addEventListener('keydown', (e) => {
   const chatInput = document.getElementById('chat-input');
@@ -1354,37 +1562,16 @@ window.addEventListener('keydown', (e) => {
     return;
   }
 
-  // Interação com NPC da Cidade [E]
   if (e.key === 'e' || e.key === 'E') {
-    if (nearbyNpc) {
-      openShop(nearbyNpc);
-    }
+    if (nearbyNpc) openShop(nearbyNpc);
   }
 
-  // Fechar Loja [Escape]
-  if (e.key === 'Escape') {
-    closeShop();
-  }
+  if (e.key === 'Escape') closeShop();
 
-  // Atalhos Rápidos de Poções
-  if (e.key === '1') {
-    keys['1'] = true;
-    useHealPotion();
-  }
-  if (e.key === '2') {
-    keys['2'] = true;
-    useSpeedPotion();
-  }
-
-  // Atalhos Rápidos de Poderes
-  if (e.key === 'r' || e.key === 'R') {
-    keys.r = true;
-    castPowerSlam();
-  }
-  if (e.key === 'f' || e.key === 'F') {
-    keys.f = true;
-    castPowerBeam();
-  }
+  if (e.key === '1') { keys['1'] = true; useHealPotion(); }
+  if (e.key === '2') { keys['2'] = true; useSpeedPotion(); }
+  if (e.key === 'r' || e.key === 'R') { keys.r = true; castPowerSlam(); }
+  if (e.key === 'f' || e.key === 'F') { keys.f = true; castPowerBeam(); }
 
   if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
   if (e.code === 'Space') keys.Space = true;
@@ -1448,15 +1635,15 @@ function castPowerSlam() {
     for (const b of serverBots.values()) {
       if (b.hp > 0 && !b.inSafeZone && Math.hypot(b.x - localPlayer.x, b.y - localPlayer.y) < 200) {
         b.hp -= 40;
-        const pushA = Math.atan2(b.y - localPlayer.y, b.x - localPlayer.x);
-        b.x += Math.cos(pushA) * 60;
-        b.y += Math.sin(pushA) * 60;
+        const pa = Math.atan2(b.y - localPlayer.y, b.x - localPlayer.x);
+        b.x += Math.cos(pa) * 60;
+        b.y += Math.sin(pa) * 60;
         if (b.hp <= 0) {
           localPlayer.score += 100;
-          localPlayer.gold += 65;
+          localPlayer.gold += 70;
           sfx.playCoin();
-          updateKillfeed([{ text: `💥 ${localPlayer.name} aniquilou ${b.name} com Pisão Sísmico (+65 🪙)!` }]);
-          setTimeout(() => { b.hp = 100; b.x = 1800 + (Math.random() - 0.5) * 1600; b.y = 1800 + (Math.random() - 0.5) * 1600; }, 3000);
+          updateKillfeed([{ text: `💥 ${localPlayer.name} aniquilou ${b.name} (+70 🪙)!` }]);
+          checkQuestProgress('kill');
         }
       }
     }
@@ -1472,8 +1659,8 @@ function castPowerBeam() {
     localPlayer.powerCooldowns.beam = 8;
     sfx.playBeam();
     const beamEnd = {
-      x: localPlayer.x + Math.cos(localPlayer.angle) * 900,
-      y: localPlayer.y + Math.sin(localPlayer.angle) * 900
+      x: localPlayer.x + Math.cos(localPlayer.angle) * 950,
+      y: localPlayer.y + Math.sin(localPlayer.angle) * 950
     };
     activeSpecialEffects.push({
       type: 'laser_beam',
@@ -1487,16 +1674,15 @@ function castPowerBeam() {
 
     for (const b of serverBots.values()) {
       if (b.hp > 0 && !b.inSafeZone) {
-        const d = distanceToSegment(b.x, b.y, localPlayer.x, localPlayer.y, beamEnd.x, beamEnd.y);
-        if (d < b.radius + 20) {
+        if (distanceToSegment(b.x, b.y, localPlayer.x, localPlayer.y, beamEnd.x, beamEnd.y) < b.radius + 20) {
           b.hp -= 55;
           addParticle(b.x, b.y, '#00e5ff', 10, 6);
           if (b.hp <= 0) {
             localPlayer.score += 100;
-            localPlayer.gold += 65;
+            localPlayer.gold += 70;
             sfx.playCoin();
-            updateKillfeed([{ text: `🏹 ${localPlayer.name} perfurou ${b.name} com o Raio Astral (+65 🪙)!` }]);
-            setTimeout(() => { b.hp = 100; b.x = 1800 + (Math.random() - 0.5) * 1600; b.y = 1800 + (Math.random() - 0.5) * 1600; }, 3000);
+            updateKillfeed([{ text: `🏹 ${localPlayer.name} perfurou ${b.name} (+70 🪙)!` }]);
+            checkQuestProgress('kill');
           }
         }
       }
@@ -1506,32 +1692,21 @@ function castPowerBeam() {
 }
 
 function distanceToSegment(px, py, x1, y1, x2, y2) {
-  const dx = x2 - x1;
-  const dy = y2 - y1;
+  const dx = x2 - x1; const dy = y2 - y1;
   const l2 = dx * dx + dy * dy;
   if (l2 === 0) return Math.hypot(px - x1, py - y1);
-  let t = ((px - x1) * dx + (py - y1) * dy) / l2;
-  t = Math.max(0, Math.min(1, t));
+  let t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / l2));
   return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
 }
 
 window.addEventListener('mousemove', (e) => {
-  mouse.x = e.clientX;
-  mouse.y = e.clientY;
+  mouse.x = e.clientX; mouse.y = e.clientY;
 });
-
 window.addEventListener('mousedown', (e) => {
-  if (e.target.id === 'gameCanvas') {
-    mouse.down = true;
-    sfx.init();
-  }
+  if (e.target.id === 'gameCanvas') { mouse.down = true; sfx.init(); }
 });
+window.addEventListener('mouseup', () => { mouse.down = false; });
 
-window.addEventListener('mouseup', () => {
-  mouse.down = false;
-});
-
-// Cliques nos Quick Slots e Prompt de NPC
 document.getElementById('slot-potion-heal').addEventListener('click', useHealPotion);
 document.getElementById('slot-potion-speed').addEventListener('click', useSpeedPotion);
 document.getElementById('slot-power-slam').addEventListener('click', castPowerSlam);
@@ -1541,7 +1716,6 @@ document.getElementById('npc-interact-prompt').addEventListener('click', () => {
 });
 document.getElementById('btn-close-shop').addEventListener('click', closeShop);
 
-// Abas da Loja
 document.querySelectorAll('.shop-tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.shop-tab-btn').forEach(b => b.classList.remove('active'));
@@ -1551,25 +1725,16 @@ document.querySelectorAll('.shop-tab-btn').forEach(btn => {
   });
 });
 
-// Suporte Mobile
-document.getElementById('btn-mobile-dash').addEventListener('touchstart', (e) => {
-  e.preventDefault();
-  keys.Space = true;
-});
-document.getElementById('btn-mobile-attack').addEventListener('touchstart', (e) => {
-  e.preventDefault();
-  mouse.down = true;
-  sfx.init();
-});
-document.getElementById('btn-mobile-attack').addEventListener('touchend', (e) => {
-  e.preventDefault();
-  mouse.down = false;
+// Seleção de Classe de Personagem
+document.querySelectorAll('.class-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedClass = card.dataset.class;
+  });
 });
 
-// -------------------------------------------------------------
-// Lobby & Seleção de Perfil
-// -------------------------------------------------------------
-let selectedColor = '#00e5ff';
+// Seleção de Cor
 document.querySelectorAll('.color-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
@@ -1591,10 +1756,12 @@ document.getElementById('btn-start').addEventListener('click', () => {
     socket.send(JSON.stringify({
       type: 'set_profile',
       name: nameInput,
+      charClass: selectedClass,
       color: selectedColor
     }));
   } else if (localPlayer) {
     localPlayer.name = nameInput;
+    localPlayer.charClass = selectedClass;
     localPlayer.color = selectedColor;
   }
 
@@ -1602,6 +1769,5 @@ document.getElementById('btn-start').addEventListener('click', () => {
   document.getElementById('hud-overlay').style.display = 'block';
 });
 
-// Inicialização automática
 connectWebSocket();
 render();
