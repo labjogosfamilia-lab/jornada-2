@@ -4,6 +4,13 @@ Um jogo multiplayer de ação tática em tempo real projetado para rodar no seu 
 
 ---
 
+## 🌐 Jogue Online Agora no Navegador:
+👉 **[https://labjogosfamilia-lab.github.io/jornada-2/](https://labjogosfamilia-lab.github.io/jornada-2/)**
+
+Compatível com PC e Celular (com suporte a bots inteligentes e conexão com servidores dedicados).
+
+---
+
 ## 🚀 Como Iniciar e Jogar
 
 ### 1. No seu PC (Servidor Host):
