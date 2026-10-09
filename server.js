@@ -339,15 +339,15 @@ const SHOP_CATALOG = {
 
 // Missões da Floresta para Ganhar Poderes (ÚNICO JEITO DE GANHAR PODER!)
 const POWER_QUESTS = [
-  { id: 'q_slam', name: '⚡ Provação do Trovão', desc: 'Derrote 2 Inimigos na Floresta', target: 2, type: 'kill', rewardPower: 'power_slam', powerName: 'Pisão Sísmico [R]' },
-  { id: 'q_beam', name: '🏹 Harmonia Astral', desc: 'Minere 2 Cristais de Gemas', target: 2, type: 'mine', rewardPower: 'power_beam', powerName: 'Raio Astral [F]' },
-  { id: 'q_fire', name: '🔥 Fogo Ancestral', desc: 'Derrote 3 Inimigos na Floresta', target: 3, type: 'kill', rewardPower: 'power_fire', powerName: 'Meteoro Flamejante [C]' },
-  { id: 'q_shield', name: '🛡️ Relíquia Sagrada', desc: 'Abra 3 Baús de Tesouro', target: 3, type: 'chest', rewardPower: 'power_shield', powerName: 'Escudo Divino [V]' },
-  { id: 'q_nature', name: '🌪️ Fúria da Floresta', desc: 'Derrote 1 Chefe Ancião da Mata', target: 1, type: 'boss', rewardPower: 'power_nature', powerName: 'Ciclone de Folhas [T]' },
-  { id: 'q_thunder', name: '⚡ Julgamento dos Relâmpagos', desc: 'Derrote 4 Inimigos na Floresta', target: 4, type: 'kill', rewardPower: 'power_thunder', powerName: 'Julgamento do Trovão [G]' },
-  { id: 'q_blizzard', name: '❄️ Coração do Inverno', desc: 'Abra 4 Baús de Tesouro na Floresta', target: 4, type: 'chest', rewardPower: 'power_blizzard', powerName: 'Nevasca Glacial [B]' },
-  { id: 'q_blackhole', name: '🌑 Singularidade do Vazio', desc: 'Minere 4 Cristais de Gemas Sagradas', target: 4, type: 'mine', rewardPower: 'power_blackhole', powerName: 'Singularidade do Vazio [Z]' },
-  { id: 'q_dragon', name: '🐉 Despertar do Dragão Ancestral', desc: 'Derrote 2 Titãs Chefes da Floresta', target: 2, type: 'boss', rewardPower: 'power_dragon', powerName: 'Sopro do Dragão Ancestral [X]' }
+  { id: 'q_slam', name: '⚡ Provação do Trovão', desc: 'Derrote 10 Inimigos em Combate na Floresta', target: 10, type: 'kill', rewardPower: 'power_slam', powerName: 'Pisão Sísmico [R]' },
+  { id: 'q_beam', name: '🏹 Harmonia Astral', desc: 'Minere 12 Cristais de Gemas Sagradas', target: 12, type: 'mine', rewardPower: 'power_beam', powerName: 'Raio Astral [F]' },
+  { id: 'q_fire', name: '🔥 Fogo Ancestral', desc: 'Derrote 20 Inimigos em Batalha na Floresta', target: 20, type: 'kill', rewardPower: 'power_fire', powerName: 'Meteoro Flamejante [C]' },
+  { id: 'q_shield', name: '🛡️ Relíquia Sagrada', desc: 'Encontre e Abra 15 Baús de Tesouro Ancestrais', target: 15, type: 'chest', rewardPower: 'power_shield', powerName: 'Escudo Divino [V]' },
+  { id: 'q_nature', name: '🌪️ Fúria da Floresta', desc: 'Derrote 3 Titãs Chefes Guardiões da Mata', target: 3, type: 'boss', rewardPower: 'power_nature', powerName: 'Ciclone de Folhas [T]' },
+  { id: 'q_thunder', name: '⚡ Julgamento dos Relâmpagos', desc: 'Derrote 30 Inimigos em Batalha Sangrenta', target: 30, type: 'kill', rewardPower: 'power_thunder', powerName: 'Julgamento do Trovão [G]' },
+  { id: 'q_blizzard', name: '❄️ Coração do Inverno', desc: 'Descubra e Abra 25 Baús de Tesouro Ocultos', target: 25, type: 'chest', rewardPower: 'power_blizzard', powerName: 'Nevasca Glacial [B]' },
+  { id: 'q_blackhole', name: '🌑 Singularidade do Vazio', desc: 'Minere 25 Cristais de Gemas Raras da Floresta', target: 25, type: 'mine', rewardPower: 'power_blackhole', powerName: 'Singularidade do Vazio [Z]' },
+  { id: 'q_dragon', name: '🐉 Despertar do Dragão Ancestral', desc: 'Derrote 5 Titãs Chefes Supremos da Floresta', target: 5, type: 'boss', rewardPower: 'power_dragon', powerName: 'Sopro do Dragão Ancestral [X]' }
 ];
 
 // Elementos do Mundo da Floresta
