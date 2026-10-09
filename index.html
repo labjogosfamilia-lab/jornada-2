@@ -104,6 +104,7 @@
         <div class="quest-title">📜 Missão da Jornada</div>
         <div id="quest-desc">⚔️ Caçar 2 Inimigos (0/2)</div>
         <div class="quest-reward">Recompensa: 🪙 150 Ouro</div>
+        <button id="btn-open-quests" class="btn-quest-open">⚡ Ver Missões de Poderes</button>
       </div>
 
       <!-- Banner de Zona Segura (Cidade) -->
@@ -162,6 +163,18 @@
           <span class="slot-icon">🏹</span>
           <div class="slot-cooldown-overlay" id="cd-beam" style="display: none;"></div>
         </div>
+        <!-- Meteoro Flamejante -->
+        <div class="quick-slot locked" id="slot-power-fire" title="Meteoro Flamejante [C]">
+          <span class="slot-key">C</span>
+          <span class="slot-icon">🔥</span>
+          <div class="slot-cooldown-overlay" id="cd-fire" style="display: none;"></div>
+        </div>
+        <!-- Escudo Divino -->
+        <div class="quick-slot locked" id="slot-power-shield" title="Escudo Divino [V]">
+          <span class="slot-key">V</span>
+          <span class="slot-icon">🛡️</span>
+          <div class="slot-cooldown-overlay" id="cd-shield" style="display: none;"></div>
+        </div>
       </div>
 
       <!-- Prompt de Interação com NPC -->
@@ -201,6 +214,20 @@
         </div>
         <div class="shop-items-list" id="shop-items-container">
           <!-- Itens injetados via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Janela Modal das Missões de Super Poderes -->
+    <div id="quests-modal">
+      <div class="quests-window">
+        <div class="quests-header">
+          <h2>📜 Missões para Desbloquear Super Poderes</h2>
+          <button class="quests-close-btn" id="btn-close-quests">×</button>
+        </div>
+        <p class="quests-intro">Complete os desafios pelo grande mundo de grama para dominar poderes lendários!</p>
+        <div class="quests-list" id="quests-list-container">
+          <!-- Cards de Missões gerados via JS -->
         </div>
       </div>
     </div>
