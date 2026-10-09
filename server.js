@@ -6,9 +6,9 @@ const os = require('os');
 
 const PORT = process.env.PORT || 3000;
 const TICK_RATE = 30;
-const ARENA_WIDTH = 16000;  // A Grande e Majestosa Floresta Ancestral (16000x16000)
-const ARENA_HEIGHT = 16000;
-const TARGET_ENTITIES = 36;
+const ARENA_WIDTH = 24000;  // O Colossal Continente da Floresta Ancestral (24000x24000)
+const ARENA_HEIGHT = 24000;
+const TARGET_ENTITIES = 50;
 
 // Tipos MIME
 const MIME_TYPES = {
@@ -251,71 +251,73 @@ const CHARACTER_CLASSES = {
 // SANTUÁRIOS E BOSQUES DA FLORESTA (NÃO É CIDADE, É FLORESTA!)
 // -------------------------------------------------------------
 const FOREST_SANCTUARIES = [
-  // 1. Santuário Central da Grande Árvore-Mãe (Centro)
-  { id: 'sanc_mother_tree', name: '🌳 Santuário da Grande Árvore-Mãe', x: 8000, y: 8000, radius: 550, theme: 'ancient_tree' },
+  // 1. Santuário Central da Grande Árvore-Mãe (Centro 24000x24000)
+  { id: 'sanc_mother_tree', name: '🌳 Santuário da Grande Árvore-Mãe', x: 12000, y: 12000, radius: 650, theme: 'ancient_tree' },
   // 2. Bosque Sagrado dos Druidas (Noroeste)
-  { id: 'sanc_druids', name: '🌿 Bosque Sagrado dos Druidas', x: 3200, y: 3200, radius: 400, theme: 'druid_grove' },
-  // 3. Lago Esmeralda da Floresta (Nordeste)
-  { id: 'sanc_lake', name: '💧 Lago Esmeralda dos Salgueiros', x: 12800, y: 3200, radius: 420, theme: 'emerald_lake' },
+  { id: 'sanc_druids', name: '🌿 Bosque Sagrado dos Druidas', x: 4500, y: 4500, radius: 450, theme: 'druid_grove' },
+  // 3. Lago Esmeralda dos Salgueiros (Nordeste)
+  { id: 'sanc_lake', name: '💧 Lago Esmeralda dos Salgueiros', x: 19500, y: 4500, radius: 480, theme: 'emerald_lake' },
   // 4. Clareira dos Cogumelos Luminosos (Sudoeste)
-  { id: 'sanc_mushrooms', name: '🍄 Clareira dos Cogumelos Luminosos', x: 3200, y: 12800, radius: 400, theme: 'mushrooms' },
+  { id: 'sanc_mushrooms', name: '🍄 Clareira dos Cogumelos Luminosos', x: 4500, y: 19500, radius: 450, theme: 'mushrooms' },
   // 5. Refúgio dos Forjadores da Madeira (Sudeste)
-  { id: 'sanc_forgers', name: '🪵 Refúgio dos Forjadores da Madeira', x: 12800, y: 12800, radius: 400, theme: 'wood_forge' },
+  { id: 'sanc_forgers', name: '🪵 Refúgio dos Forjadores da Madeira', x: 19500, y: 19500, radius: 450, theme: 'wood_forge' },
   // 6. Mirante dos Ventos das Copas (Norte)
-  { id: 'sanc_winds', name: '🌾 Mirante dos Ventos das Copas', x: 8000, y: 2200, radius: 400, theme: 'treetop_winds' },
+  { id: 'sanc_winds', name: '🌾 Mirante dos Ventos das Copas', x: 12000, y: 3000, radius: 450, theme: 'treetop_winds' },
   // 7. Bosque Encantado dos Cristais (Leste)
-  { id: 'sanc_fae', name: '🌸 Bosque Encantado dos Cristais', x: 13800, y: 8000, radius: 400, theme: 'fae_crystals' },
+  { id: 'sanc_fae', name: '🌸 Bosque Encantado dos Cristais', x: 21000, y: 12000, radius: 450, theme: 'fae_crystals' },
   // 8. Aldeia dos Guardiões da Mata (Oeste)
-  { id: 'sanc_hunters', name: '🏹 Aldeia dos Guardiões da Mata', x: 2200, y: 8000, radius: 400, theme: 'hunters_camp' }
+  { id: 'sanc_hunters', name: '🏹 Aldeia dos Guardiões da Mata', x: 3000, y: 12000, radius: 450, theme: 'hunters_camp' }
 ];
 
 const FOREST_STRUCTURES = [
   // 1. Árvore-Mãe Central
-  { id: 'b_mother_tree', name: 'Grande Árvore-Mãe', x: 8000, y: 7820, w: 220, h: 140, roofColor: '#1b4332', wallColor: '#3e2723', type: 'ancient_tree' },
-  { id: 'b_wood_smithy', name: 'Armaria da Árvore', x: 7850, y: 7980, w: 95, h: 80, roofColor: '#2d6a4f', wallColor: '#4e342e', type: 'shop' },
-  { id: 'b_herbal_hut', name: 'Cabana das Ervas Místicas', x: 8150, y: 7980, w: 95, h: 80, roofColor: '#40916c', wallColor: '#4e342e', type: 'shop' },
-  { id: 'b_elder_lodge', name: 'Tenda dos Anciãos', x: 8000, y: 8190, w: 105, h: 85, roofColor: '#52b788', wallColor: '#3e2723', type: 'house' },
+  { id: 'b_mother_tree', name: 'Grande Árvore-Mãe Ancestral', x: 12000, y: 11800, w: 260, h: 160, roofColor: '#1b4332', wallColor: '#3e2723', type: 'ancient_tree' },
+  { id: 'b_wood_smithy', name: 'Armaria da Árvore', x: 11820, y: 11980, w: 100, h: 85, roofColor: '#2d6a4f', wallColor: '#4e342e', type: 'shop' },
+  { id: 'b_herbal_hut', name: 'Cabana das Ervas Místicas', x: 12180, y: 11980, w: 100, h: 85, roofColor: '#40916c', wallColor: '#4e342e', type: 'shop' },
+  { id: 'b_elder_lodge', name: 'Tenda dos Anciãos', x: 12000, y: 12220, w: 110, h: 90, roofColor: '#52b788', wallColor: '#3e2723', type: 'house' },
 
   // 2. Bosque dos Druidas
-  { id: 'b_druid_hut', name: 'Cabana do Grande Druida', x: 3200, y: 3100, w: 90, h: 80, roofColor: '#2d6a4f', wallColor: '#4e342e', type: 'house' },
-  { id: 'b_druid_altar', name: 'Altar de Menires', x: 3100, y: 3240, w: 85, h: 75, roofColor: '#1b4332', wallColor: '#5d4037', type: 'shop' },
-  { id: 'b_druid_herbs', name: 'Cultivo dos Bosques', x: 3300, y: 3240, w: 85, h: 75, roofColor: '#52b788', wallColor: '#3e2723', type: 'shop' },
+  { id: 'b_druid_hut', name: 'Cabana do Grande Druida', x: 4500, y: 4400, w: 95, h: 85, roofColor: '#2d6a4f', wallColor: '#4e342e', type: 'house' },
+  { id: 'b_druid_altar', name: 'Altar de Menires', x: 4400, y: 4540, w: 90, h: 80, roofColor: '#1b4332', wallColor: '#5d4037', type: 'shop' },
+  { id: 'b_druid_herbs', name: 'Cultivo dos Bosques', x: 4600, y: 4540, w: 90, h: 80, roofColor: '#52b788', wallColor: '#3e2723', type: 'shop' },
 
   // 3. Lago Esmeralda
-  { id: 'b_lake_shrine', name: 'Santuário da Água', x: 12800, y: 3100, w: 95, h: 85, roofColor: '#1b4332', wallColor: '#4e342e', type: 'house' },
-  { id: 'b_lake_pier', name: 'Cabana dos Pescadores', x: 12700, y: 3240, w: 85, h: 75, roofColor: '#2d6a4f', wallColor: '#5d4037', type: 'house' },
+  { id: 'b_lake_shrine', name: 'Santuário da Água', x: 19500, y: 4400, w: 100, h: 90, roofColor: '#1b4332', wallColor: '#4e342e', type: 'house' },
+  { id: 'b_lake_pier', name: 'Cabana dos Pescadores', x: 19400, y: 4540, w: 90, h: 80, roofColor: '#2d6a4f', wallColor: '#5d4037', type: 'house' },
 
   // 4. Clareira dos Cogumelos
-  { id: 'b_shroom_hut', name: 'Tenda do Xamã', x: 3200, y: 12700, w: 95, h: 85, roofColor: '#8e44ad', wallColor: '#4e342e', type: 'house' },
-  { id: 'b_shroom_bazaar', name: 'Bazar dos Fungos', x: 3100, y: 12840, w: 85, h: 75, roofColor: '#9b59b6', wallColor: '#3e2723', type: 'shop' },
+  { id: 'b_shroom_hut', name: 'Tenda do Xamã', x: 4500, y: 19400, w: 100, h: 90, roofColor: '#8e44ad', wallColor: '#4e342e', type: 'house' },
+  { id: 'b_shroom_bazaar', name: 'Bazar dos Fungos', x: 4400, y: 19540, w: 90, h: 80, roofColor: '#9b59b6', wallColor: '#3e2723', type: 'shop' },
 
   // 5. Forjadores da Madeira
-  { id: 'b_forg_hut', name: 'Forja da Madeira e Pedra', x: 12800, y: 12700, w: 100, h: 85, roofColor: '#c0392b', wallColor: '#4e342e', type: 'shop' },
+  { id: 'b_forg_hut', name: 'Forja da Madeira e Pedra', x: 19500, y: 19400, w: 105, h: 90, roofColor: '#c0392b', wallColor: '#4e342e', type: 'shop' },
 
   // 6. Mirante dos Ventos
-  { id: 'b_wind_lodge', name: 'Torre de Vigia de Madeira', x: 8000, y: 2100, w: 90, h: 90, roofColor: '#2d6a4f', wallColor: '#3e2723', type: 'house' },
+  { id: 'b_wind_lodge', name: 'Torre de Vigia de Madeira', x: 12000, y: 2900, w: 95, h: 95, roofColor: '#2d6a4f', wallColor: '#3e2723', type: 'house' },
 
   // 7. Bosque dos Cristais
-  { id: 'b_crystal_shrine', name: 'Santuário do Oráculo', x: 13800, y: 7900, w: 95, h: 90, roofColor: '#6c5ce7', wallColor: '#3e2723', type: 'house' },
+  { id: 'b_crystal_shrine', name: 'Santuário do Oráculo', x: 21000, y: 11900, w: 100, h: 95, roofColor: '#6c5ce7', wallColor: '#3e2723', type: 'house' },
 
   // 8. Aldeia dos Guardiões
-  { id: 'b_hunter_cabin', name: 'Cabana dos Caçadores', x: 2200, y: 7900, w: 95, h: 80, roofColor: '#d35400', wallColor: '#4e342e', type: 'house' }
+  { id: 'b_hunter_cabin', name: 'Cabana dos Caçadores', x: 3000, y: 11900, w: 100, h: 85, roofColor: '#d35400', wallColor: '#4e342e', type: 'house' }
 ];
 
 // NPCs da Floresta
 const NPCS = [
-  { id: 'npc_blacksmith', name: 'Brok, o Forjador da Floresta', icon: '🔨', x: 7920, y: 7980, radius: 28, type: 'weapons' },
-  { id: 'npc_alchemist', name: 'Sylva, a Herbalista', icon: '🧪', x: 8080, y: 7980, radius: 28, type: 'potions' },
-  { id: 'npc_elder', name: 'Ancião da Floresta', icon: '📜', x: 8000, y: 7900, radius: 28, type: 'quests' },
-  { id: 'npc_druid', name: 'Druida Rowan', icon: '🌿', x: 3200, y: 3200, radius: 26, type: 'potions' },
-  { id: 'npc_frost_druid', name: 'Pescador do Lago', icon: '🎣', x: 12800, y: 3200, radius: 26, type: 'weapons' },
-  { id: 'npc_xama', name: 'Xamã dos Cogumelos', icon: '🍄', x: 3200, y: 12800, radius: 26, type: 'potions' },
-  { id: 'npc_wood_smith', name: 'Ferreiro dos Troncos', icon: '🪵', x: 12800, y: 12800, radius: 26, type: 'weapons' },
-  { id: 'npc_hunter', name: 'Lorde dos Caçadores', icon: '🏹', x: 2200, y: 8000, radius: 26, type: 'weapons' }
+  { id: 'npc_blacksmith', name: 'Brok, o Forjador da Floresta', icon: '🔨', x: 11900, y: 11980, radius: 28, type: 'weapons' },
+  { id: 'npc_alchemist', name: 'Sylva, a Herbalista', icon: '🧪', x: 12100, y: 11980, radius: 28, type: 'potions' },
+  { id: 'npc_elder', name: 'Ancião da Floresta', icon: '📜', x: 12000, y: 11900, radius: 28, type: 'quests' },
+  { id: 'npc_druid', name: 'Druida Rowan', icon: '🌿', x: 4500, y: 4500, radius: 26, type: 'potions' },
+  { id: 'npc_frost_druid', name: 'Pescador do Lago', icon: '🎣', x: 19500, y: 4500, radius: 26, type: 'weapons' },
+  { id: 'npc_xama', name: 'Xamã dos Cogumelos', icon: '🍄', x: 4500, y: 19500, radius: 26, type: 'potions' },
+  { id: 'npc_wood_smith', name: 'Ferreiro dos Troncos', icon: '🪵', x: 19500, y: 19500, radius: 26, type: 'weapons' },
+  { id: 'npc_hunter', name: 'Lorde dos Caçadores', icon: '🏹', x: 3000, y: 12000, radius: 26, type: 'weapons' }
 ];
 
 const SHOP_CATALOG = {
   weapons: [
+    { id: 'fist', name: 'Punhos do Sobrevivente', cost: 0, damage: 12, color: '#ffdcb4', desc: 'Desarmado: golpes com as próprias mãos' },
+    { id: 'sword_starter', name: 'Lâmina de Carvalho Rústica', cost: 60, damage: 22, color: '#00e5ff', desc: 'Espada de madeira balanceada' },
     { id: 'sword_starter', name: 'Lâmina dos Bosques', cost: 0, damage: 22, color: '#00e5ff', desc: 'Espada de madeira de carvalho balanceada' },
     { id: 'sword_rune', name: 'Lâmina Rúnica da Floresta', cost: 120, damage: 34, color: '#2ed573', desc: '+50% Dano & corte rápido' },
     { id: 'sword_fire', name: 'Lâmina do Fogo da Mata', cost: 280, damage: 52, color: '#ff4757', desc: 'Lança brasas ardentes na folhagem' },
@@ -344,6 +346,7 @@ let orbs = [];
 let worldBoss = null;
 let secondBoss = null;
 let thirdBoss = null;
+let fourthBoss = null;
 
 function spawnMineCrystals(count = 45) {
   while (mineCrystals.length < count) {
@@ -413,11 +416,11 @@ function initWorldBosses() {
   worldBoss = {
     id: 'world_colossus',
     name: '👑 Rei Titã da Floresta Ancestral',
-    x: 11000,
-    y: 8000,
+    x: 16500,
+    y: 12000,
     radius: 65,
-    hp: 800,
-    maxHp: 800,
+    hp: 850,
+    maxHp: 850,
     color: '#ffd32a',
     speed: 3.2,
     angle: 0
@@ -426,11 +429,11 @@ function initWorldBosses() {
   secondBoss = {
     id: 'world_ignis',
     name: '🔥 Lorde Ignis, O Cavaleiro do Fogo',
-    x: 8000,
-    y: 12000,
+    x: 12000,
+    y: 17500,
     radius: 65,
-    hp: 750,
-    maxHp: 750,
+    hp: 800,
+    maxHp: 800,
     color: '#ff4757',
     speed: 3.5,
     angle: 0
@@ -439,21 +442,34 @@ function initWorldBosses() {
   thirdBoss = {
     id: 'world_druid',
     name: '⚡ Arquidruida das Tempestades',
-    x: 5000,
-    y: 5000,
+    x: 7000,
+    y: 7000,
     radius: 60,
-    hp: 700,
-    maxHp: 700,
+    hp: 750,
+    maxHp: 750,
     color: '#00e5ff',
     speed: 3.4,
     angle: 0
   };
+
+  fourthBoss = {
+    id: 'world_shadow',
+    name: '💀 General Espectral da Noite',
+    x: 7000,
+    y: 17500,
+    radius: 65,
+    hp: 800,
+    maxHp: 800,
+    color: '#a29bfe',
+    speed: 3.6,
+    angle: 0
+  };
 }
 
-spawnMineCrystals(110);
-spawnBreakables(120);
-spawnChests(100);
-spawnOrbs(130);
+spawnMineCrystals(160);
+spawnBreakables(180);
+spawnChests(150);
+spawnOrbs(200);
 initWorldBosses();
 
 // Obstáculos de Pedras e Menires Antigos
@@ -604,17 +620,17 @@ function onClientMessage(client, msg) {
     }
 
     // Super Poderes (DESBLOQUEADOS APENAS POR MISSÃO!)
-    if (msg.input?.powerSlam && p.powers.slam && p.powerCooldowns.slam <= 0 && !p.inSafeZone) {
+    if (msg.input?.powerSlam && p.powers.slam && p.powerCooldowns.slam <= 0 ) {
       p.powerCooldowns.slam = 6;
       executeSeismicSlam(p);
     }
 
-    if (msg.input?.powerBeam && p.powers.beam && p.powerCooldowns.beam <= 0 && !p.inSafeZone) {
+    if (msg.input?.powerBeam && p.powers.beam && p.powerCooldowns.beam <= 0 ) {
       p.powerCooldowns.beam = 8;
       executeAstralBeam(p);
     }
 
-    if (msg.input?.powerFire && p.powers.fire && p.powerCooldowns.fire <= 0 && !p.inSafeZone) {
+    if (msg.input?.powerFire && p.powers.fire && p.powerCooldowns.fire <= 0 ) {
       p.powerCooldowns.fire = 7;
       executeFireMeteor(p);
     }
@@ -625,7 +641,7 @@ function onClientMessage(client, msg) {
       broadcast({ type: 'effect', name: 'shield_up', x: p.x, y: p.y, color: '#00e5ff' });
     }
 
-    if (msg.input?.powerNature && p.powers.nature && p.powerCooldowns.nature <= 0 && !p.inSafeZone) {
+    if (msg.input?.powerNature && p.powers.nature && p.powerCooldowns.nature <= 0 ) {
       p.powerCooldowns.nature = 9;
       executeNatureCyclone(p);
     }
@@ -880,7 +896,7 @@ function updateBotAI(bot, now) {
   }
 
   const enemies = [];
-  for (const p of players.values()) if (p.hp > 0 && !p.isDead && !p.inSafeZone) enemies.push(p);
+  for (const p of players.values()) if (p.hp > 0 && !p.isDead ) enemies.push(p);
   for (const b of bots.values()) if (b.id !== bot.id && b.hp > 0 && !b.isDead && !b.inSafeZone) enemies.push(b);
 
   let closestEnemy = null;
@@ -916,11 +932,11 @@ function updateBotAI(bot, now) {
 // Chefes Titânicos da Floresta
 // -------------------------------------------------------------
 function updateWorldBosses() {
-  const bosses = [worldBoss, secondBoss, thirdBoss];
+  const bosses = [worldBoss, secondBoss, thirdBoss, fourthBoss];
   for (const boss of bosses) {
     if (!boss || boss.hp <= 0) continue;
 
-    const targets = [...players.values(), ...bots.values()].filter(t => t.hp > 0 && !t.isDead && !t.inSafeZone);
+    const targets = [...players.values(), ...bots.values()].filter(t => t.hp > 0 && !t.isDead );
     let closest = null;
     let minD = Infinity;
     for (const t of targets) {
@@ -1058,7 +1074,7 @@ function gameTick() {
     }
 
     // Ataque
-    if (ent.input.attack && ent.attackCooldown <= 0 && !ent.inSafeZone) {
+    if (ent.input.attack && ent.attackCooldown <= 0 ) {
       ent.attackCooldown = 0.3;
       const wCatalog = SHOP_CATALOG.weapons.find(w => w.id === ent.weapon) || SHOP_CATALOG.weapons[0];
       if (wCatalog.triple) {
@@ -1107,7 +1123,7 @@ function gameTick() {
     let hit = false;
     if (pr.x < 0 || pr.x > ARENA_WIDTH || pr.y < 0 || pr.y > ARENA_HEIGHT || pr.lifetime <= 0) hit = true;
 
-    if (!hit && isInsideAnySanctuary(pr.x, pr.y)) hit = true;
+    // Combat allowed everywhere in forest
 
     // Colisão com Cristais
     if (!hit) {
@@ -1240,7 +1256,8 @@ function gameTick() {
     orbs: orbs,
     worldBoss: worldBoss,
     secondBoss: secondBoss,
-    thirdBoss: thirdBoss
+    thirdBoss: thirdBoss,
+    fourthBoss: fourthBoss
   };
 
   broadcast(snapshot);
