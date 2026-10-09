@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 const TICK_RATE = 30; // 30 ticks por segundo
 const ARENA_WIDTH = 3600;
 const ARENA_HEIGHT = 3600;
-const TARGET_ENTITIES = 14; // Combatentes espalhados pela jornada (players + bots)
+const TARGET_ENTITIES = 14;
 
 // Tipos MIME
 const MIME_TYPES = {
@@ -118,7 +118,6 @@ function parseFrames(client) {
     const firstByte = client.buffer[0];
     const secondByte = client.buffer[1];
 
-    const fin = (firstByte & 0x80) === 0x80;
     const opcode = firstByte & 0x0f;
     const masked = (secondByte & 0x80) === 0x80;
     let payloadLength = secondByte & 0x7f;
@@ -203,24 +202,82 @@ function sendTo(client, msgObj) {
 }
 
 // -------------------------------------------------------------
-// Definições de Mundo, Cidade e Itens da Jornada
+// Definições de Classes de Personagem
 // -------------------------------------------------------------
-// Cidade Central (Safe Zone)
+const CHARACTER_CLASSES = {
+  warrior: {
+    id: 'warrior',
+    name: 'Guerreiro da Forja',
+    icon: '🗡️',
+    baseHp: 135,
+    speed: 6.2,
+    baseWeapon: 'sword_starter',
+    desc: 'Alta vida e resistência a golpes'
+  },
+  mage: {
+    id: 'mage',
+    name: 'Mago Astral',
+    icon: '🧙‍♂️',
+    baseHp: 95,
+    speed: 6.6,
+    baseWeapon: 'sword_starter',
+    desc: 'Disparos mágicos velozes e alto poder'
+  },
+  ranger: {
+    id: 'ranger',
+    name: 'Arqueiro dos Bosques',
+    icon: '🏹',
+    baseHp: 105,
+    speed: 7.2,
+    baseWeapon: 'sword_starter',
+    desc: 'Super veloz e com disparos de longo alcance'
+  },
+  shadow: {
+    id: 'shadow',
+    name: 'Assassino Noturno',
+    icon: '🥷',
+    baseHp: 100,
+    speed: 6.8,
+    baseWeapon: 'sword_starter',
+    desc: 'Esquiva ágil e alto dano crítico'
+  }
+};
+
+// -------------------------------------------------------------
+// Cidade, Prédios, Casas e NPCs
+// -------------------------------------------------------------
 const CITY = {
   name: 'Cidade dos Guardiões',
   x: 1800,
   y: 1800,
-  radius: 320
+  radius: 350
 };
 
-// NPCs da Cidade (Lojas de Espadas, Poções e Poderes)
+// Prédios e Casas construídos na cidade
+const BUILDINGS = [
+  // Castelo Real (Norte da Praça)
+  { id: 'b_castle', name: 'Castelo do Rei', x: 1800, y: 1610, w: 160, h: 90, roofColor: '#2f3542', wallColor: '#57606f', type: 'castle' },
+  // Ferraria de Brok (Oeste)
+  { id: 'b_blacksmith', name: 'Ferraria de Brok', x: 1660, y: 1750, w: 90, h: 80, roofColor: '#e74c3c', wallColor: '#795548', type: 'shop' },
+  // Alquimia de Sylva (Leste)
+  { id: 'b_alchemy', name: 'Alquimia da Sylva', x: 1940, y: 1750, w: 90, h: 80, roofColor: '#27ae60', wallColor: '#5d4037', type: 'shop' },
+  // Torre Arcana de Elidor (Sul)
+  { id: 'b_mage', name: 'Torre Arcana', x: 1800, y: 1980, w: 85, h: 85, roofColor: '#8e44ad', wallColor: '#34495e', type: 'tower' },
+  // Casas e Taverna
+  { id: 'b_tavern', name: 'Taverna do Aventureiro', x: 1650, y: 1610, w: 75, h: 65, roofColor: '#d35400', wallColor: '#6d4c41', type: 'house' },
+  { id: 'b_house1', name: 'Casa do Guarda', x: 1950, y: 1610, w: 75, h: 65, roofColor: '#c0392b', wallColor: '#6d4c41', type: 'house' },
+  { id: 'b_house2', name: 'Casa do Explorador', x: 1660, y: 1890, w: 75, h: 65, roofColor: '#e67e22', wallColor: '#6d4c41', type: 'house' },
+  { id: 'b_house3', name: 'Câmara dos Magos', x: 1940, y: 1890, w: 75, h: 65, roofColor: '#9b59b6', wallColor: '#4e342e', type: 'house' }
+];
+
 const NPCS = [
   { id: 'npc_blacksmith', name: 'Brok, o Ferreiro', icon: '🔨', x: 1720, y: 1760, radius: 28, type: 'weapons' },
   { id: 'npc_alchemist', name: 'Sylva, a Alquimista', icon: '🧪', x: 1880, y: 1760, radius: 28, type: 'potions' },
-  { id: 'npc_mage', name: 'Mago Elidor', icon: '🧙‍♂️', x: 1800, y: 1880, radius: 28, type: 'powers' }
+  { id: 'npc_mage', name: 'Mago Elidor', icon: '🧙‍♂️', x: 1800, y: 1910, radius: 28, type: 'powers' },
+  { id: 'npc_king', name: 'Capitão das Missões', icon: '📜', x: 1800, y: 1680, radius: 28, type: 'quests' }
 ];
 
-// Catálogo da Loja da Cidade
+// Catálogo das Lojas
 const SHOP_CATALOG = {
   weapons: [
     { id: 'sword_starter', name: 'Lâmina do Noviço', cost: 0, damage: 22, color: '#00e5ff', desc: 'Espada inicial balanceada' },
@@ -238,94 +295,137 @@ const SHOP_CATALOG = {
   ]
 };
 
-// Obstáculos e Ruínas nos 4 Biomas da Jornada
-const obstacles = [
-  // Muralhas externas da Cidade
-  { x: 1800, y: 1480, radius: 45, type: 'city_gate', label: 'Portão Norte' },
-  { x: 1800, y: 2120, radius: 45, type: 'city_gate', label: 'Portão Sul' },
-  { x: 1480, y: 1800, radius: 45, type: 'city_gate', label: 'Portão Oeste' },
-  { x: 2120, y: 1800, radius: 45, type: 'city_gate', label: 'Portão Leste' },
+// -------------------------------------------------------------
+// Elementos Interativos do Mundo (Gemas, Caixas e Chefe)
+// -------------------------------------------------------------
+let mineCrystals = []; // Cristais de mineração
+let breakables = [];   // Barris e caixas destrutíveis
+let chests = [];       // Baús de tesouro
+let orbs = [];         // Orbes de regeneração
+let worldBoss = null;  // Colosso Errante
 
-  // Bioma 1: Bosque dos Ecos (Noroeste)
-  { x: 800, y: 800, radius: 95, type: 'sanctuary', label: 'Carvalho Ancestral' },
-  { x: 600, y: 1100, radius: 65, type: 'rock', label: 'Monólito da Floresta' },
-  { x: 1100, y: 600, radius: 60, type: 'rock' },
-
-  // Bioma 2: Ruínas Glaciais (Nordeste)
-  { x: 2800, y: 800, radius: 95, type: 'pillar', label: 'Templo Glacial de Niflheim' },
-  { x: 2500, y: 600, radius: 65, type: 'rock' },
-  { x: 3000, y: 1100, radius: 60, type: 'rock' },
-
-  // Bioma 3: Pântano das Sombras (Sudoeste)
-  { x: 800, y: 2800, radius: 95, type: 'pillar', label: 'Labirinto das Sombras' },
-  { x: 1100, y: 3000, radius: 65, type: 'rock' },
-  { x: 600, y: 2500, radius: 60, type: 'rock' },
-
-  // Bioma 4: Abismo de Magma (Sudeste)
-  { x: 2800, y: 2800, radius: 100, type: 'pillar', label: 'Núcleo da Forja Ardente' },
-  { x: 2500, y: 3000, radius: 65, type: 'rock' },
-  { x: 3000, y: 2500, radius: 60, type: 'rock' }
-];
-
-// Nomes temáticos de Bots inteligentes
-const BOT_NAMES = [
-  'Arconte Sylas', 'Valquíria Kira', 'Titã Gorok', 'Sombra Vane', 
-  'Sentinela Kael', 'Caçador Rex', 'Guardião Thorne', 'Oráculo Zeph', 
-  'Lorde Malakor', 'Druida Rowan', 'Lâmina Lyra', 'Paladino Uther',
-  'Andarilho Jarek', 'Místico Fenrir'
-];
-
-// Estado Geral do Jogo
-const players = new Map();
-const bots = new Map();
-let projectiles = [];
-let orbs = [];
-let chests = []; // Baús de Ouro espalhados
-let killFeed = [];
-let nextProjectileId = 1;
-
-// Gerar Baús de Ouro pelo mapa
-function spawnChests(targetCount = 18) {
-  while (chests.length < targetCount) {
-    const spawn = getSpreadSpawn(false);
-    chests.push({
-      id: 'chest_' + Math.random().toString(36).substring(2, 9),
-      x: spawn.x,
-      y: spawn.y,
-      radius: 18,
-      gold: 35 + Math.floor(Math.random() * 30)
+function spawnMineCrystals(count = 18) {
+  while (mineCrystals.length < count) {
+    const sp = getSpreadSpawn(false);
+    const types = [
+      { name: 'Safira Cósmica', color: '#00e5ff', gold: 60 },
+      { name: 'Rubi do Fogo', color: '#ff4757', gold: 75 },
+      { name: 'Ametista Mística', color: '#a29bfe', gold: 80 },
+      { name: 'Esmeralda Vital', color: '#2ed573', gold: 70 }
+    ];
+    const chosen = types[Math.floor(Math.random() * types.length)];
+    mineCrystals.push({
+      id: 'cry_' + Math.random().toString(36).substring(2, 9),
+      x: sp.x,
+      y: sp.y,
+      hp: 3,
+      maxHp: 3,
+      radius: 20,
+      name: chosen.name,
+      color: chosen.color,
+      gold: chosen.gold
     });
   }
 }
 
-// Inicializar Orbes de Cura e Energia
-function spawnOrbs(count = 35) {
+function spawnBreakables(count = 22) {
+  while (breakables.length < count) {
+    const sp = getSpreadSpawn(false);
+    breakables.push({
+      id: 'brk_' + Math.random().toString(36).substring(2, 9),
+      x: sp.x,
+      y: sp.y,
+      radius: 16,
+      type: Math.random() > 0.5 ? 'crate' : 'barrel',
+      gold: 20 + Math.floor(Math.random() * 25)
+    });
+  }
+}
+
+function spawnChests(count = 16) {
+  while (chests.length < count) {
+    const sp = getSpreadSpawn(false);
+    chests.push({
+      id: 'chest_' + Math.random().toString(36).substring(2, 9),
+      x: sp.x,
+      y: sp.y,
+      radius: 18,
+      gold: 40 + Math.floor(Math.random() * 40)
+    });
+  }
+}
+
+function spawnOrbs(count = 30) {
   while (orbs.length < count) {
-    const spawn = getSpreadSpawn(false);
+    const sp = getSpreadSpawn(false);
     orbs.push({
       id: 'orb_' + Math.random().toString(36).substring(2, 9),
-      x: spawn.x,
-      y: spawn.y,
-      type: Math.random() > 0.45 ? 'heal' : 'energy',
+      x: sp.x,
+      y: sp.y,
+      type: Math.random() > 0.5 ? 'heal' : 'energy',
       value: 30,
       radius: 14
     });
   }
 }
-spawnOrbs(35);
-spawnChests(18);
 
-// Posição ESPALHADA pelo mapa (fora da cidade para explorar a jornada)
+function initWorldBoss() {
+  worldBoss = {
+    id: 'world_colossus',
+    name: '👑 Colosso Titânico Ancestral',
+    x: 2800,
+    y: 1200,
+    radius: 55,
+    hp: 450,
+    maxHp: 450,
+    color: '#e67e22',
+    speed: 3.2,
+    angle: 0,
+    attackCooldown: 0,
+    slamCooldown: 0
+  };
+}
+
+spawnMineCrystals(18);
+spawnBreakables(22);
+spawnChests(16);
+spawnOrbs(30);
+initWorldBoss();
+
+// Obstáculos dos Biomas
+const obstacles = [
+  { x: 1800, y: 1450, radius: 40, type: 'city_gate', label: 'Portão Norte' },
+  { x: 1800, y: 2150, radius: 40, type: 'city_gate', label: 'Portão Sul' },
+  { x: 1450, y: 1800, radius: 40, type: 'city_gate', label: 'Portão Oeste' },
+  { x: 2150, y: 1800, radius: 40, type: 'city_gate', label: 'Portão Leste' },
+
+  { x: 800, y: 800, radius: 95, type: 'sanctuary', label: 'Carvalho Ancestral' },
+  { x: 600, y: 1100, radius: 65, type: 'rock', label: 'Monólito da Floresta' },
+  { x: 2800, y: 800, radius: 95, type: 'pillar', label: 'Templo Glacial' },
+  { x: 800, y: 2800, radius: 95, type: 'pillar', label: 'Labirinto das Sombras' },
+  { x: 2800, y: 2800, radius: 100, type: 'pillar', label: 'Forja Vulcânica' }
+];
+
+const BOT_NAMES = [
+  'Arconte Sylas', 'Valquíria Kira', 'Titã Gorok', 'Sombra Vane', 
+  'Sentinela Kael', 'Caçador Rex', 'Guardião Thorne', 'Oráculo Zeph', 
+  'Lorde Malakor', 'Druida Rowan', 'Lâmina Lyra', 'Paladino Uther'
+];
+
+const players = new Map();
+const bots = new Map();
+let projectiles = [];
+let killFeed = [];
+let nextProjectileId = 1;
+
 function getSpreadSpawn(allowCity = false) {
   for (let attempt = 0; attempt < 40; attempt++) {
     const x = 200 + Math.random() * (ARENA_WIDTH - 400);
     const y = 200 + Math.random() * (ARENA_HEIGHT - 400);
 
-    // Evita nascer dentro da cidade a menos que solicitado
     const distToCity = Math.hypot(x - CITY.x, y - CITY.y);
     if (!allowCity && distToCity < CITY.radius + 150) continue;
 
-    // Evita colisão com obstáculos
     let collides = false;
     for (const obs of obstacles) {
       if (Math.hypot(x - obs.x, y - obs.y) < obs.radius + 50) {
@@ -343,25 +443,29 @@ function getSpreadSpawn(allowCity = false) {
 // -------------------------------------------------------------
 function onPlayerJoin(client) {
   const spawn = getSpreadSpawn(false);
+  const defClass = CHARACTER_CLASSES.warrior;
+
   const player = {
     id: client.id,
     isBot: false,
     name: 'Viajante #' + client.id.substring(2, 6),
+    charClass: 'warrior',
     color: '#00e5ff',
     x: spawn.x,
     y: spawn.y,
     vx: 0,
     vy: 0,
-    speed: 6.5,
+    speed: defClass.speed,
     angle: 0,
-    hp: 100,
-    maxHp: 100,
+    hp: defClass.baseHp,
+    maxHp: defClass.baseHp,
     stamina: 100,
     maxStamina: 100,
-    gold: 50, // Ouro inicial para comprar primeiros itens
+    gold: 80, // Ouro inicial para explorar
     score: 0,
     kills: 0,
     deaths: 0,
+    minedCount: 0,
     weapon: 'sword_starter',
     potions: { heal: 1, speed: 0 },
     powers: { slam: false, beam: false },
@@ -371,6 +475,7 @@ function onPlayerJoin(client) {
     attackCooldown: 0,
     radius: 24,
     inSafeZone: false,
+    activeQuest: { id: 'q_bots', title: 'Caçar Inimigos', target: 2, current: 0, reward: 150 },
     input: { up: false, down: false, left: false, right: false, attack: false, dash: false, powerSlam: false, powerBeam: false, useHeal: false, useSpeed: false, angle: 0 }
   };
 
@@ -381,19 +486,21 @@ function onPlayerJoin(client) {
     id: client.id,
     arena: { width: ARENA_WIDTH, height: ARENA_HEIGHT },
     city: CITY,
+    buildings: BUILDINGS,
     npcs: NPCS,
     catalog: SHOP_CATALOG,
+    classes: CHARACTER_CLASSES,
     obstacles: obstacles,
     player: player
   });
 
-  broadcastKillFeed(`🌿 ${player.name} iniciou sua Jornada!`);
+  broadcastKillFeed(`🌿 ${player.name} (${defClass.name}) iniciou a Jornada!`);
 }
 
 function onPlayerLeave(id) {
   const p = players.get(id);
   if (p) {
-    broadcastKillFeed(`🚪 ${p.name} descansou da jornada.`);
+    broadcastKillFeed(`🚪 ${p.name} saiu do mundo.`);
     players.delete(id);
   }
 }
@@ -405,28 +512,24 @@ function onClientMessage(client, msg) {
   if (msg.type === 'input') {
     p.input = msg.input || p.input;
 
-    // Uso de Poção de Vida
     if (msg.input?.useHeal && p.potions.heal > 0 && p.hp < p.maxHp) {
       p.potions.heal--;
       p.hp = Math.min(p.maxHp, p.hp + 50);
       broadcast({ type: 'effect', name: 'heal', x: p.x, y: p.y, color: '#2ed573' });
     }
 
-    // Uso de Poção de Vigor/Velocidade
     if (msg.input?.useSpeed && p.potions.speed > 0) {
       p.potions.speed--;
-      p.speedBoostTimer = 10; // 10 segundos de boost
+      p.speedBoostTimer = 10;
       p.stamina = p.maxStamina;
       broadcast({ type: 'effect', name: 'speed_boost', x: p.x, y: p.y, color: '#ffd32a' });
     }
 
-    // Super Poder Sísmico [R]
     if (msg.input?.powerSlam && p.powers.slam && p.powerCooldowns.slam <= 0 && !p.inSafeZone) {
       p.powerCooldowns.slam = 6;
       executeSeismicSlam(p);
     }
 
-    // Super Poder Raio Astral [F]
     if (msg.input?.powerBeam && p.powers.beam && p.powerCooldowns.beam <= 0 && !p.inSafeZone) {
       p.powerCooldowns.beam = 8;
       executeAstralBeam(p);
@@ -435,8 +538,13 @@ function onClientMessage(client, msg) {
     if (typeof msg.name === 'string' && msg.name.trim().length > 0) {
       p.name = msg.name.trim().substring(0, 16);
     }
-    if (typeof msg.color === 'string') {
-      p.color = msg.color;
+    if (typeof msg.color === 'string') p.color = msg.color;
+    if (msg.charClass && CHARACTER_CLASSES[msg.charClass]) {
+      p.charClass = msg.charClass;
+      const cData = CHARACTER_CLASSES[msg.charClass];
+      p.maxHp = cData.baseHp;
+      p.hp = cData.baseHp;
+      p.speed = cData.speed;
     }
   } else if (msg.type === 'buy_item') {
     handleShopPurchase(p, msg.category, msg.itemId);
@@ -453,40 +561,29 @@ function onClientMessage(client, msg) {
   }
 }
 
-// Processa compra na Loja da Cidade
 function handleShopPurchase(player, category, itemId) {
-  // Verifica se o jogador está na Cidade (Safe Zone)
   const dist = Math.hypot(player.x - CITY.x, player.y - CITY.y);
-  if (dist > CITY.radius + 60) {
-    sendTo(clients.get(player.socket), { type: 'shop_error', text: 'Você precisa estar na Cidade para comprar itens!' });
-    return;
-  }
+  if (dist > CITY.radius + 60) return;
 
   const items = SHOP_CATALOG[category];
   if (!items) return;
   const item = items.find(it => it.id === itemId);
-  if (!item) return;
-
-  if (player.gold < item.cost) {
-    sendTo(clients.get(player.socket), { type: 'shop_error', text: 'Ouro insuficiente!' });
-    return;
-  }
+  if (!item || player.gold < item.cost) return;
 
   player.gold -= item.cost;
 
   if (category === 'weapons') {
     player.weapon = item.id;
-    broadcastKillFeed(`⚔️ ${player.name} forjou: ${item.name}!`);
+    broadcastKillFeed(`⚔️ ${player.name} comprou: ${item.name}!`);
   } else if (category === 'potions') {
     if (itemId === 'potion_heal') player.potions.heal = (player.potions.heal || 0) + 1;
     if (itemId === 'potion_speed') player.potions.speed = (player.potions.speed || 0) + 1;
   } else if (category === 'powers') {
     if (itemId === 'power_slam') player.powers.slam = true;
     if (itemId === 'power_beam') player.powers.beam = true;
-    broadcastKillFeed(`✨ ${player.name} dominou o poder: ${item.name}!`);
+    broadcastKillFeed(`✨ ${player.name} despertou o poder: ${item.name}!`);
   }
 
-  // Envia confirmação de compra
   sendTo(clients.get(player.socket), {
     type: 'inventory_update',
     gold: player.gold,
@@ -503,9 +600,6 @@ function broadcastKillFeed(text) {
   broadcast({ type: 'killfeed', feed: killFeed });
 }
 
-// -------------------------------------------------------------
-// Habilidades & Super Poderes
-// -------------------------------------------------------------
 function executeSeismicSlam(caster) {
   broadcast({
     type: 'effect',
@@ -519,24 +613,27 @@ function executeSeismicSlam(caster) {
   const targets = [...players.values(), ...bots.values()];
   for (const t of targets) {
     if (t.id === caster.id || t.hp <= 0 || t.inSafeZone) continue;
-    const d = Math.hypot(t.x - caster.x, t.y - caster.y);
-    if (d < 200) {
-      t.hp -= 40;
-      // Empurrão sísmico (Knockback)
-      const pushAngle = Math.atan2(t.y - caster.y, t.x - caster.x);
-      t.x += Math.cos(pushAngle) * 50;
-      t.y += Math.sin(pushAngle) * 50;
+    if (Math.hypot(t.x - caster.x, t.y - caster.y) < 200) {
+      t.hp -= 42;
+      const pa = Math.atan2(t.y - caster.y, t.x - caster.x);
+      t.x += Math.cos(pa) * 55;
+      t.y += Math.sin(pa) * 55;
       checkEntityDeath(t, caster);
     }
+  }
+
+  // Atinge o Chefe se perto
+  if (worldBoss && worldBoss.hp > 0 && Math.hypot(worldBoss.x - caster.x, worldBoss.y - caster.y) < 220) {
+    worldBoss.hp -= 50;
+    checkBossDeath(caster);
   }
 }
 
 function executeAstralBeam(caster) {
   const beamAngle = caster.angle;
-  const beamRange = 900;
   const beamEnd = {
-    x: caster.x + Math.cos(beamAngle) * beamRange,
-    y: caster.y + Math.sin(beamAngle) * beamRange
+    x: caster.x + Math.cos(beamAngle) * 950,
+    y: caster.y + Math.sin(beamAngle) * 950
   };
 
   broadcast({
@@ -552,11 +649,16 @@ function executeAstralBeam(caster) {
   const targets = [...players.values(), ...bots.values()];
   for (const t of targets) {
     if (t.id === caster.id || t.hp <= 0 || t.inSafeZone) continue;
-    // Distância ponto-reta simples para acerto do feixe
-    const distToBeam = distanceToSegment(t.x, t.y, caster.x, caster.y, beamEnd.x, beamEnd.y);
-    if (distToBeam < t.radius + 20) {
-      t.hp -= 55;
+    if (distanceToSegment(t.x, t.y, caster.x, caster.y, beamEnd.x, beamEnd.y) < t.radius + 25) {
+      t.hp -= 60;
       checkEntityDeath(t, caster);
+    }
+  }
+
+  if (worldBoss && worldBoss.hp > 0) {
+    if (distanceToSegment(worldBoss.x, worldBoss.y, caster.x, caster.y, beamEnd.x, beamEnd.y) < worldBoss.radius + 30) {
+      worldBoss.hp -= 70;
+      checkBossDeath(caster);
     }
   }
 }
@@ -572,7 +674,7 @@ function distanceToSegment(px, py, x1, y1, x2, y2) {
 }
 
 // -------------------------------------------------------------
-// Inteligência Artificial dos Bots (Espalhados pela Jornada)
+// Bots Inteligentes Espalhados
 // -------------------------------------------------------------
 function adjustBotsPopulation() {
   const totalHumans = players.size;
@@ -581,35 +683,35 @@ function adjustBotsPopulation() {
   while (bots.size < desiredBots) {
     const botId = 'bot_' + Math.random().toString(36).substring(2, 8);
     const spawn = getSpreadSpawn(false);
-    const botName = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)] + ' (BOT)';
-    const botColors = ['#ff4757', '#ffa502', '#70a1ff', '#2ed573', '#a29bfe', '#eccc68'];
+    const bName = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)] + ' (BOT)';
+    const classesKeys = Object.keys(CHARACTER_CLASSES);
+    const bClass = classesKeys[Math.floor(Math.random() * classesKeys.length)];
 
     const bot = {
       id: botId,
       isBot: true,
-      name: botName,
-      color: botColors[Math.floor(Math.random() * botColors.length)],
+      name: bName,
+      charClass: bClass,
+      color: ['#ff4757', '#ffa502', '#70a1ff', '#2ed573', '#a29bfe'][Math.floor(Math.random() * 5)],
       x: spawn.x,
       y: spawn.y,
       vx: 0,
       vy: 0,
       speed: 5.6,
       angle: Math.random() * Math.PI * 2,
-      hp: 100,
-      maxHp: 100,
+      hp: 110,
+      maxHp: 110,
       stamina: 100,
-      gold: 40 + Math.floor(Math.random() * 60),
+      gold: 50,
       score: 0,
       kills: 0,
       deaths: 0,
-      weapon: Math.random() > 0.6 ? 'sword_rune' : 'sword_starter',
+      weapon: Math.random() > 0.5 ? 'sword_rune' : 'sword_starter',
       radius: 24,
       dashCooldown: 0,
       attackCooldown: 0,
-      speedBoostTimer: 0,
       inSafeZone: false,
       nextDecisionTime: 0,
-      strafeDirection: Math.random() > 0.5 ? 1 : -1,
       input: { up: false, down: false, left: false, right: false, attack: false, dash: false, angle: 0 }
     };
 
@@ -623,18 +725,13 @@ function adjustBotsPopulation() {
 }
 
 function updateBotAI(bot, now) {
-  // Se estiver na Safe Zone da Cidade, apenas passeia pacificamente
   if (bot.inSafeZone) {
     bot.input.attack = false;
-    if (now > bot.nextDecisionTime) {
-      bot.nextDecisionTime = now + 1500;
-      bot.angle = Math.random() * Math.PI * 2;
-    }
     bot.input.up = true;
     return;
   }
 
-  // Fuga para curar caso vida baixa
+  // Fuga para curar
   if (bot.hp <= 40 && orbs.length > 0) {
     let nearestHeal = null;
     let minD = Infinity;
@@ -652,20 +749,7 @@ function updateBotAI(bot, now) {
     }
   }
 
-  // Procura baú de ouro por perto para coletar
-  if (chests.length > 0) {
-    for (const ch of chests) {
-      const d = Math.hypot(ch.x - bot.x, ch.y - bot.y);
-      if (d < 350) {
-        bot.angle = Math.atan2(ch.y - bot.y, ch.x - bot.x);
-        bot.input.up = true;
-        bot.input.attack = false;
-        return;
-      }
-    }
-  }
-
-  // Encontra o inimigo mais próximo fora da Safe Zone
+  // Procura de inimigos
   const enemies = [];
   for (const p of players.values()) if (p.hp > 0 && !p.inSafeZone) enemies.push(p);
   for (const b of bots.values()) if (b.id !== bot.id && b.hp > 0 && !b.inSafeZone) enemies.push(b);
@@ -679,75 +763,125 @@ function updateBotAI(bot, now) {
 
   if (now > bot.nextDecisionTime) {
     bot.nextDecisionTime = now + 400 + Math.random() * 500;
-    bot.strafeDirection = Math.random() > 0.5 ? 1 : -1;
   }
 
-  if (closestEnemy && minDist < 850) {
-    const leadX = closestEnemy.x + (closestEnemy.vx || 0) * 8;
-    const leadY = closestEnemy.y + (closestEnemy.vy || 0) * 8;
-    bot.angle = Math.atan2(leadY - bot.y, leadX - bot.x);
-
-    if (minDist > 300) {
+  if (closestEnemy && minDist < 800) {
+    bot.angle = Math.atan2(closestEnemy.y - bot.y, closestEnemy.x - bot.x);
+    if (minDist > 280) {
       bot.input.up = true;
       bot.input.down = false;
-    } else if (minDist < 160) {
-      bot.input.up = false;
-      bot.input.down = true;
     } else {
-      bot.angle += (Math.PI / 2) * bot.strafeDirection;
+      bot.angle += Math.PI / 2;
       bot.input.up = true;
       bot.input.down = false;
     }
-
     bot.input.attack = minDist < 650 && Math.random() < 0.6;
-
-    if (bot.dashCooldown <= 0) {
-      for (const pr of projectiles) {
-        if (pr.ownerId !== bot.id && Math.hypot(pr.x - bot.x, pr.y - bot.y) < 130) {
-          bot.input.dash = true;
-          break;
-        }
-      }
-    }
   } else {
-    // Patrulha explorando os biomas da jornada
-    if (now > bot.nextDecisionTime) {
-      bot.angle += (Math.random() - 0.5) * 1.6;
-    }
     bot.input.up = true;
-    bot.input.down = false;
     bot.input.attack = false;
+    if (Math.random() < 0.03) bot.angle += (Math.random() - 0.5) * 1.5;
   }
 }
 
 // -------------------------------------------------------------
-// Loop Principal da Simulação de Física e Jogo (Tick)
+// Chefe do Mundo (Colosso Titânico)
+// -------------------------------------------------------------
+function updateWorldBoss() {
+  if (!worldBoss || worldBoss.hp <= 0) return;
+
+  // Procura alvo humano ou bot mais próximo
+  const allTargets = [...players.values(), ...bots.values()].filter(t => t.hp > 0 && !t.inSafeZone);
+  let closest = null;
+  let minD = Infinity;
+  for (const t of allTargets) {
+    const d = Math.hypot(t.x - worldBoss.x, t.y - worldBoss.y);
+    if (d < minD) { minD = d; closest = t; }
+  }
+
+  if (closest && minD < 800) {
+    worldBoss.angle = Math.atan2(closest.y - worldBoss.y, closest.x - worldBoss.x);
+    worldBoss.x += Math.cos(worldBoss.angle) * worldBoss.speed;
+    worldBoss.y += Math.sin(worldBoss.angle) * worldBoss.speed;
+
+    // Pisão Titânico
+    if (minD < 160 && (!worldBoss.slamCooldown || worldBoss.slamCooldown <= 0)) {
+      worldBoss.slamCooldown = 4;
+      broadcast({
+        type: 'effect',
+        name: 'seismic_slam',
+        x: worldBoss.x,
+        y: worldBoss.y,
+        radius: 220,
+        color: '#e67e22'
+      });
+      for (const t of allTargets) {
+        if (Math.hypot(t.x - worldBoss.x, t.y - worldBoss.y) < 220) {
+          t.hp -= 35;
+          checkEntityDeath(t, null);
+        }
+      }
+    }
+  } else {
+    // Patrulha lenta
+    worldBoss.x += Math.cos(worldBoss.angle) * (worldBoss.speed * 0.5);
+    worldBoss.y += Math.sin(worldBoss.angle) * (worldBoss.speed * 0.5);
+    if (Math.random() < 0.02) worldBoss.angle += (Math.random() - 0.5) * 1.2;
+  }
+
+  if (worldBoss.slamCooldown > 0) worldBoss.slamCooldown -= 1 / TICK_RATE;
+}
+
+function checkBossDeath(killer) {
+  if (worldBoss && worldBoss.hp <= 0) {
+    worldBoss.hp = 0;
+    broadcastKillFeed(`👑 O COLOSSO TITÂNICO FOI DERROTADO POR ${killer.name.toUpperCase()}! (+250 🪙)!`);
+    killer.gold += 250;
+    killer.score += 500;
+    killer.powers.slam = true;
+    killer.powers.beam = true;
+
+    // Chuva de moedas e baús
+    for (let i = 0; i < 6; i++) {
+      chests.push({
+        id: 'boss_chest_' + Math.random(),
+        x: worldBoss.x + (Math.random() - 0.5) * 160,
+        y: worldBoss.y + (Math.random() - 0.5) * 160,
+        radius: 18,
+        gold: 60
+      });
+    }
+
+    setTimeout(() => {
+      initWorldBoss();
+      broadcastKillFeed(`⚠️ Um novo Colosso Ancestral despertou no horizonte!`);
+    }, 25000);
+  }
+}
+
+// -------------------------------------------------------------
+// Loop Principal da Simulação de Física (Tick)
 // -------------------------------------------------------------
 function gameTick() {
   const now = Date.now();
   adjustBotsPopulation();
+  updateWorldBoss();
 
   const entities = [...players.values(), ...bots.values()];
 
-  // Atualizar IA dos Bots
   for (const bot of bots.values()) {
     if (bot.hp > 0) updateBotAI(bot, now);
   }
 
-  // Atualizar Entidades
   for (const ent of entities) {
     if (ent.hp <= 0) continue;
 
-    // Checa se está na Cidade (Safe Zone)
     const distToCity = Math.hypot(ent.x - CITY.x, ent.y - CITY.y);
     ent.inSafeZone = distToCity < CITY.radius;
 
-    // Regeneração gradual de HP na Cidade
     if (ent.inSafeZone && ent.hp < ent.maxHp) {
       ent.hp = Math.min(ent.maxHp, ent.hp + 6 / TICK_RATE);
     }
 
-    // Cooldowns
     if (ent.dashCooldown > 0) ent.dashCooldown -= 1 / TICK_RATE;
     if (ent.attackCooldown > 0) ent.attackCooldown -= 1 / TICK_RATE;
     if (ent.stamina < ent.maxStamina) ent.stamina = Math.min(ent.maxStamina, ent.stamina + 20 / TICK_RATE);
@@ -757,7 +891,6 @@ function gameTick() {
       if (ent.powerCooldowns.beam > 0) ent.powerCooldowns.beam -= 1 / TICK_RATE;
     }
 
-    // Direção
     let dx = 0, dy = 0;
     if (ent.isBot) {
       if (ent.input.up) { dx += Math.cos(ent.angle); dy += Math.sin(ent.angle); }
@@ -774,7 +907,6 @@ function gameTick() {
     let curSpeed = ent.speed;
     if (ent.speedBoostTimer > 0) curSpeed *= 1.45;
 
-    // Dash
     if (ent.input.dash && ent.dashCooldown <= 0 && ent.stamina >= 25) {
       ent.stamina -= 25;
       ent.dashCooldown = 1.3;
@@ -787,30 +919,66 @@ function gameTick() {
       ent.vx = (dx / len) * curSpeed;
       ent.vy = (dy / len) * curSpeed;
     } else {
-      ent.vx = 0;
-      ent.vy = 0;
+      ent.vx = 0; ent.vy = 0;
     }
 
     const nextX = Math.max(ent.radius, Math.min(ARENA_WIDTH - ent.radius, ent.x + ent.vx));
     const nextY = Math.max(ent.radius, Math.min(ARENA_HEIGHT - ent.radius, ent.y + ent.vy));
 
-    // Colisão com obstáculos
+    // Colisão com Prédios e Obstáculos
     let blocked = false;
-    for (const obs of obstacles) {
-      if (Math.hypot(nextX - obs.x, nextY - obs.y) < obs.radius + ent.radius) {
-        const a = Math.atan2(nextY - obs.y, nextX - obs.x);
-        ent.x = obs.x + Math.cos(a) * (obs.radius + ent.radius);
-        ent.y = obs.y + Math.sin(a) * (obs.radius + ent.radius);
-        blocked = true;
-        break;
+    for (const b of BUILDINGS) {
+      if (nextX > b.x - b.w / 2 && nextX < b.x + b.w / 2 &&
+          nextY > b.y - b.h / 2 && nextY < b.y + b.h / 2) {
+        blocked = true; break;
       }
     }
     if (!blocked) {
-      ent.x = nextX;
-      ent.y = nextY;
+      for (const obs of obstacles) {
+        if (Math.hypot(nextX - obs.x, nextY - obs.y) < obs.radius + ent.radius) {
+          const a = Math.atan2(nextY - obs.y, nextX - obs.x);
+          ent.x = obs.x + Math.cos(a) * (obs.radius + ent.radius);
+          ent.y = obs.y + Math.sin(a) * (obs.radius + ent.radius);
+          blocked = true;
+          break;
+        }
+      }
+    }
+    if (!blocked) { ent.x = nextX; ent.y = nextY; }
+
+    // Mineração de Cristais de Gema
+    for (let cIdx = mineCrystals.length - 1; cIdx >= 0; cIdx--) {
+      const cr = mineCrystals[cIdx];
+      if (Math.hypot(ent.x - cr.x, ent.y - cr.y) < ent.radius + cr.radius + 10 && ent.input.attack) {
+        cr.hp--;
+        ent.gold += 20;
+        broadcast({ type: 'effect', name: 'chest_opened', x: cr.x, y: cr.y, color: cr.color });
+        if (cr.hp <= 0) {
+          ent.gold += cr.gold;
+          ent.score += 40;
+          ent.minedCount = (ent.minedCount || 0) + 1;
+          broadcastKillFeed(`💎 ${ent.name} minerou uma ${cr.name} (+${cr.gold} 🪙)!`);
+          mineCrystals.splice(cIdx, 1);
+          spawnMineCrystals(18);
+        }
+        break;
+      }
     }
 
-    // Coleta de Baús de Ouro
+    // Quebra de Barris e Caixas
+    for (let bIdx = breakables.length - 1; bIdx >= 0; bIdx--) {
+      const br = breakables[bIdx];
+      if (Math.hypot(ent.x - br.x, ent.y - br.y) < ent.radius + br.radius) {
+        ent.gold += br.gold;
+        ent.score += 15;
+        broadcast({ type: 'effect', name: 'chest_opened', x: br.x, y: br.y, color: '#e67e22' });
+        breakables.splice(bIdx, 1);
+        spawnBreakables(22);
+        break;
+      }
+    }
+
+    // Baús de Tesouro
     for (let cIdx = chests.length - 1; cIdx >= 0; cIdx--) {
       const ch = chests[cIdx];
       if (Math.hypot(ent.x - ch.x, ent.y - ch.y) < ent.radius + ch.radius) {
@@ -818,35 +986,31 @@ function gameTick() {
         ent.score += 25;
         broadcast({ type: 'effect', name: 'chest_opened', x: ch.x, y: ch.y, color: '#ffd32a' });
         chests.splice(cIdx, 1);
-        spawnChests(18);
+        spawnChests(16);
         break;
       }
     }
 
-    // Coleta de Orbes
+    // Orbes
     for (let oIdx = orbs.length - 1; oIdx >= 0; oIdx--) {
       const orb = orbs[oIdx];
       if (Math.hypot(ent.x - orb.x, ent.y - orb.y) < ent.radius + orb.radius) {
         if (orb.type === 'heal') ent.hp = Math.min(ent.maxHp, ent.hp + orb.value);
         else { ent.score += 15; ent.stamina = Math.min(ent.maxStamina, ent.stamina + orb.value); }
         orbs.splice(oIdx, 1);
-        spawnOrbs(35);
+        spawnOrbs(30);
         break;
       }
     }
 
-    // Disparo de Arma (Apenas fora da Cidade)
+    // Ataque
     if (ent.input.attack && ent.attackCooldown <= 0 && !ent.inSafeZone) {
       ent.attackCooldown = 0.28;
-      const weaponData = SHOP_CATALOG.weapons.find(w => w.id === ent.weapon) || SHOP_CATALOG.weapons[0];
-
-      if (weaponData.triple) {
-        // Disparo Triplo em Leque do Cajado
-        [-0.2, 0, 0.2].forEach(spread => {
-          createProjectile(ent, weaponData, ent.angle + spread);
-        });
+      const wData = SHOP_CATALOG.weapons.find(w => w.id === ent.weapon) || SHOP_CATALOG.weapons[0];
+      if (wData.triple) {
+        [-0.2, 0, 0.2].forEach(spr => createProjectile(ent, wData, ent.angle + spr));
       } else {
-        createProjectile(ent, weaponData, ent.angle);
+        createProjectile(ent, wData, ent.angle);
       }
     }
   }
@@ -854,27 +1018,19 @@ function gameTick() {
   // Atualizar Projéteis
   for (let pIdx = projectiles.length - 1; pIdx >= 0; pIdx--) {
     const pr = projectiles[pIdx];
-    pr.x += pr.vx;
-    pr.y += pr.vy;
-    pr.lifetime--;
+    pr.x += pr.vx; pr.y += pr.vy; pr.lifetime--;
 
     let destroyed = false;
-    if (pr.x < 0 || pr.x > ARENA_WIDTH || pr.y < 0 || pr.y > ARENA_HEIGHT || pr.lifetime <= 0) {
-      destroyed = true;
-    }
+    if (pr.x < 0 || pr.x > ARENA_WIDTH || pr.y < 0 || pr.y > ARENA_HEIGHT || pr.lifetime <= 0) destroyed = true;
+    if (!destroyed && Math.hypot(pr.x - CITY.x, pr.y - CITY.y) < CITY.radius) destroyed = true;
 
-    // Destrói projéteis que tentam entrar na Cidade (Barreira Rúnica Sagrada)
-    if (!destroyed && Math.hypot(pr.x - CITY.x, pr.y - CITY.y) < CITY.radius) {
-      destroyed = true;
-      broadcast({ type: 'hit', x: pr.x, y: pr.y, color: '#00e5ff' });
-    }
-
-    if (!destroyed) {
-      for (const obs of obstacles) {
-        if (Math.hypot(pr.x - obs.x, pr.y - obs.y) < obs.radius) {
-          destroyed = true;
-          break;
-        }
+    if (!destroyed && worldBoss && worldBoss.hp > 0) {
+      if (Math.hypot(pr.x - worldBoss.x, pr.y - worldBoss.y) < worldBoss.radius + pr.radius) {
+        destroyed = true;
+        worldBoss.hp -= pr.damage;
+        broadcast({ type: 'hit', x: pr.x, y: pr.y, color: pr.color });
+        const killer = players.get(pr.ownerId) || bots.get(pr.ownerId);
+        checkBossDeath(killer);
       }
     }
 
@@ -903,6 +1059,7 @@ function gameTick() {
     players: Array.from(players.values()).map(p => ({
       id: p.id,
       name: p.name,
+      charClass: p.charClass,
       color: p.color,
       x: Math.round(p.x),
       y: Math.round(p.y),
@@ -926,6 +1083,7 @@ function gameTick() {
     bots: Array.from(bots.values()).map(b => ({
       id: b.id,
       name: b.name,
+      charClass: b.charClass,
       color: b.color,
       x: Math.round(b.x),
       y: Math.round(b.y),
@@ -934,7 +1092,6 @@ function gameTick() {
       maxHp: b.maxHp,
       weapon: b.weapon,
       score: b.score,
-      kills: b.kills,
       inSafeZone: b.inSafeZone,
       isBot: true
     })),
@@ -944,8 +1101,11 @@ function gameTick() {
       y: Math.round(pr.y),
       color: pr.color
     })),
+    mineCrystals: mineCrystals,
+    breakables: breakables,
     chests: chests,
-    orbs: orbs
+    orbs: orbs,
+    worldBoss: worldBoss
   };
 
   broadcast(snapshot);
@@ -956,7 +1116,6 @@ function createProjectile(owner, weapon, angle) {
   projectiles.push({
     id: nextProjectileId++,
     ownerId: owner.id,
-    ownerName: owner.name,
     color: weapon.color || owner.color,
     damage: weapon.damage || 24,
     x: owner.x + Math.cos(angle) * (owner.radius + 8),
@@ -976,13 +1135,12 @@ function checkEntityDeath(victim, killer) {
     if (killer) {
       killer.kills++;
       killer.score += 100;
-      killer.gold += 65; // Recompensa em ouro pelo abate!
-      broadcastKillFeed(`⚡ ${killer.name} derrotou ${victim.name} (+65 🪙)!`);
+      killer.gold += 70;
+      broadcastKillFeed(`⚡ ${killer.name} derrotou ${victim.name} (+70 🪙)!`);
     } else {
       broadcastKillFeed(`💀 ${victim.name} foi eliminado!`);
     }
 
-    // Renascimento em ponto aleatório da jornada
     setTimeout(() => {
       const respawn = getSpreadSpawn(false);
       victim.x = respawn.x;
@@ -1001,7 +1159,7 @@ setInterval(gameTick, 1000 / TICK_RATE);
 server.listen(PORT, '0.0.0.0', () => {
   const nets = os.networkInterfaces();
   console.log('\n===============================================================');
-  console.log('       ⚔️  JORNADA II: CIDADE & ARENA DOS CAMPEÕES ⚔️           ');
+  console.log('       ⚔️  JORNADA II: CIDADE, CASAS & GEMAS MÍSTICAS ⚔️        ');
   console.log('===============================================================');
   console.log(` ✅ Servidor Ativo e Escutando na porta: ${PORT}`);
   console.log('\n 🔗 Endereços para Conexão:');
@@ -1015,7 +1173,8 @@ server.listen(PORT, '0.0.0.0', () => {
     }
   }
   
-  console.log('\n 🏰 Cidade Central: Com lojas de Espadas, Poções e Super Poderes!');
-  console.log(' 🗺️ Mapa Expandido: Biomas, Baús de Ouro e Inimigos Espalhados!');
+  console.log('\n 🏰 Casas, Lojas e Prédios da Cidade no centro do mapa!');
+  console.log(' 💎 Mineração de Gemas, Barris de Ouro e Colosso Errante!');
+  console.log(' 🧙‍♂️ 4 Classes de Personagem personalizáveis!');
   console.log('===============================================================\n');
 });
