@@ -1031,9 +1031,13 @@ function updateBotAI(bot, now) {
       bot.input.attack = minDist <= 85;
     }
   } else {
-    bot.input.up = true;
+    if (bot.isWandering === undefined) bot.isWandering = Math.random() > 0.4;
+    if (Math.random() < 0.02) {
+      bot.isWandering = !bot.isWandering;
+      if (bot.isWandering) bot.angle += (Math.random() - 0.5) * 2;
+    }
+    bot.input.up = !!bot.isWandering;
     bot.input.attack = false;
-    if (Math.random() < 0.03) bot.angle += (Math.random() - 0.5) * 1.5;
   }
 }
 
@@ -1138,6 +1142,8 @@ function gameTick() {
 
     if (len > 0) {
       ent.walkStep = (ent.walkStep || 0) + 0.25;
+    } else {
+      ent.walkStep = 0;
     }
 
     if (ent.input.dash && ent.dashCooldown <= 0 && ent.stamina >= 25) {
