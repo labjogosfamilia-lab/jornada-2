@@ -984,7 +984,7 @@ function executeOfflineAttack(attacker, isPlayer) {
             updateKillfeed([{ text: `⚔️ ${localPlayer.name} derrotou ${b.name} (+70 🪙)!` }]);
             checkOfflineQuestProgress('kill');
             setTimeout(() => {
-              const sp = getOfflineSpawnPoint();
+              const sp = b.isOtherPlayer ? { x: 12000 + (Math.random() - 0.5) * 160, y: 12000 + (Math.random() - 0.5) * 160 } : getOfflineSpawnPoint();
               b.hp = b.maxHp;
               b.isDead = false;
               b.shieldTimer = 3;
@@ -1349,7 +1349,45 @@ function startOfflineSimulation() {
     });
   });
 
-// Loop de Simulação Offline (30 FPS)
+  // 3 OUTROS JOGADORES NO SANTUÁRIO CENTRAL (12000, 12000)
+  const otherPlayersData = [
+    { id: 'player_pedro', name: '👑 Jogador 2 (Pedro)', class: 'warrior', x: 12080, y: 12030, weapon: 'sword_iron', color: '#2ed573' },
+    { id: 'player_sofia', name: '👑 Jogadora 3 (Sofia)', class: 'mage', x: 11930, y: 12050, weapon: 'staff_astral', color: '#a29bfe' },
+    { id: 'player_lucas', name: '👑 Campeão (Lucas)', class: 'ranger', x: 12040, y: 11920, weapon: 'sword_rune', color: '#ffa502' }
+  ];
+
+  otherPlayersData.forEach(op => {
+    const bData = CHARACTER_CLASSES[op.class] || CHARACTER_CLASSES.warrior;
+    serverBots.set(op.id, {
+      id: op.id,
+      isBot: false,
+      isOtherPlayer: true,
+      isDead: false,
+      name: op.name,
+      charClass: op.class,
+      color: op.color || bData.color,
+      hairColor: bData.hairColor,
+      skinColor: bData.skinColor,
+      x: op.x,
+      y: op.y,
+      vx: 0,
+      vy: 0,
+      walkStep: 0,
+      speed: 4.8,
+      angle: Math.random() * Math.PI * 2,
+      hp: 120,
+      maxHp: 120,
+      gold: 150,
+      score: 180,
+      shieldTimer: 3,
+      weapon: op.weapon,
+      radius: 24,
+      dashCooldown: 0,
+      attackCooldown: 0
+    });
+  });
+
+  // Loop de Simulação Offline (30 FPS)
   offlineSimulationInterval = setInterval(() => {
     if (!isOfflineMode || !localPlayer) return;
 
@@ -1779,7 +1817,7 @@ function startOfflineSimulation() {
               updateKillfeed([{ text: `⚡ ${localPlayer.name} derrotou ${b.name} (+70 🪙)!` }]);
               checkOfflineQuestProgress('kill');
               setTimeout(() => {
-                const sp = getOfflineSpawnPoint();
+                const sp = b.isOtherPlayer ? { x: 12000 + (Math.random() - 0.5) * 160, y: 12000 + (Math.random() - 0.5) * 160 } : getOfflineSpawnPoint();
                 b.hp = b.maxHp;
                 b.isDead = false;
                 b.shieldTimer = 3;
@@ -2515,6 +2553,9 @@ function render() {
   drawWindLeaves();
   drawFireflies();
 
+  // 16. Bússola e Radar de Rastreamento de Outros Jogadores
+  drawPlayerRadar();
+
   drawMinimap();
 }
 
@@ -2911,6 +2952,20 @@ function drawCharacter(ent) {
   }
 
   // --- PERSONAGEM VIVO ---
+  // Destaque de Chão para Outro Jogador Real
+  if (ent.id !== myId && (!ent.isBot || ent.isOtherPlayer)) {
+    const ringPulse = 28 + Math.sin(Date.now() / 150) * 3;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(0, 0, ringPulse, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.75)';
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = '#00e5ff';
+    ctx.shadowBlur = 14;
+    ctx.stroke();
+    ctx.restore();
+  }
+
   // 1. Sombra nos Pés
   ctx.beginPath();
   ctx.ellipse(0, 14, 16, 7, 0, 0, Math.PI * 2);
@@ -3091,14 +3146,31 @@ function drawCharacter(ent) {
   ctx.fillStyle = ent.isBot ? '#ffa502' : '#2ed573';
   ctx.fillRect(-barWidth / 2, -32, barWidth * hpRatio, barHeight);
 
-  ctx.font = 'bold 11px Segoe UI, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = ent.id === myId ? '#ffd32a' : '#ffffff';
-  ctx.shadowColor = '#000000';
-  ctx.shadowBlur = 4;
+  const isOther = ent.id !== myId && (!ent.isBot || ent.isOtherPlayer);
   const clIcons = { warrior: '🗡️', mage: '🧙‍♂️', ranger: '🏹', shadow: '🥷' };
   const icon = clIcons[ent.charClass] || '⚔️';
-  ctx.fillText(`${icon} ${ent.name}`, 0, -38);
+
+  if (isOther) {
+    ctx.font = 'bold 10px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffd32a';
+    ctx.shadowColor = '#000000';
+    ctx.shadowBlur = 6;
+    ctx.fillText('👑 OUTRO JOGADOR', 0, -50);
+
+    ctx.font = 'bold 12px Segoe UI, sans-serif';
+    ctx.fillStyle = '#00e5ff';
+    ctx.shadowColor = '#00e5ff';
+    ctx.shadowBlur = 8;
+    ctx.fillText(`${icon} ${ent.name}`, 0, -36);
+  } else {
+    ctx.font = 'bold 11px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = ent.id === myId ? '#ffd32a' : '#ffffff';
+    ctx.shadowColor = '#000000';
+    ctx.shadowBlur = 4;
+    ctx.fillText(`${icon} ${ent.name}`, 0, -38);
+  }
 
   ctx.restore();
 }
@@ -3806,6 +3878,132 @@ function drawObstacle(obs) {
   ctx.restore();
 }
 
+// -------------------------------------------------------------
+// BÚSSOLA E RADAR DE RASTREAMENTO DOS OUTROS JOGADORES
+// Exibe setas direcionais nas bordas da tela apontando para os outros jogadores
+// -------------------------------------------------------------
+function drawPlayerRadar() {
+  if (!localPlayer) return;
+
+  const others = [];
+  if (!isOfflineMode) {
+    for (const p of serverPlayers.values()) {
+      if (p.id !== myId && p.hp > 0 && !p.isDead) {
+        others.push(p);
+      }
+    }
+  } else {
+    for (const b of serverBots.values()) {
+      if (b.isOtherPlayer && b.hp > 0 && !b.isDead) {
+        others.push(b);
+      }
+    }
+  }
+
+  if (others.length === 0) return;
+
+  const cx = screenWidth / 2;
+  const cy = screenHeight / 2;
+  const clIcons = { warrior: '🗡️', mage: '🧙‍♂️', ranger: '🏹', shadow: '🥷' };
+
+  for (const p of others) {
+    const dx = p.x - camera.x;
+    const dy = p.y - camera.y;
+    const dist = Math.hypot(dx, dy);
+    const screenX = cx + dx;
+    const screenY = cy + dy;
+
+    // Se estiver fora da tela visível (com margem de segurança de 70px)
+    const pad = 70;
+    const isOffScreen = screenX < pad || screenX > screenWidth - pad || screenY < pad || screenY > screenHeight - pad;
+
+    if (isOffScreen) {
+      const angle = Math.atan2(dy, dx);
+      const meters = Math.max(1, Math.round(dist / 28));
+
+      const halfW = screenWidth / 2 - pad;
+      const halfH = screenHeight / 2 - pad;
+
+      let edgeX, edgeY;
+      const absCos = Math.abs(Math.cos(angle));
+      const absSin = Math.abs(Math.sin(angle));
+
+      if (halfW * absSin <= halfH * absCos) {
+        edgeX = cx + Math.sign(Math.cos(angle)) * halfW;
+        edgeY = cy + Math.sign(Math.cos(angle)) * halfW * Math.tan(angle);
+      } else {
+        edgeY = cy + Math.sign(Math.sin(angle)) * halfH;
+        edgeX = cx + Math.sign(Math.sin(angle)) * halfH / Math.tan(angle);
+      }
+
+      ctx.save();
+      ctx.translate(edgeX, edgeY);
+
+      // 1. Seta indicadora de direção
+      ctx.save();
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(18, 0);
+      ctx.lineTo(-6, -9);
+      ctx.lineTo(-2, 0);
+      ctx.lineTo(-6, 9);
+      ctx.closePath();
+      ctx.fillStyle = '#00e5ff';
+      ctx.shadowColor = '#00e5ff';
+      ctx.shadowBlur = 12;
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+
+      // 2. Placa informativa flutuante
+      const icon = clIcons[p.charClass] || '⚔️';
+      const cleanName = (p.name || 'Jogador').replace(' (BOT)', '');
+      const badgeText = `${icon} ${cleanName} (${meters}m)`;
+
+      ctx.font = 'bold 11px Segoe UI, sans-serif';
+      const textWidth = ctx.measureText(badgeText).width;
+      const boxW = Math.max(86, textWidth + 18);
+      const boxH = 24;
+
+      const offsetDist = 28;
+      const badgeX = -Math.cos(angle) * offsetDist;
+      const badgeY = -Math.sin(angle) * offsetDist;
+
+      ctx.translate(badgeX, badgeY);
+
+      // Fundo estilizado com borda néon ciano
+      ctx.beginPath();
+      ctx.roundRect(-boxW / 2, -boxH / 2, boxW, boxH, 6);
+      ctx.fillStyle = 'rgba(10, 15, 25, 0.9)';
+      ctx.fill();
+      ctx.strokeStyle = '#00e5ff';
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = '#00e5ff';
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+
+      // Barra de Vida
+      const hpPct = Math.max(0, Math.min(1, (p.hp || 0) / (p.maxHp || 100)));
+      ctx.fillStyle = '#ff4757';
+      ctx.fillRect(-boxW / 2 + 4, -boxH / 2 + 2, boxW - 8, 2.5);
+      ctx.fillStyle = '#2ed573';
+      ctx.fillRect(-boxW / 2 + 4, -boxH / 2 + 2, (boxW - 8) * hpPct, 2.5);
+
+      // Texto com sombra
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#000000';
+      ctx.shadowBlur = 4;
+      ctx.fillText(badgeText, 0, 3);
+
+      ctx.restore();
+    }
+  }
+}
+
 function drawMinimap() {
   mCtx.clearRect(0, 0, 160, 160);
   const sx = 160 / arena.width;
@@ -3864,23 +4062,69 @@ function drawMinimap() {
     }
   }
 
-  // Bots
+  // Bots Comuns
   mCtx.fillStyle = '#ffa502';
   for (const b of serverBots.values()) {
-    if (b.hp > 0 && !b.isDead) {
+    if (b.hp > 0 && !b.isDead && !b.isOtherPlayer) {
       mCtx.beginPath();
       mCtx.arc(b.x * sx, b.y * sy, 2, 0, Math.PI * 2);
       mCtx.fill();
     }
   }
 
-  // Jogadores
+  // Jogadores (Online e Offline) com Farol / Beacon Pulsante e Nomes
+  const playersToDraw = [];
   for (const p of serverPlayers.values()) {
-    if (p.hp > 0 && !p.isDead) {
-      mCtx.fillStyle = p.id === myId ? '#ffffff' : '#00e5ff';
+    if (p.hp > 0 && !p.isDead) playersToDraw.push({ ...p, isSelf: p.id === myId });
+  }
+  if (isOfflineMode) {
+    for (const b of serverBots.values()) {
+      if (b.isOtherPlayer && b.hp > 0 && !b.isDead) {
+        playersToDraw.push({ ...b, isSelf: false });
+      }
+    }
+  }
+
+  for (const p of playersToDraw) {
+    const px = p.x * sx;
+    const py = p.y * sy;
+    if (p.isSelf) {
+      // Jogador Local (Você): Ponto branco com anel verde
       mCtx.beginPath();
-      mCtx.arc(p.x * sx, p.y * sy, p.id === myId ? 4 : 2.5, 0, Math.PI * 2);
+      mCtx.arc(px, py, 6, 0, Math.PI * 2);
+      mCtx.strokeStyle = '#2ed573';
+      mCtx.lineWidth = 1.5;
+      mCtx.stroke();
+
+      mCtx.beginPath();
+      mCtx.arc(px, py, 4, 0, Math.PI * 2);
+      mCtx.fillStyle = '#ffffff';
       mCtx.fill();
+    } else {
+      // Outro Jogador: Anel pulsante ciano/dourado + Marcador + Nome
+      const pulse = ((Date.now() / 350) % 1);
+      mCtx.beginPath();
+      mCtx.arc(px, py, 4 + pulse * 6, 0, Math.PI * 2);
+      mCtx.strokeStyle = `rgba(0, 229, 255, ${1 - pulse})`;
+      mCtx.lineWidth = 1.5;
+      mCtx.stroke();
+
+      mCtx.beginPath();
+      mCtx.arc(px, py, 4.5, 0, Math.PI * 2);
+      mCtx.fillStyle = '#00e5ff';
+      mCtx.fill();
+      mCtx.strokeStyle = '#ffffff';
+      mCtx.lineWidth = 1;
+      mCtx.stroke();
+
+      // Nome do outro jogador no minimapa
+      mCtx.font = 'bold 9px Segoe UI, sans-serif';
+      mCtx.fillStyle = '#00e5ff';
+      mCtx.textAlign = 'center';
+      mCtx.shadowColor = '#000000';
+      mCtx.shadowBlur = 3;
+      mCtx.fillText('👑 ' + (p.name || 'Jogador').replace(' (BOT)', ''), px, py - 7);
+      mCtx.shadowBlur = 0;
     }
   }
 }
