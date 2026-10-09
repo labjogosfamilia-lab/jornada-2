@@ -343,7 +343,11 @@ const POWER_QUESTS = [
   { id: 'q_beam', name: '🏹 Harmonia Astral', desc: 'Minere 2 Cristais de Gemas', target: 2, type: 'mine', rewardPower: 'power_beam', powerName: 'Raio Astral [F]' },
   { id: 'q_fire', name: '🔥 Fogo Ancestral', desc: 'Derrote 3 Inimigos na Floresta', target: 3, type: 'kill', rewardPower: 'power_fire', powerName: 'Meteoro Flamejante [C]' },
   { id: 'q_shield', name: '🛡️ Relíquia Sagrada', desc: 'Abra 3 Baús de Tesouro', target: 3, type: 'chest', rewardPower: 'power_shield', powerName: 'Escudo Divino [V]' },
-  { id: 'q_nature', name: '🌪️ Fúria da Floresta', desc: 'Derrote 1 Chefe Ancião da Mata', target: 1, type: 'boss', rewardPower: 'power_nature', powerName: 'Ciclone de Folhas [T]' }
+  { id: 'q_nature', name: '🌪️ Fúria da Floresta', desc: 'Derrote 1 Chefe Ancião da Mata', target: 1, type: 'boss', rewardPower: 'power_nature', powerName: 'Ciclone de Folhas [T]' },
+  { id: 'q_thunder', name: '⚡ Julgamento dos Relâmpagos', desc: 'Derrote 4 Inimigos na Floresta', target: 4, type: 'kill', rewardPower: 'power_thunder', powerName: 'Julgamento do Trovão [G]' },
+  { id: 'q_blizzard', name: '❄️ Coração do Inverno', desc: 'Abra 4 Baús de Tesouro na Floresta', target: 4, type: 'chest', rewardPower: 'power_blizzard', powerName: 'Nevasca Glacial [B]' },
+  { id: 'q_blackhole', name: '🌑 Singularidade do Vazio', desc: 'Minere 4 Cristais de Gemas Sagradas', target: 4, type: 'mine', rewardPower: 'power_blackhole', powerName: 'Singularidade do Vazio [Z]' },
+  { id: 'q_dragon', name: '🐉 Despertar do Dragão Ancestral', desc: 'Derrote 2 Titãs Chefes da Floresta', target: 2, type: 'boss', rewardPower: 'power_dragon', powerName: 'Sopro do Dragão Ancestral [X]' }
 ];
 
 // Elementos do Mundo da Floresta
@@ -569,8 +573,8 @@ function onPlayerJoin(client) {
     xp: 0,
     weapon: 'fist',
     potions: { heal: 1, speed: 1, superHeal: 0, shield: 0, strength: 0 },
-    powers: { slam: false, beam: false, fire: false, shield: false, nature: false },
-    powerCooldowns: { slam: 0, beam: 0, fire: 0, shield: 0, nature: 0 },
+    powers: { slam: false, beam: false, fire: false, shield: false, nature: false, thunder: false, blizzard: false, blackhole: false, dragon: false },
+    powerCooldowns: { slam: 0, beam: 0, fire: 0, shield: 0, nature: 0, thunder: 0, blizzard: 0, blackhole: 0, dragon: 0 },
     speedBoostTimer: 0,
     strengthTimer: 0,
     dashCooldown: 0,
@@ -578,7 +582,7 @@ function onPlayerJoin(client) {
     radius: 24,
     inSafeZone: true,
     activeQuests: POWER_QUESTS.map(q => ({ ...q, current: 0, completed: false })),
-    input: { up: false, down: false, left: false, right: false, attack: false, dash: false, sprint: false, powerSlam: false, powerBeam: false, powerFire: false, powerShield: false, powerNature: false, useHeal: false, useSpeed: false, useSuperHeal: false, useShieldPot: false, useStrengthPot: false, angle: 0 }
+    input: { up: false, down: false, left: false, right: false, attack: false, dash: false, sprint: false, powerSlam: false, powerBeam: false, powerFire: false, powerShield: false, powerNature: false, powerThunder: false, powerBlizzard: false, powerBlackHole: false, powerDragon: false, useHeal: false, useSpeed: false, useSuperHeal: false, useShieldPot: false, useStrengthPot: false, angle: 0 }
   };
 
   players.set(client.id, player);
@@ -671,6 +675,26 @@ function onClientMessage(client, msg) {
     if (msg.input?.powerNature && p.powers.nature && p.powerCooldowns.nature <= 0 ) {
       p.powerCooldowns.nature = 9;
       executeNatureCyclone(p);
+    }
+
+    if (msg.input?.powerThunder && p.powers.thunder && p.powerCooldowns.thunder <= 0) {
+      p.powerCooldowns.thunder = 9;
+      executeThunderStrike(p);
+    }
+
+    if (msg.input?.powerBlizzard && p.powers.blizzard && p.powerCooldowns.blizzard <= 0) {
+      p.powerCooldowns.blizzard = 8;
+      executeBlizzardBlast(p);
+    }
+
+    if (msg.input?.powerBlackHole && p.powers.blackhole && p.powerCooldowns.blackhole <= 0) {
+      p.powerCooldowns.blackhole = 11;
+      executeBlackHole(p);
+    }
+
+    if (msg.input?.powerDragon && p.powers.dragon && p.powerCooldowns.dragon <= 0) {
+      p.powerCooldowns.dragon = 13;
+      executeDragonBreath(p);
     }
   } else if (msg.type === 'set_profile') {
     if (typeof msg.name === 'string' && msg.name.trim().length > 0) {
@@ -834,6 +858,111 @@ function executeNatureCyclone(caster) {
   if (secondBoss && secondBoss.hp > 0 && Math.hypot(secondBoss.x - caster.x, secondBoss.y - caster.y) < 260) {
     secondBoss.hp -= 60;
     checkBossDeath(caster, secondBoss);
+  }
+}
+
+function executeThunderStrike(caster) {
+  broadcast({ type: 'effect', name: 'thunder_strike', x: caster.x, y: caster.y, radius: 280, color: '#f1c40f' });
+
+  const targets = [...players.values(), ...bots.values()];
+  for (const t of targets) {
+    if (t.id === caster.id || t.hp <= 0 || t.isDead || t.inSafeZone || t.shieldTimer > 0) continue;
+    if (Math.hypot(t.x - caster.x, t.y - caster.y) < 280) {
+      t.hp -= 55;
+      const pa = Math.atan2(t.y - caster.y, t.x - caster.x);
+      t.x += Math.cos(pa) * 75;
+      t.y += Math.sin(pa) * 75;
+      checkEntityDeath(t, caster);
+    }
+  }
+
+  const bosses = [worldBoss, secondBoss, thirdBoss, fourthBoss];
+  for (const b of bosses) {
+    if (b && b.hp > 0 && Math.hypot(b.x - caster.x, b.y - caster.y) < 300) {
+      b.hp -= 65;
+      checkBossDeath(caster, b);
+    }
+  }
+}
+
+function executeBlizzardBlast(caster) {
+  broadcast({ type: 'effect', name: 'blizzard_blast', x: caster.x, y: caster.y, radius: 320, color: '#74b9ff' });
+
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    createProjectile(caster, { color: '#74b9ff', damage: 34 }, a);
+  }
+
+  const targets = [...players.values(), ...bots.values()];
+  for (const t of targets) {
+    if (t.id === caster.id || t.hp <= 0 || t.isDead || t.inSafeZone || t.shieldTimer > 0) continue;
+    if (Math.hypot(t.x - caster.x, t.y - caster.y) < 260) {
+      t.hp -= 30;
+      checkEntityDeath(t, caster);
+    }
+  }
+}
+
+function executeBlackHole(caster) {
+  const holeX = caster.x + Math.cos(caster.angle) * 180;
+  const holeY = caster.y + Math.sin(caster.angle) * 180;
+
+  broadcast({ type: 'effect', name: 'black_hole', x: holeX, y: holeY, radius: 350 });
+
+  const targets = [...players.values(), ...bots.values()];
+  for (const t of targets) {
+    if (t.id === caster.id || t.hp <= 0 || t.isDead || t.inSafeZone || t.shieldTimer > 0) continue;
+    if (Math.hypot(t.x - holeX, t.y - holeY) < 350) {
+      t.hp -= 68;
+      const pa = Math.atan2(holeY - t.y, holeX - t.x);
+      t.x += Math.cos(pa) * 120;
+      t.y += Math.sin(pa) * 120;
+      checkEntityDeath(t, caster);
+    }
+  }
+
+  const bosses = [worldBoss, secondBoss, thirdBoss, fourthBoss];
+  for (const b of bosses) {
+    if (b && b.hp > 0 && Math.hypot(b.x - holeX, b.y - holeY) < 360) {
+      b.hp -= 75;
+      checkBossDeath(caster, b);
+    }
+  }
+}
+
+function executeDragonBreath(caster) {
+  broadcast({ type: 'effect', name: 'dragon_breath', x: caster.x, y: caster.y, angle: caster.angle, reach: 460 });
+
+  const maxReach = 460;
+  const maxCone = 0.65; // ~74 graus
+
+  const targets = [...players.values(), ...bots.values()];
+  for (const t of targets) {
+    if (t.id === caster.id || t.hp <= 0 || t.isDead || t.inSafeZone || t.shieldTimer > 0) continue;
+    const dist = Math.hypot(t.x - caster.x, t.y - caster.y);
+    if (dist <= maxReach) {
+      const dir = Math.atan2(t.y - caster.y, t.x - caster.x);
+      if (calcAngleDiff(dir, caster.angle) < maxCone) {
+        t.hp -= 85;
+        t.x += Math.cos(caster.angle) * 70;
+        t.y += Math.sin(caster.angle) * 70;
+        checkEntityDeath(t, caster);
+      }
+    }
+  }
+
+  const bosses = [worldBoss, secondBoss, thirdBoss, fourthBoss];
+  for (const b of bosses) {
+    if (b && b.hp > 0) {
+      const dist = Math.hypot(b.x - caster.x, b.y - caster.y);
+      if (dist <= maxReach + b.radius) {
+        const dir = Math.atan2(b.y - caster.y, b.x - caster.x);
+        if (calcAngleDiff(dir, caster.angle) < maxCone) {
+          b.hp -= 110;
+          checkBossDeath(caster, b);
+        }
+      }
+    }
   }
 }
 
@@ -1175,6 +1304,10 @@ function gameTick() {
       if (ent.powerCooldowns.fire > 0) ent.powerCooldowns.fire -= 1 / TICK_RATE;
       if (ent.powerCooldowns.shield > 0) ent.powerCooldowns.shield -= 1 / TICK_RATE;
       if (ent.powerCooldowns.nature > 0) ent.powerCooldowns.nature -= 1 / TICK_RATE;
+      if (ent.powerCooldowns.thunder > 0) ent.powerCooldowns.thunder -= 1 / TICK_RATE;
+      if (ent.powerCooldowns.blizzard > 0) ent.powerCooldowns.blizzard -= 1 / TICK_RATE;
+      if (ent.powerCooldowns.blackhole > 0) ent.powerCooldowns.blackhole -= 1 / TICK_RATE;
+      if (ent.powerCooldowns.dragon > 0) ent.powerCooldowns.dragon -= 1 / TICK_RATE;
     }
 
     let dx = 0, dy = 0;
@@ -1392,7 +1525,11 @@ function gameTick() {
         beam: Number((p.powerCooldowns?.beam || 0).toFixed(1)),
         fire: Number((p.powerCooldowns?.fire || 0).toFixed(1)),
         shield: Number((p.powerCooldowns?.shield || 0).toFixed(1)),
-        nature: Number((p.powerCooldowns?.nature || 0).toFixed(1))
+        nature: Number((p.powerCooldowns?.nature || 0).toFixed(1)),
+        thunder: Number((p.powerCooldowns?.thunder || 0).toFixed(1)),
+        blizzard: Number((p.powerCooldowns?.blizzard || 0).toFixed(1)),
+        blackhole: Number((p.powerCooldowns?.blackhole || 0).toFixed(1)),
+        dragon: Number((p.powerCooldowns?.dragon || 0).toFixed(1))
       },
       score: p.score,
       kills: p.kills,
