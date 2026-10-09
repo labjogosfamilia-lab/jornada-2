@@ -63,7 +63,11 @@
           <small style="color: #70a1ff; font-size: 11px; display: block; margin-top: 4px;">Deixe vazio ou padrão para jogar no servidor local / bots.</small>
         </div>
 
-        <button id="btn-start" class="btn-play">ENTRAR NA FLORESTA</button>
+        <div id="continue-save-container" style="display: none; margin-bottom: 10px;">
+          <button id="btn-continue-save" class="btn-continue">▶️ CONTINUAR JORNADA (<span id="continue-save-info">Nv. 1</span>)</button>
+        </div>
+
+        <button id="btn-start" class="btn-play">ENTRAR NA FLORESTA (NOVO JOGO)</button>
 
         <div class="server-info-badge">
           <span id="server-status-dot">🟡 Conectando...</span>
@@ -73,6 +77,9 @@
       </div>
     </div>
 
+    <!-- Notificação de Jogo Salvo -->
+    <div id="save-toast" class="save-toast" style="display: none;">💾 Progresso Salvo com Sucesso!</div>
+
     <!-- Interface em Jogo (HUD) -->
     <div id="hud-overlay" style="display: none;">
       <!-- Placar de Líderes -->
@@ -81,11 +88,11 @@
         <div id="lb-entries"></div>
       </div>
 
-      <!-- Barra Superior: Ouro, Nível de Elite e Tela Cheia -->
+      <!-- Barra Superior: Ouro, Nível de Elite, Salvar e Tela Cheia -->
       <div id="top-bar-hud">
         <div id="gold-badge">
           <span>🪙</span>
-          <span id="gold-val">50</span>
+          <span id="gold-val">0</span>
           <span style="font-size: 11px; color: #8899aa;">Ouro</span>
         </div>
         <div id="level-badge">
@@ -93,6 +100,7 @@
           <span id="level-val">Nv. 1</span>
           <div class="xp-bar-bg"><div id="xp-bar-fill" style="width: 0%;"></div></div>
         </div>
+        <button id="btn-save-game" class="btn-save-game" title="Salvar Progresso no Navegador">💾 Salvar</button>
         <button id="btn-fullscreen" class="btn-fullscreen" title="Tela Cheia">⛶</button>
       </div>
 
@@ -115,9 +123,9 @@
         <button id="btn-open-quests" class="btn-quest-open">⚡ Ver Missões de Poderes</button>
       </div>
 
-      <!-- Banner de Zona Segura (Floresta) -->
-      <div id="safe-zone-banner">
-        🌿 SANTUÁRIO DA FLORESTA (ZONA SEGURA)
+      <!-- Banner Informativo de Território Selvagem (SEM ÁREA SAFE!) -->
+      <div id="safe-zone-banner" style="display: none;">
+        🌲 TERRITÓRIO DA FLORESTA (ZONA DE COMBATE LIVRE)
       </div>
 
       <!-- Tela de Morte / Renascimento -->
