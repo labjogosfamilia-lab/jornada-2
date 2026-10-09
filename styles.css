@@ -799,6 +799,171 @@ canvas#minimapCanvas {
   font-size: 11px;
   color: #2ed573;
   font-weight: 700;
+  margin-bottom: 6px;
 }
+
+.btn-quest-open {
+  width: 100%;
+  padding: 5px 8px;
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  border: 1px solid #f1c40f;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(243, 156, 18, 0.4);
+}
+
+.btn-quest-open:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.7);
+}
+
+/* -----------------------------------------------------------
+   MODAL DE MISSÕES DE SUPER PODERES
+   ----------------------------------------------------------- */
+#quests-modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 14, 23, 0.85);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 120;
+}
+
+.quests-window {
+  background: linear-gradient(145deg, #1b263b, #0d1b2a);
+  border: 2px solid #f39c12;
+  border-radius: 16px;
+  width: 580px;
+  max-width: 92%;
+  padding: 24px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(243, 156, 18, 0.3);
+  color: #fff;
+}
+
+.quests-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(243, 156, 18, 0.3);
+  padding-bottom: 12px;
+  margin-bottom: 10px;
+}
+
+.quests-header h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #f1c40f;
+  letter-spacing: 0.5px;
+}
+
+.quests-close-btn {
+  background: transparent;
+  border: none;
+  color: #a4b0be;
+  font-size: 26px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.quests-close-btn:hover {
+  color: #ff4757;
+}
+
+.quests-intro {
+  font-size: 12px;
+  color: #8899aa;
+  margin-bottom: 16px;
+}
+
+.quests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.quest-card {
+  background: rgba(13, 27, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.2s;
+}
+
+.quest-card.completed {
+  border-color: #2ed573;
+  background: rgba(46, 213, 115, 0.08);
+}
+
+.quest-card-info h4 {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #ffffff;
+}
+
+.quest-card-info p {
+  font-size: 12px;
+  color: #ced6e0;
+  margin-bottom: 6px;
+}
+
+.quest-card-reward {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffd32a;
+}
+
+.quest-card-status {
+  text-align: right;
+  min-width: 130px;
+}
+
+.quest-progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.quest-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f39c12, #2ed573);
+  transition: width 0.3s;
+}
+
+.quest-status-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: #70a1ff;
+}
+
+.quest-badge-done {
+  display: inline-block;
+  padding: 4px 10px;
+  background: rgba(46, 213, 115, 0.2);
+  border: 1px solid #2ed573;
+  border-radius: 12px;
+  color: #2ed573;
+  font-size: 11px;
+  font-weight: 800;
+}
+
 
 
