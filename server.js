@@ -572,6 +572,7 @@ function onPlayerJoin(client) {
     level: 1,
     xp: 0,
     weapon: 'fist',
+    ownedWeapons: ['fist'],
     potions: { heal: 1, speed: 1, superHeal: 0, shield: 0, strength: 0 },
     powers: { slam: false, beam: false, fire: false, shield: false, nature: false, thunder: false, blizzard: false, blackhole: false, dragon: false },
     powerCooldowns: { slam: 0, beam: 0, fire: 0, shield: 0, nature: 0, thunder: 0, blizzard: 0, blackhole: 0, dragon: 0 },
@@ -737,14 +738,25 @@ function handleShopPurchase(player, category, itemId) {
   const items = SHOP_CATALOG[category];
   if (!items) return;
   const item = items.find(it => it.id === itemId);
-  if (!item || player.gold < item.cost) return;
-
-  player.gold -= item.cost;
+  if (!item) return;
 
   if (category === 'weapons') {
-    player.weapon = item.id;
-    broadcastKillFeed(`⚔️ ${player.name} comprou: ${item.name}!`);
+    if (!player.ownedWeapons) player.ownedWeapons = ['fist'];
+    const alreadyOwned = player.ownedWeapons.includes(item.id);
+
+    if (alreadyOwned) {
+      player.weapon = item.id;
+      broadcastKillFeed(`⚔️ ${player.name} equipou: ${item.name}!`);
+    } else {
+      if (player.gold < item.cost) return;
+      player.gold -= item.cost;
+      player.weapon = item.id;
+      player.ownedWeapons.push(item.id);
+      broadcastKillFeed(`⚔️ ${player.name} forjou e desbloqueou: ${item.name}!`);
+    }
   } else if (category === 'potions') {
+    if (player.gold < item.cost) return;
+    player.gold -= item.cost;
     if (itemId === 'potion_heal') player.potions.heal = (player.potions.heal || 0) + 1;
     if (itemId === 'potion_speed') player.potions.speed = (player.potions.speed || 0) + 1;
     if (itemId === 'potion_super_heal') player.potions.superHeal = (player.potions.superHeal || 0) + 1;
@@ -756,6 +768,7 @@ function handleShopPurchase(player, category, itemId) {
     type: 'inventory_update',
     gold: player.gold,
     weapon: player.weapon,
+    ownedWeapons: player.ownedWeapons,
     potions: player.potions,
     powers: player.powers
   });
@@ -1516,6 +1529,7 @@ function gameTick() {
       stamina: Math.round(p.stamina),
       gold: p.gold,
       weapon: p.weapon,
+      ownedWeapons: p.ownedWeapons || ['fist'],
       shieldTimer: Number((p.shieldTimer || 0).toFixed(1)),
       isDead: p.isDead || false,
       potions: p.potions,
