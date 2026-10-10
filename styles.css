@@ -435,6 +435,28 @@ canvas#minimapCanvas {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
+#weapon-badge {
+  background: rgba(12, 17, 28, 0.88);
+  border: 1px solid rgba(0, 229, 255, 0.45);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #00e5ff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+#weapon-badge:hover {
+  transform: scale(1.05);
+  border-color: #00e5ff;
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.5);
+}
+
 .xp-bar-bg {
   width: 70px;
   height: 6px;
@@ -784,11 +806,25 @@ canvas#minimapCanvas {
   box-shadow: 0 0 12px rgba(255, 211, 42, 0.5);
 }
 
-.btn-buy-item.owned {
-  background: #2ed573;
+.btn-buy-item.owned,
+.btn-buy-item.equipped {
+  background: linear-gradient(135deg, #2ed573, #26af5f);
   color: #fff;
   cursor: default;
-  pointer-events: none;
+  box-shadow: 0 0 10px rgba(46, 213, 115, 0.4);
+}
+
+.btn-buy-item.btn-equip-free {
+  background: linear-gradient(135deg, #00d2d3, #0984e3);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(0, 210, 211, 0.45);
+}
+
+.btn-buy-item.btn-equip-free:hover {
+  transform: scale(1.06);
+  background: linear-gradient(135deg, #00e5ff, #00cec9);
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.7);
 }
 
 /* -----------------------------------------------------------
