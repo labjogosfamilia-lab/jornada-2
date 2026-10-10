@@ -588,6 +588,7 @@ function saveGame(showToast = true) {
     xp: localPlayer.xp || 0,
     maxXp: localPlayer.maxXp || 100,
     weapon: localPlayer.weapon || 'fist',
+    ownedWeapons: localPlayer.ownedWeapons || [localPlayer.weapon || 'fist'],
     potions: localPlayer.potions || { heal: 0, speed: 0, superHeal: 0, shield: 0, strength: 0 },
     powers: localPlayer.powers || { slam: false, beam: false, fire: false, shield: false, nature: false, thunder: false, blizzard: false, blackhole: false, dragon: false },
     activeQuests: localPlayer.activeQuests || POWER_QUESTS,
@@ -1169,6 +1170,7 @@ function startOfflineSimulation() {
     kills: 0,
     minedCount: 0,
     weapon: 'fist',
+    ownedWeapons: ['fist'],
     potions: { heal: 0, speed: 0, superHeal: 0, shield: 0, strength: 0 },
     powers: { slam: false, beam: false, fire: false, shield: false, nature: false, thunder: false, blizzard: false, blackhole: false, dragon: false },
     powerCooldowns: { slam: 0, beam: 0, fire: 0, shield: 0, nature: 0, thunder: 0, blizzard: 0, blackhole: 0, dragon: 0 },
@@ -2093,11 +2095,18 @@ function handleServerMessage(msg) {
     if (localPlayer) {
       localPlayer.gold = msg.gold;
       localPlayer.weapon = msg.weapon;
+      if (msg.ownedWeapons) {
+        localPlayer.ownedWeapons = msg.ownedWeapons;
+      } else {
+        if (!localPlayer.ownedWeapons) localPlayer.ownedWeapons = ['fist'];
+        if (!localPlayer.ownedWeapons.includes(msg.weapon)) localPlayer.ownedWeapons.push(msg.weapon);
+      }
       localPlayer.potions = msg.potions;
       localPlayer.powers = msg.powers;
       updateHUD(localPlayer);
       renderShopItems();
       renderQuestsList();
+      saveGame(false);
     }
   }
 }
@@ -2169,6 +2178,12 @@ function updateHUD(player) {
   document.getElementById('stamina-val').innerText = `${Math.round(player.stamina)} / 100`;
 
   document.getElementById('gold-val').innerText = player.gold || 0;
+
+  const wEl = document.getElementById('weapon-val');
+  if (wEl) {
+    const wData = SHOP_CATALOG.weapons.find(w => w.id === player.weapon);
+    wEl.innerText = wData ? wData.name.split(' ')[0] : 'Punhos';
+  }
 
   const banner = document.getElementById('safe-zone-banner');
   if (banner) banner.style.display = player.inSafeZone ? 'block' : 'none';
@@ -2376,27 +2391,60 @@ function renderShopItems() {
   container.innerHTML = '';
   const items = shopCatalog[currentShopTab] || [];
 
+  if (currentShopTab === 'weapons' && (!localPlayer.ownedWeapons || !Array.isArray(localPlayer.ownedWeapons))) {
+    localPlayer.ownedWeapons = ['fist'];
+    if (localPlayer.weapon && !localPlayer.ownedWeapons.includes(localPlayer.weapon)) {
+      localPlayer.ownedWeapons.push(localPlayer.weapon);
+    }
+  }
+
   items.forEach(item => {
     const card = document.createElement('div');
     card.className = 'shop-item-card';
 
+    let isEquipped = false;
     let isOwned = false;
-    if (currentShopTab === 'weapons' && localPlayer?.weapon === item.id) isOwned = true;
-    if (currentShopTab === 'powers' && localPlayer?.powers && localPlayer.powers[item.id.replace('power_', '')]) isOwned = true;
+
+    if (currentShopTab === 'weapons') {
+      isEquipped = (localPlayer?.weapon === item.id);
+      isOwned = (localPlayer?.ownedWeapons && localPlayer.ownedWeapons.includes(item.id)) || isEquipped;
+    }
+    if (currentShopTab === 'powers' && localPlayer?.powers && localPlayer.powers[item.id.replace('power_', '')]) {
+      isEquipped = true;
+      isOwned = true;
+    }
+
+    let btnText = '';
+    let btnClass = 'btn-buy-item';
+
+    if (currentShopTab === 'weapons') {
+      if (isEquipped) {
+        btnText = '✅ EQUIPADA';
+        btnClass += ' equipped';
+      } else if (isOwned) {
+        btnText = '⚔️ EQUIPAR (GRÁTIS)';
+        btnClass += ' btn-equip-free';
+      } else {
+        btnText = `🪙 ${item.cost} Ouro`;
+      }
+    } else {
+      btnText = isOwned ? 'DOMINADO' : `🪙 ${item.cost} Ouro`;
+      if (isOwned) btnClass += ' owned';
+    }
 
     card.innerHTML = `
       <div class="shop-item-info">
         <h4>${item.icon || '⚔️'} ${item.name}</h4>
         <p>${item.desc}</p>
       </div>
-      <button class="btn-buy-item ${isOwned ? 'owned' : ''}" data-id="${item.id}" data-category="${currentShopTab}">
-        ${isOwned ? 'DOMINADO' : `🪙 ${item.cost} Ouro`}
+      <button class="${btnClass}" data-id="${item.id}" data-category="${currentShopTab}" ${isEquipped ? 'disabled' : ''}>
+        ${btnText}
       </button>
     `;
     container.appendChild(card);
   });
 
-  container.querySelectorAll('.btn-buy-item:not(.owned)').forEach(btn => {
+  container.querySelectorAll('.btn-buy-item:not([disabled])').forEach(btn => {
     btn.addEventListener('click', () => buyItem(btn.dataset.category, btn.dataset.id));
   });
 }
@@ -2409,6 +2457,50 @@ function buyItem(category, itemId) {
   const item = shopCatalog[category]?.find(it => it.id === itemId);
   if (!item || !localPlayer) return;
 
+  if (category === 'weapons') {
+    if (!localPlayer.ownedWeapons) localPlayer.ownedWeapons = ['fist'];
+    const alreadyOwned = localPlayer.ownedWeapons.includes(itemId);
+
+    if (alreadyOwned) {
+      // Já comprou essa arma antes! Troca 100% GRÁTIS!
+      localPlayer.weapon = itemId;
+      sfx.playSwordSlash();
+      showSaveToast(`⚔️ ${item.name} equipada com sucesso!`);
+      updateKillfeed([{ text: `⚔️ ${localPlayer.name} equipou: ${item.name} (Gratuito)!` }]);
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'buy_item', category, itemId }));
+      }
+      updateHUD(localPlayer);
+      renderShopItems();
+      saveGame(false);
+      return;
+    }
+
+    // Primeira vez comprando essa espada: cobra ouro e adiciona permanentemente ao inventário
+    if (localPlayer.gold < item.cost) {
+      alert(`Ouro insuficiente! Você precisa de ${item.cost} de Ouro para comprar a ${item.name}!`);
+      return;
+    }
+
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: 'buy_item', category, itemId }));
+    } else {
+      localPlayer.gold -= item.cost;
+      localPlayer.weapon = itemId;
+      if (!localPlayer.ownedWeapons.includes(itemId)) {
+        localPlayer.ownedWeapons.push(itemId);
+      }
+      sfx.playCoin();
+      showSaveToast(`✨ ${item.name} comprada e desbloqueada para sempre!`);
+      updateKillfeed([{ text: `✨ ${localPlayer.name} comprou e desbloqueou permanentemente: ${item.name}!` }]);
+      updateHUD(localPlayer);
+      renderShopItems();
+      saveGame(false);
+    }
+    return;
+  }
+
+  // Poções
   if (localPlayer.gold < item.cost) {
     alert('Ouro insuficiente! Explore o grande mundo, derrote inimigos, abra baús e minere gemas para enriquecer!');
     return;
@@ -2419,23 +2511,59 @@ function buyItem(category, itemId) {
   } else {
     localPlayer.gold -= item.cost;
     sfx.playCoin();
-    if (category === 'weapons') localPlayer.weapon = item.id;
-    if (category === 'potions') {
-      if (itemId === 'potion_heal') localPlayer.potions.heal = (localPlayer.potions.heal || 0) + 1;
-      if (itemId === 'potion_speed') localPlayer.potions.speed = (localPlayer.potions.speed || 0) + 1;
-      if (itemId === 'potion_super_heal') localPlayer.potions.superHeal = (localPlayer.potions.superHeal || 0) + 1;
-      if (itemId === 'potion_shield') localPlayer.potions.shield = (localPlayer.potions.shield || 0) + 1;
-      if (itemId === 'potion_strength') localPlayer.potions.strength = (localPlayer.potions.strength || 0) + 1;
-    }
-    if (category === 'powers') {
-      const pKey = itemId.replace('power_', '');
-      localPlayer.powers[pKey] = true;
-    }
+    if (itemId === 'potion_heal') localPlayer.potions.heal = (localPlayer.potions.heal || 0) + 1;
+    if (itemId === 'potion_speed') localPlayer.potions.speed = (localPlayer.potions.speed || 0) + 1;
+    if (itemId === 'potion_super_heal') localPlayer.potions.superHeal = (localPlayer.potions.superHeal || 0) + 1;
+    if (itemId === 'potion_shield') localPlayer.potions.shield = (localPlayer.potions.shield || 0) + 1;
+    if (itemId === 'potion_strength') localPlayer.potions.strength = (localPlayer.potions.strength || 0) + 1;
     updateHUD(localPlayer);
     renderShopItems();
     renderQuestsList();
+    saveGame(false);
   }
 }
+
+// -------------------------------------------------------------
+// TROCA RÁPIDA DE ARMAS (TAB / CLIQUE NO EMBLEMA)
+// Alterna instantaneamente entre todas as espadas que você já comprou (100% Grátis)
+// -------------------------------------------------------------
+function cycleNextOwnedWeapon() {
+  if (!localPlayer || localPlayer.isDead) return;
+  if (!localPlayer.ownedWeapons || !Array.isArray(localPlayer.ownedWeapons)) {
+    localPlayer.ownedWeapons = ['fist'];
+  }
+  if (!localPlayer.ownedWeapons.includes(localPlayer.weapon || 'fist')) {
+    localPlayer.ownedWeapons.push(localPlayer.weapon || 'fist');
+  }
+
+  if (localPlayer.ownedWeapons.length <= 1) {
+    showSaveToast('🗡️ Compre mais armas na Loja para alternar com TAB!');
+    return;
+  }
+
+  const currentIdx = localPlayer.ownedWeapons.indexOf(localPlayer.weapon);
+  const nextIdx = (currentIdx + 1) % localPlayer.ownedWeapons.length;
+  const nextWeaponId = localPlayer.ownedWeapons[nextIdx];
+
+  localPlayer.weapon = nextWeaponId;
+  sfx.playSwordSlash();
+
+  const wData = SHOP_CATALOG.weapons.find(w => w.id === nextWeaponId) || { name: nextWeaponId };
+  showSaveToast(`⚔️ Arma Ativa: ${wData.name}!`);
+  updateKillfeed([{ text: `⚔️ ${localPlayer.name} alternou para: ${wData.name} (Gratuito)!` }]);
+
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({ type: 'buy_item', category: 'weapons', itemId: nextWeaponId }));
+  }
+
+  updateHUD(localPlayer);
+  renderShopItems();
+  saveGame(false);
+}
+
+// Vincula o clique no emblema da arma no topo da tela
+const wBadgeDirect = document.getElementById('weapon-badge');
+if (wBadgeDirect) wBadgeDirect.addEventListener('click', cycleNextOwnedWeapon);
 
 // -------------------------------------------------------------
 // Renderização do Jogo
@@ -4206,6 +4334,11 @@ window.addEventListener('keydown', (e) => {
   setKey(e, true);
 
   if (localPlayer && !localPlayer.isDead) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      cycleNextOwnedWeapon();
+      return;
+    }
     const k = (e.key || '').toLowerCase();
     if (k === '1' || e.code === 'Digit1') { keys['1'] = true; useHealPotion(); }
     if (k === '2' || e.code === 'Digit2') { keys['2'] = true; useSpeedPotion(); }
@@ -5042,6 +5175,9 @@ if (btnContinue) {
       localPlayer.xp = saved.xp || 0;
       localPlayer.maxXp = saved.maxXp || 100;
       localPlayer.weapon = saved.weapon || 'fist';
+      localPlayer.ownedWeapons = saved.ownedWeapons || [localPlayer.weapon || 'fist'];
+      if (!localPlayer.ownedWeapons.includes('fist')) localPlayer.ownedWeapons.push('fist');
+      if (!localPlayer.ownedWeapons.includes(localPlayer.weapon)) localPlayer.ownedWeapons.push(localPlayer.weapon);
       localPlayer.powers = {
         slam: false, beam: false, fire: false, shield: false, nature: false,
         thunder: false, blizzard: false, blackhole: false, dragon: false,
