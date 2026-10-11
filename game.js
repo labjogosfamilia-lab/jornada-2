@@ -589,7 +589,13 @@ function saveGame(showToast = true) {
     maxXp: localPlayer.maxXp || 100,
     weapon: localPlayer.weapon || 'fist',
     ownedWeapons: localPlayer.ownedWeapons || [localPlayer.weapon || 'fist'],
-    potions: localPlayer.potions || { heal: 0, speed: 0, superHeal: 0, shield: 0, strength: 0 },
+    potions: {
+      heal: Math.max(0, Number(localPlayer.potions?.heal) || 0),
+      speed: Math.max(0, Number(localPlayer.potions?.speed) || 0),
+      superHeal: Math.max(0, Number(localPlayer.potions?.superHeal) || 0),
+      shield: Math.max(0, Number(localPlayer.potions?.shield) || 0),
+      strength: Math.max(0, Number(localPlayer.potions?.strength) || 0)
+    },
     powers: localPlayer.powers || { slam: false, beam: false, fire: false, shield: false, nature: false, thunder: false, blizzard: false, blackhole: false, dragon: false },
     activeQuests: localPlayer.activeQuests || POWER_QUESTS,
     kills: localPlayer.kills || 0,
@@ -623,7 +629,8 @@ function checkAndDisplayContinueButton() {
   const cCont = document.getElementById('continue-save-container');
   const cInfo = document.getElementById('continue-save-info');
   if (saved && cCont && cInfo) {
-    cInfo.innerText = `Nv. ${saved.level || 1} • 🪙 ${saved.gold || 0}`;
+    const totalPots = (saved.potions?.heal || 0) + (saved.potions?.speed || 0) + (saved.potions?.superHeal || 0) + (saved.potions?.shield || 0) + (saved.potions?.strength || 0);
+    cInfo.innerText = `Nv. ${saved.level || 1} • 🪙 ${saved.gold || 0} • 🧪 ${totalPots} Poções`;
     cCont.style.display = 'block';
   }
 }
@@ -1165,13 +1172,21 @@ function startOfflineSimulation() {
 
   myId = 'local_hero';
   const cData = CHARACTER_CLASSES[selectedClass] || CHARACTER_CLASSES.warrior;
+  const saved = loadSavedGame();
 
-  // JOGADOR COMEÇA SEM NADA (0 OURO, 0 POÇÕES, PUNHOS NUS!)
+  const initPotions = (saved && saved.potions) ? {
+    heal: Math.max(0, Number(saved.potions.heal) || 0),
+    speed: Math.max(0, Number(saved.potions.speed) || 0),
+    superHeal: Math.max(0, Number(saved.potions.superHeal) || 0),
+    shield: Math.max(0, Number(saved.potions.shield) || 0),
+    strength: Math.max(0, Number(saved.potions.strength) || 0)
+  } : { heal: 3, speed: 3, superHeal: 1, shield: 1, strength: 1 };
+
   localPlayer = {
     id: myId,
-    name: document.getElementById('player-name')?.value?.trim() || 'Guilherme',
-    charClass: selectedClass,
-    color: cData.color,
+    name: saved?.name || document.getElementById('player-name')?.value?.trim() || 'Guilherme',
+    charClass: saved?.charClass || selectedClass,
+    color: saved?.color || cData.color,
     hairColor: cData.hairColor,
     skinColor: cData.skinColor,
     x: 12000,
@@ -1187,18 +1202,18 @@ function startOfflineSimulation() {
     maxStamina: 100,
     shieldTimer: 3,
     isDead: false,
-    gold: 0,
-    score: 0,
-    kills: 0,
-    minedCount: 0,
-    weapon: 'fist',
-    ownedWeapons: ['fist'],
-    potions: { heal: 0, speed: 0, superHeal: 0, shield: 0, strength: 0 },
-    powers: { slam: false, beam: false, fire: false, shield: false, nature: false, thunder: false, blizzard: false, blackhole: false, dragon: false },
+    gold: saved?.gold || 0,
+    score: saved?.score || 0,
+    kills: saved?.kills || 0,
+    minedCount: saved?.minedCount || 0,
+    weapon: saved?.weapon || 'fist',
+    ownedWeapons: saved?.ownedWeapons || ['fist'],
+    potions: initPotions,
+    powers: saved?.powers ? { ...saved.powers } : { slam: false, beam: false, fire: false, shield: false, nature: false, thunder: false, blizzard: false, blackhole: false, dragon: false },
     powerCooldowns: { slam: 0, beam: 0, fire: 0, shield: 0, nature: 0, thunder: 0, blizzard: 0, blackhole: 0, dragon: 0 },
-    level: 1,
-    xp: 0,
-    maxXp: 100,
+    level: saved?.level || 1,
+    xp: saved?.xp || 0,
+    maxXp: saved?.maxXp || 100,
     dashCooldown: 0,
     attackCooldown: 0,
     speedBoostTimer: 0,
@@ -1206,7 +1221,7 @@ function startOfflineSimulation() {
     isSprinting: false,
     inSafeZone: false,
     radius: 24,
-    activeQuests: POWER_QUESTS.map(q => ({ ...q, current: 0, completed: false }))
+    activeQuests: saved?.activeQuests || POWER_QUESTS.map(q => ({ ...q, current: 0, completed: false }))
   };
   serverPlayers.set(myId, localPlayer);
 
@@ -1515,6 +1530,8 @@ function startOfflineSimulation() {
             localPlayer.potions[droppedPot] = (localPlayer.potions[droppedPot] || 0) + 1;
             const potIcons = { heal: '🧪 +1 Néctar', speed: '⚡ +1 Vigor', shield: '🛡️ +1 Escudo', superHeal: '💖 +1 Elixir Vital', strength: '🐉 +1 Sangue de Titã' };
             addFloatingText(br.x, br.y - 35, potIcons[droppedPot], '#2ed573', 15, true);
+            updateHUD(localPlayer);
+            saveGame(false);
           }
 
           serverBreakables.splice(i, 1);
@@ -1540,6 +1557,8 @@ function startOfflineSimulation() {
             localPlayer.potions[droppedPot] = (localPlayer.potions[droppedPot] || 0) + 1;
             const potIcons = { heal: '🧪 +1 Néctar Curativo', speed: '⚡ +1 Vigor do Vento', shield: '🛡️ +1 Poção de Escudo', superHeal: '💖 +1 Elixir Vital', strength: '🐉 +1 Sangue de Titã' };
             addFloatingText(ch.x, ch.y - 35, potIcons[droppedPot], '#ffd32a', 16, true);
+            updateHUD(localPlayer);
+            saveGame(false);
           }
 
           updateKillfeed([{ text: `🪙 ${localPlayer.name} abriu um baú (+${ch.gold} Ouro)!` }]);
@@ -4550,6 +4569,7 @@ function useHealPotion() {
       addParticle(localPlayer.x, localPlayer.y, '#2ed573', 15, 6);
       addFloatingText(localPlayer.x, localPlayer.y - 20, '+50 HP', '#2ed573', 17);
       updateHUD(localPlayer);
+      saveGame(false);
     }
   }
 }
@@ -4565,6 +4585,7 @@ function useSpeedPotion() {
       addParticle(localPlayer.x, localPlayer.y, '#ffd32a', 15, 6);
       addFloatingText(localPlayer.x, localPlayer.y - 20, '⚡ FÚRIA DO VENTO!', '#ffd32a', 17);
       updateHUD(localPlayer);
+      saveGame(false);
     }
   }
 }
@@ -4579,6 +4600,7 @@ function useSuperHealPotion() {
       addParticle(localPlayer.x, localPlayer.y, '#ff6b81', 25, 7);
       addFloatingText(localPlayer.x, localPlayer.y - 25, '💖 +120 HP ELIXIR!', '#ff6b81', 18, true);
       updateHUD(localPlayer);
+      saveGame(false);
     }
   }
 }
@@ -4593,6 +4615,7 @@ function useShieldPotion() {
       addParticle(localPlayer.x, localPlayer.y, '#00e5ff', 25, 7);
       addFloatingText(localPlayer.x, localPlayer.y - 25, '🛡️ CASCA DE FERRO (+15s)!', '#00e5ff', 18, true);
       updateHUD(localPlayer);
+      saveGame(false);
     }
   }
 }
@@ -4607,6 +4630,7 @@ function useStrengthPotion() {
       addParticle(localPlayer.x, localPlayer.y, '#ff4757', 25, 7);
       addFloatingText(localPlayer.x, localPlayer.y - 25, '🐉 SANGUE DE TITÃ (+60% DANO)!', '#ff4757', 18, true);
       updateHUD(localPlayer);
+      saveGame(false);
     }
   }
 }
@@ -5237,6 +5261,27 @@ if (btnContinue) {
       localPlayer.score = saved.score || 0;
       localPlayer.minedCount = saved.minedCount || 0;
 
+      // Restaura todas as poções salvas para que NUNCA sejam perdidas!
+      if (saved.potions) {
+        localPlayer.potions = {
+          heal: Math.max(0, Number(saved.potions.heal) || 0),
+          speed: Math.max(0, Number(saved.potions.speed) || 0),
+          superHeal: Math.max(0, Number(saved.potions.superHeal) || 0),
+          shield: Math.max(0, Number(saved.potions.shield) || 0),
+          strength: Math.max(0, Number(saved.potions.strength) || 0)
+        };
+      }
+
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: 'set_profile',
+          name: localPlayer.name,
+          charClass: localPlayer.charClass,
+          color: localPlayer.color,
+          potions: localPlayer.potions
+        }));
+      }
+
       const cData = CHARACTER_CLASSES[localPlayer.charClass];
       if (cData) {
         localPlayer.maxHp = cData.baseHp;
@@ -5261,14 +5306,9 @@ document.getElementById('btn-start').addEventListener('click', () => {
     connectWebSocket(customServer);
   }
 
-  if (socket && socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({
-      type: 'set_profile',
-      name: nameInput,
-      charClass: selectedClass,
-      color: selectedColor
-    }));
-  } else if (localPlayer) {
+  const saved = loadSavedGame();
+
+  if (localPlayer) {
     localPlayer.name = nameInput;
     localPlayer.charClass = selectedClass;
     const cData = CHARACTER_CLASSES[selectedClass];
@@ -5280,6 +5320,37 @@ document.getElementById('btn-start').addEventListener('click', () => {
       localPlayer.hp = cData.baseHp;
       localPlayer.speed = cData.speed;
     }
+
+    // Preserva o progresso de poções salvas para que o jogador NUNCA perca as poções ao entrar!
+    if (saved && saved.potions) {
+      localPlayer.potions = {
+        heal: Math.max(0, Number(saved.potions.heal) || 0),
+        speed: Math.max(0, Number(saved.potions.speed) || 0),
+        superHeal: Math.max(0, Number(saved.potions.superHeal) || 0),
+        shield: Math.max(0, Number(saved.potions.shield) || 0),
+        strength: Math.max(0, Number(saved.potions.strength) || 0)
+      };
+      if (saved.gold) localPlayer.gold = Math.max(localPlayer.gold || 0, saved.gold);
+      if (saved.level) localPlayer.level = Math.max(localPlayer.level || 1, saved.level);
+      if (saved.xp) localPlayer.xp = saved.xp;
+      if (saved.maxXp) localPlayer.maxXp = saved.maxXp;
+      if (saved.weapon && saved.weapon !== 'fist') localPlayer.weapon = saved.weapon;
+      if (saved.ownedWeapons && Array.isArray(saved.ownedWeapons)) {
+        localPlayer.ownedWeapons = Array.from(new Set([...(localPlayer.ownedWeapons || ['fist']), ...saved.ownedWeapons]));
+      }
+      if (saved.powers) localPlayer.powers = { ...localPlayer.powers, ...saved.powers };
+    }
+    updateHUD(localPlayer);
+  }
+
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({
+      type: 'set_profile',
+      name: nameInput,
+      charClass: selectedClass,
+      color: selectedColor,
+      potions: localPlayer?.potions || saved?.potions || null
+    }));
   }
 
   document.getElementById('lobby-screen').style.display = 'none';
