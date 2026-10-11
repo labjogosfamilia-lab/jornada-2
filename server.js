@@ -1238,7 +1238,13 @@ function updateBotAI(bot, now) {
 function updateWorldBosses() {
   const bosses = [worldBoss, secondBoss, thirdBoss, fourthBoss];
   for (const boss of bosses) {
-    if (!boss || boss.hp <= 0) continue;
+    if (!boss) continue;
+    if (boss.hp <= 0 || boss.isDead) {
+      if (boss.respawnTime && Date.now() >= boss.respawnTime) {
+        respawnServerBoss(boss);
+      }
+      continue;
+    }
 
     const targets = [...players.values(), ...bots.values()].filter(t => t.hp > 0 && !t.isDead );
     let closest = null;
@@ -1263,19 +1269,35 @@ function updateWorldBosses() {
 }
 
 function checkBossDeath(killer, boss) {
-  if (boss.hp <= 0) {
+  if (boss.hp <= 0 && !boss.isDead) {
     boss.hp = 0;
-    broadcastKillFeed(`👑 ${killer ? killer.name : 'Um Guardião'} DERRUBOU O ${boss.name.toUpperCase()}!`);
+    boss.isDead = true;
+    boss.deathTime = Date.now();
+    boss.respawnTime = Date.now() + 10 * 60 * 1000; // 10 MINUTOS EXATOS!
+
+    broadcastKillFeed(`👑 ${killer ? killer.name : 'Um Guardião'} DERRUBOU O ${boss.name.toUpperCase()}! Renasce em 10 minutos!`);
     if (killer) {
       killer.gold += 300;
       killer.score += 600;
       progressPlayerQuest(killer, 'boss');
     }
     setTimeout(() => {
-      boss.hp = boss.maxHp;
-      broadcastKillFeed(`⚠️ O ${boss.name} ressurgiu nas profundezas da mata!`);
-    }, 45000);
+      respawnServerBoss(boss);
+    }, 10 * 60 * 1000);
   }
+}
+
+function respawnServerBoss(boss) {
+  if (!boss || !boss.isDead) return;
+  boss.hp = boss.maxHp;
+  boss.isDead = false;
+  boss.deathTime = null;
+  boss.respawnTime = null;
+  if (boss.id === 'world_colossus') { boss.x = 16500; boss.y = 12000; }
+  else if (boss.id === 'world_ignis') { boss.x = 12000; boss.y = 17500; }
+  else if (boss.id === 'world_storm') { boss.x = 17500; boss.y = 17500; }
+  else if (boss.id === 'world_shadow') { boss.x = 7000; boss.y = 17500; }
+  broadcastKillFeed(`⚠️ O ${boss.name} ressurgiu nas profundezas da mata (Respawn de 10 min)!`);
 }
 
 // -------------------------------------------------------------
@@ -1332,10 +1354,16 @@ function gameTick() {
       if (ent.input.down) dy += 1;
       if (ent.input.left) dx -= 1;
       if (ent.input.right) dx += 1;
-      ent.angle = ent.input.angle || ent.angle;
     }
 
     const len = Math.hypot(dx, dy);
+
+    // O PERSONAGEM VIRA PARA ONDE ESTÁ ANDANDO!
+    if (len > 0 && !ent.input.attack) {
+      ent.angle = Math.atan2(dy, dx);
+    } else if (!ent.isBot && ent.input.angle !== undefined) {
+      ent.angle = ent.input.angle;
+    }
     let curSpeed = ent.speed;
     if (ent.speedBoostTimer > 0) curSpeed *= 1.45;
 
