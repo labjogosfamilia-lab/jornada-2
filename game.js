@@ -823,6 +823,35 @@ function calcAngleDiff(a, b) {
   return Math.abs(diff);
 }
 
+function handleOfflineBossDeath(boss, customMsg) {
+  if (!boss || (boss.hp <= 0 && boss.isDead)) return;
+  boss.hp = 0;
+  boss.isDead = true;
+  boss.respawnTime = Date.now() + 10 * 60 * 1000; // 10 minutos (600.000 ms)
+
+  localPlayer.gold += 300;
+  localPlayer.score += 600;
+  addPlayerXp(250);
+  checkOfflineQuestProgress('boss');
+  addFloatingText(boss.x, boss.y - 45, '+300 🪙', '#ffd32a', 22, true);
+  sfx.playCoin();
+  updateKillfeed([{ text: customMsg || `👑 ${localPlayer.name} derrotou o ${boss.name.toUpperCase()} (+300 🪙)! Renasce em 10 minutos.` }]);
+}
+
+function respawnOfflineBoss(boss) {
+  if (!boss) return;
+  boss.hp = boss.maxHp;
+  boss.isDead = false;
+  boss.respawnTime = null;
+  addFloatingText(boss.x, boss.y - 50, `⚡ ${boss.name} RENASCEU!`, '#00e5ff', 24, true);
+  triggerScreenShake(12);
+  sfx.playSlam();
+  for (let i = 0; i < 25; i++) {
+    addParticle(boss.x, boss.y, boss.color, 15, 6);
+  }
+  updateKillfeed([{ text: `⚡ ${boss.name} despertou e renasceu na Floresta Ancestral!` }]);
+}
+
 function executeOfflineAttack(attacker, isPlayer) {
   const wId = attacker.weapon || 'fist';
   const weaponsList = (shopCatalog && shopCatalog.weapons) ? shopCatalog.weapons : SHOP_CATALOG.weapons;
@@ -1012,14 +1041,7 @@ function executeOfflineAttack(attacker, isPlayer) {
             addFloatingText(boss.x, boss.y - 35, `-${attackDmg}`, wData.color, 18, true);
 
             if (boss.hp <= 0) {
-              localPlayer.gold += 300;
-              localPlayer.score += 600;
-              addPlayerXp(250);
-              checkOfflineQuestProgress('boss');
-              addFloatingText(boss.x, boss.y - 45, '+300 🪙', '#ffd32a', 20, true);
-              sfx.playCoin();
-              updateKillfeed([{ text: `👑 ${localPlayer.name} golpeou o ${boss.name.toUpperCase()} até a queda (+300 🪙)!` }]);
-              boss.hp = 0;
+              handleOfflineBossDeath(boss, `👑 ${localPlayer.name} golpeou o ${boss.name.toUpperCase()} até a queda (+300 🪙)! Renasce em 10 minutos.`);
             }
           }
         }
@@ -1422,7 +1444,14 @@ function startOfflineSimulation() {
       if (keys.a || keys.ArrowLeft) dx -= 1;
       if (keys.d || keys.ArrowRight) dx += 1;
 
-      localPlayer.angle = Math.atan2(mouse.y - screenHeight / 2, mouse.x - screenWidth / 2);
+      const isWalking = (dx !== 0 || dy !== 0);
+      if (mouse.down) {
+        localPlayer.angle = Math.atan2(mouse.y - screenHeight / 2, mouse.x - screenWidth / 2);
+      } else if (isWalking) {
+        localPlayer.angle = Math.atan2(dy, dx);
+      } else {
+        localPlayer.angle = Math.atan2(mouse.y - screenHeight / 2, mouse.x - screenWidth / 2);
+      }
 
       let spd = localPlayer.speed;
       if (localPlayer.speedBoostTimer > 0) spd *= 1.45;
@@ -1547,7 +1576,12 @@ function startOfflineSimulation() {
     // Chefes do Mundo
     const bosses = [serverWorldBoss, serverSecondBoss, serverThirdBoss, serverFourthBoss];
     for (const boss of bosses) {
-      if (boss && boss.hp > 0) {
+      if (!boss) continue;
+      // Respawna após 10 minutos (600.000 ms) se não estiver vivo!
+      if (boss.isDead && boss.respawnTime && Date.now() >= boss.respawnTime) {
+        respawnOfflineBoss(boss);
+      }
+      if (boss.hp > 0 && !boss.isDead) {
         let bossMoving = false;
         const dToBoss = Math.hypot(localPlayer.x - boss.x, localPlayer.y - boss.y);
         if (dToBoss < 1200 && !localPlayer.isDead) {
@@ -1629,12 +1663,16 @@ function startOfflineSimulation() {
         if (b.weapon === 'staff_astral') {
           // Cajado Druídico: Mantém certa distância e atira projéteis mágicos
           if (dToPlayer > 260) {
-            b.x += Math.cos(b.angle) * bSpeed;
-            b.y += Math.sin(b.angle) * bSpeed;
+            const moveAngle = Math.atan2(localPlayer.y - b.y, localPlayer.x - b.x);
+            b.angle = moveAngle;
+            b.x += Math.cos(moveAngle) * bSpeed;
+            b.y += Math.sin(moveAngle) * bSpeed;
             isMoving = true;
           } else {
-            b.x += Math.cos(b.angle + Math.PI / 2) * bSpeed;
-            b.y += Math.sin(b.angle + Math.PI / 2) * bSpeed;
+            const strafeAngle = Math.atan2(localPlayer.y - b.y, localPlayer.x - b.x) + Math.PI / 2;
+            b.angle = strafeAngle;
+            b.x += Math.cos(strafeAngle) * bSpeed;
+            b.y += Math.sin(strafeAngle) * bSpeed;
             isMoving = true;
           }
 
@@ -1645,8 +1683,10 @@ function startOfflineSimulation() {
         } else {
           // Espadas e Punhos: Avança para combate corpo a corpo direto (SEM PROJÉTEIS)!
           if (dToPlayer > 55) {
-            b.x += Math.cos(b.angle) * bSpeed;
-            b.y += Math.sin(b.angle) * bSpeed;
+            const moveAngle = Math.atan2(localPlayer.y - b.y, localPlayer.x - b.x);
+            b.angle = moveAngle;
+            b.x += Math.cos(moveAngle) * bSpeed;
+            b.y += Math.sin(moveAngle) * bSpeed;
             isMoving = true;
           }
           if (dToPlayer <= 90 && (!b.attackCooldown || b.attackCooldown <= 0)) {
@@ -1774,14 +1814,7 @@ function startOfflineSimulation() {
             sfx.playHit();
             addParticle(pr.x, pr.y, boss.color, 10, 5);
             if (boss.hp <= 0) {
-              localPlayer.gold += 300;
-              localPlayer.score += 600;
-              addPlayerXp(250);
-              checkOfflineQuestProgress('boss');
-              addFloatingText(boss.x, boss.y - 45, '+300 🪙', '#ffd32a', 20, true);
-              sfx.playCoin();
-              updateKillfeed([{ text: `👑 ${localPlayer.name} derrotou o ${boss.name.toUpperCase()} (+300 🪙)!` }]);
-              boss.hp = 0;
+              handleOfflineBossDeath(boss, `👑 ${localPlayer.name} derrotou o ${boss.name.toUpperCase()} (+300 🪙)! Renasce em 10 minutos.`);
             }
             break;
           }
@@ -2117,7 +2150,15 @@ function handleServerMessage(msg) {
 function sendInput() {
   if (!socket || socket.readyState !== WebSocket.OPEN || !localPlayer) return;
 
-  const angle = Math.atan2(mouse.y - screenHeight / 2, mouse.x - screenWidth / 2);
+  let angle = Math.atan2(mouse.y - screenHeight / 2, mouse.x - screenWidth / 2);
+  let dx = 0, dy = 0;
+  if (keys.w || keys.ArrowUp) dy -= 1;
+  if (keys.s || keys.ArrowDown) dy += 1;
+  if (keys.a || keys.ArrowLeft) dx -= 1;
+  if (keys.d || keys.ArrowRight) dx += 1;
+  if ((dx !== 0 || dy !== 0) && !mouse.down) {
+    angle = Math.atan2(dy, dx);
+  }
   socket.send(JSON.stringify({
     type: 'input',
     input: {
@@ -2192,7 +2233,8 @@ function updateHUD(player) {
   const bossBar = document.getElementById('boss-hud-bar');
   const bossFill = document.getElementById('boss-hp-fill');
   const bossVal = document.getElementById('boss-hp-val');
-  const activeBosses = [serverWorldBoss, serverSecondBoss, serverThirdBoss, serverFourthBoss].filter(b => b && b.hp > 0);
+  const allBosses = [serverWorldBoss, serverSecondBoss, serverThirdBoss, serverFourthBoss].filter(Boolean);
+  const activeBosses = allBosses.filter(b => b.hp > 0 && !b.isDead);
   let activeBoss = null;
   if (activeBosses.length > 0) {
     activeBosses.sort((a, b) => Math.hypot(player.x - a.x, player.y - a.y) - Math.hypot(player.x - b.x, player.y - b.y));
@@ -2205,7 +2247,21 @@ function updateHUD(player) {
     bossVal.innerText = `${Math.round(activeBoss.hp)} / ${activeBoss.maxHp}`;
     document.getElementById('boss-name').innerText = activeBoss.name;
   } else {
-    bossBar.style.display = 'none';
+    const deadBosses = allBosses.filter(b => (b.hp <= 0 || b.isDead) && b.respawnTime);
+    deadBosses.sort((a, b) => a.respawnTime - b.respawnTime);
+    const nextRespawn = deadBosses[0];
+    if (nextRespawn) {
+      bossBar.style.display = 'block';
+      const remainingMs = Math.max(0, nextRespawn.respawnTime - Date.now());
+      const mins = Math.floor(remainingMs / 60000);
+      const secs = Math.floor((remainingMs % 60000) / 1000);
+      const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      bossFill.style.width = '0%';
+      bossVal.innerText = `⏳ Renasce em: ${timeStr} (10 min)`;
+      document.getElementById('boss-name').innerText = `💀 ${nextRespawn.name} (Derrotado)`;
+    } else {
+      bossBar.style.display = 'none';
+    }
   }
 
   // Rastreador da Missão Atual
@@ -3480,8 +3536,8 @@ function drawBoss(boss) {
   ctx.stroke();
   ctx.restore();
 
-  // Se o Boss foi derrotado: repousa no chão com Grande Lápide Ancestral
-  if (boss.hp <= 0) {
+  // Se o Boss foi derrotado: repousa no chão com Grande Lápide Ancestral e timer de renascimento de 10 min
+  if (boss.hp <= 0 || boss.isDead) {
     ctx.save();
     ctx.rotate(Math.PI * 0.45);
     ctx.globalAlpha = 0.75;
@@ -3499,8 +3555,18 @@ function drawBoss(boss) {
     ctx.fillStyle = '#ffd32a';
     ctx.shadowColor = '#000';
     ctx.shadowBlur = 6;
-    ctx.fillText('👑 TITÃ DA FLORESTA DERROTADO', 0, -60);
-    ctx.fillText(boss.name, 0, -80);
+    ctx.fillText('👑 TITÃ DA FLORESTA DERROTADO', 0, -65);
+    ctx.fillText(boss.name, 0, -88);
+
+    if (boss.respawnTime) {
+      const remainingMs = Math.max(0, boss.respawnTime - Date.now());
+      const mins = Math.floor(remainingMs / 60000);
+      const secs = Math.floor((remainingMs % 60000) / 1000);
+      const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      ctx.font = 'bold 14px Segoe UI, sans-serif';
+      ctx.fillStyle = '#00e5ff';
+      ctx.fillText(`⏳ Renasce em: ${timeStr} (10 min)`, 0, -42);
+    }
     ctx.restore();
     return;
   }
@@ -4448,6 +4514,7 @@ function performPlayerDash() {
   if (dx !== 0 || dy !== 0) {
     dashAngle = Math.atan2(dy, dx);
   }
+  localPlayer.angle = dashAngle;
 
   const dashDist = 88;
   const targetX = Math.max(localPlayer.radius, Math.min(arena.width - localPlayer.radius, localPlayer.x + Math.cos(dashAngle) * dashDist));
@@ -4730,21 +4797,14 @@ function castPowerNature() {
       }
     }
 
-    const bosses = [serverWorldBoss, serverSecondBoss];
+    const bosses = [serverWorldBoss, serverSecondBoss, serverThirdBoss, serverFourthBoss];
     for (const boss of bosses) {
       if (boss && boss.hp > 0 && Math.hypot(boss.x - localPlayer.x, boss.y - localPlayer.y) < 280) {
         boss.hp -= 50;
         addFloatingText(boss.x, boss.y - 35, '-50', '#2ed573', 18);
         addParticle(boss.x, boss.y, '#2ed573', 15, 6);
         if (boss.hp <= 0) {
-          localPlayer.gold += 300;
-          localPlayer.score += 600;
-          addPlayerXp(250);
-          checkOfflineQuestProgress('boss');
-          addFloatingText(boss.x, boss.y - 50, '+300 🪙', '#ffd32a', 22, true);
-          sfx.playCoin();
-          updateKillfeed([{ text: `👑 ${localPlayer.name} aniquilou ${boss.name.toUpperCase()} (+300 🪙)!` }]);
-          boss.hp = 0;
+          handleOfflineBossDeath(boss, `👑 ${localPlayer.name} aniquilou ${boss.name.toUpperCase()} (+300 🪙)! Renasce em 10 minutos.`);
         }
       }
     }
@@ -4806,14 +4866,7 @@ function castPowerThunder() {
         addFloatingText(boss.x, boss.y - 40, '⚡ -65', '#f1c40f', 20, true);
         addParticle(boss.x, boss.y, '#f1c40f', 18, 7);
         if (boss.hp <= 0) {
-          localPlayer.gold += 300;
-          localPlayer.score += 600;
-          addPlayerXp(250);
-          checkOfflineQuestProgress('boss');
-          addFloatingText(boss.x, boss.y - 50, '+300 🪙', '#ffd32a', 22, true);
-          sfx.playCoin();
-          updateKillfeed([{ text: `👑 ${localPlayer.name} fulminou ${boss.name.toUpperCase()} (+300 🪙)!` }]);
-          boss.hp = 0;
+          handleOfflineBossDeath(boss, `👑 ${localPlayer.name} fulminou ${boss.name.toUpperCase()} (+300 🪙)! Renasce em 10 minutos.`);
         }
       }
     }
@@ -4942,14 +4995,7 @@ function castPowerBlackHole() {
         addFloatingText(boss.x, boss.y - 40, '🌑 -75', '#a29bfe', 20, true);
         addParticle(boss.x, boss.y, '#6c5ce7', 18, 7);
         if (boss.hp <= 0) {
-          localPlayer.gold += 300;
-          localPlayer.score += 600;
-          addPlayerXp(250);
-          checkOfflineQuestProgress('boss');
-          addFloatingText(boss.x, boss.y - 50, '+300 🪙', '#ffd32a', 22, true);
-          sfx.playCoin();
-          updateKillfeed([{ text: `👑 ${localPlayer.name} engoliu ${boss.name.toUpperCase()} no Vazio (+300 🪙)!` }]);
-          boss.hp = 0;
+          handleOfflineBossDeath(boss, `👑 ${localPlayer.name} engoliu ${boss.name.toUpperCase()} no Vazio (+300 🪙)! Renasce em 10 minutos.`);
         }
       }
     }
@@ -5024,14 +5070,7 @@ function castPowerDragon() {
             addFloatingText(boss.x, boss.y - 45, '🐉 -110 TITÂNICO!', '#ff4757', 24, true);
             addParticle(boss.x, boss.y, '#ff4757', 22, 8);
             if (boss.hp <= 0) {
-              localPlayer.gold += 300;
-              localPlayer.score += 600;
-              addPlayerXp(250);
-              checkOfflineQuestProgress('boss');
-              addFloatingText(boss.x, boss.y - 50, '+300 🪙', '#ffd32a', 22, true);
-              sfx.playCoin();
-              updateKillfeed([{ text: `👑 ${localPlayer.name} incinerou ${boss.name.toUpperCase()} com Fogo Dracônico (+300 🪙)!` }]);
-              boss.hp = 0;
+              handleOfflineBossDeath(boss, `👑 ${localPlayer.name} incinerou ${boss.name.toUpperCase()} com Fogo Dracônico (+300 🪙)! Renasce em 10 minutos.`);
             }
           }
         }
