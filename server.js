@@ -711,6 +711,23 @@ function onClientMessage(client, msg) {
       p.hairColor = cData.hairColor;
       p.skinColor = cData.skinColor;
     }
+    if (msg.potions && typeof msg.potions === 'object') {
+      p.potions = {
+        heal: Math.max(0, Number(msg.potions.heal) || 0),
+        speed: Math.max(0, Number(msg.potions.speed) || 0),
+        superHeal: Math.max(0, Number(msg.potions.superHeal) || 0),
+        shield: Math.max(0, Number(msg.potions.shield) || 0),
+        strength: Math.max(0, Number(msg.potions.strength) || 0)
+      };
+      sendTo(client, {
+        type: 'inventory_update',
+        gold: p.gold,
+        weapon: p.weapon,
+        ownedWeapons: p.ownedWeapons,
+        potions: p.potions,
+        powers: p.powers
+      });
+    }
   } else if (msg.type === 'buy_item') {
     handleShopPurchase(p, msg.category, msg.itemId);
   } else if (msg.type === 'chat') {
